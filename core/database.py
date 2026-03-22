@@ -105,6 +105,24 @@ def _encode_json_list(items: list[str] | None) -> str | None:
     return json.dumps(cleaned, ensure_ascii=True)
 
 
+def _decode_json_vector(value: str | None) -> list[float]:
+    if not value:
+        return []
+    try:
+        parsed = json.loads(value)
+    except Exception:
+        return []
+    if not isinstance(parsed, list):
+        return []
+    vector: list[float] = []
+    for item in parsed:
+        try:
+            vector.append(float(item))
+        except Exception:
+            continue
+    return vector
+
+
 def _domain_from_url(url: str | None) -> str | None:
     if not url:
         return None
@@ -324,6 +342,74 @@ def init_db() -> None:
                 url,
                 content_text
             )
+            """
+        )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                label TEXT NOT NULL DEFAULT '',
+                started_at TEXT NOT NULL,
+                ended_at TEXT NOT NULL,
+                event_count INTEGER NOT NULL DEFAULT 0,
+                embedding_json TEXT NOT NULL DEFAULT '[]',
+                keyphrases_json TEXT,
+                recency_score REAL NOT NULL DEFAULT 0.0,
+                dependency_score REAL NOT NULL DEFAULT 0.0,
+                total_score REAL NOT NULL DEFAULT 0.0,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS session_links (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_session_id INTEGER NOT NULL,
+                target_session_id INTEGER NOT NULL,
+                link_type TEXT NOT NULL,
+                strength REAL NOT NULL DEFAULT 0.0,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (source_session_id) REFERENCES sessions(id),
+                FOREIGN KEY (target_session_id) REFERENCES sessions(id)
+            )
+            """
+        )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS event_sessions (
+                event_id INTEGER NOT NULL,
+                session_id INTEGER NOT NULL,
+                position REAL NOT NULL DEFAULT 0.5,
+                dependency_score REAL NOT NULL DEFAULT 0.0,
+                PRIMARY KEY (event_id, session_id),
+                FOREIGN KEY (event_id) REFERENCES events(id),
+                FOREIGN KEY (session_id) REFERENCES sessions(id)
+            )
+            """
+        )
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_sessions_started_at
+            ON sessions(started_at DESC)
+            """
+        )
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_sessions_total_score
+            ON sessions(total_score DESC)
+            """
+        )
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_event_sessions_session_id
+            ON event_sessions(session_id)
+            """
+        )
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_session_links_source
+            ON session_links(source_session_id)
             """
         )
         _backfill_from_anchors(connection)
@@ -688,9 +774,266 @@ def lexical_candidates(
 
 def clear_memory() -> None:
     with get_connection() as connection:
+        connection.execute("DELETE FROM session_links")
+        connection.execute("DELETE FROM event_sessions")
+        connection.execute("DELETE FROM sessions")
         connection.execute("DELETE FROM events_fts")
         connection.execute("DELETE FROM events")
         connection.commit()
+
+
+def _session_row_to_dict(row: sqlite3.Row | dict) -> dict:
+    payload = dict(row)
+    payload["embedding"] = _decode_json_vector(payload.get("embedding_json"))
+    payload["keyphrases"] = _decode_json_list(payload.get("keyphrases_json"))
+    return payload
+
+
+def list_sessions(limit: int = 100) -> list[dict]:
+    with get_connection() as connection:
+        rows = connection.execute(
+            """
+            SELECT
+                id,
+                label,
+                started_at,
+                ended_at,
+                event_count,
+                embedding_json,
+                keyphrases_json,
+                recency_score,
+                dependency_score,
+                total_score,
+                updated_at
+            FROM sessions
+            ORDER BY total_score DESC, started_at DESC, id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    return [_session_row_to_dict(row) for row in rows]
+
+
+def get_session_events(session_id: int) -> list[Event]:
+    with get_connection() as connection:
+        rows = connection.execute(
+            """
+            SELECT
+                e.id,
+                e.occurred_at,
+                e.application,
+                e.window_title,
+                e.url,
+                e.interaction_type,
+                e.content_text,
+                e.exe_path,
+                e.tab_titles_json,
+                e.tab_urls_json,
+                e.full_text,
+                e.keyphrases_json,
+                e.searchable_text,
+                e.embedding_json,
+                e.source
+            FROM event_sessions es
+            INNER JOIN events e ON e.id = es.event_id
+            WHERE es.session_id = ?
+            ORDER BY e.occurred_at ASC, e.id ASC
+            """,
+            (session_id,),
+        ).fetchall()
+    return [Event(**dict(row)) for row in rows]
+
+
+def get_event_session(event_id: int) -> int | None:
+    with get_connection() as connection:
+        row = connection.execute(
+            """
+            SELECT session_id
+            FROM event_sessions
+            WHERE event_id = ?
+            ORDER BY session_id DESC
+            LIMIT 1
+            """,
+            (event_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    return int(row["session_id"])
+
+
+def get_event(event_id: int) -> Event | None:
+    events = list_events_by_ids([event_id])
+    return events[0] if events else None
+
+
+def list_unassigned_events(
+    start_at: str | None = None,
+    end_at: str | None = None,
+    *,
+    limit: int | None = None,
+) -> list[Event]:
+    clauses = ["es.event_id IS NULL"]
+    params: list[object] = []
+    if start_at is not None:
+        clauses.append("e.occurred_at >= ?")
+        params.append(start_at)
+    if end_at is not None:
+        clauses.append("e.occurred_at <= ?")
+        params.append(end_at)
+    limit_sql = ""
+    if limit is not None:
+        limit_sql = "LIMIT ?"
+        params.append(limit)
+    with get_connection() as connection:
+        rows = connection.execute(
+            f"""
+            SELECT
+                e.id,
+                e.occurred_at,
+                e.application,
+                e.window_title,
+                e.url,
+                e.interaction_type,
+                e.content_text,
+                e.exe_path,
+                e.tab_titles_json,
+                e.tab_urls_json,
+                e.full_text,
+                e.keyphrases_json,
+                e.searchable_text,
+                e.embedding_json,
+                e.source
+            FROM events e
+            LEFT JOIN event_sessions es ON es.event_id = e.id
+            WHERE {' AND '.join(clauses)}
+            ORDER BY e.occurred_at ASC, e.id ASC
+            {limit_sql}
+            """,
+            tuple(params),
+        ).fetchall()
+    return [Event(**dict(row)) for row in rows]
+
+
+def count_unassigned_events() -> int:
+    with get_connection() as connection:
+        row = connection.execute(
+            """
+            SELECT COUNT(*) AS count
+            FROM events e
+            LEFT JOIN event_sessions es ON es.event_id = e.id
+            WHERE es.event_id IS NULL
+            """
+        ).fetchone()
+    return int(row["count"]) if row else 0
+
+
+def clear_network_tables() -> None:
+    with get_connection() as connection:
+        connection.execute("DELETE FROM session_links")
+        connection.execute("DELETE FROM event_sessions")
+        connection.execute("DELETE FROM sessions")
+        connection.commit()
+
+
+def insert_session(
+    *,
+    label: str,
+    started_at: str,
+    ended_at: str,
+    event_count: int,
+    embedding: list[float],
+    keyphrases: list[str] | None = None,
+    recency_score: float = 0.0,
+    dependency_score: float = 0.0,
+    total_score: float = 0.0,
+    updated_at: str | None = None,
+) -> int:
+    updated_timestamp = updated_at or datetime.now().isoformat(sep=" ", timespec="seconds")
+    with get_connection() as connection:
+        cursor = connection.execute(
+            """
+            INSERT INTO sessions (
+                label,
+                started_at,
+                ended_at,
+                event_count,
+                embedding_json,
+                keyphrases_json,
+                recency_score,
+                dependency_score,
+                total_score,
+                updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                label,
+                started_at,
+                ended_at,
+                event_count,
+                json.dumps([float(value) for value in embedding], ensure_ascii=True),
+                _encode_json_list(keyphrases),
+                float(recency_score),
+                float(dependency_score),
+                float(total_score),
+                updated_timestamp,
+            ),
+        )
+        connection.commit()
+        return int(cursor.lastrowid)
+
+
+def insert_event_session_mappings(session_id: int, event_ids: list[int]) -> None:
+    if not event_ids:
+        return
+    total = max(len(event_ids) - 1, 1)
+    with get_connection() as connection:
+        connection.executemany(
+            """
+            INSERT OR REPLACE INTO event_sessions (event_id, session_id, position, dependency_score)
+            VALUES (?, ?, ?, COALESCE((SELECT dependency_score FROM event_sessions WHERE event_id = ? AND session_id = ?), 0.0))
+            """,
+            [
+                (
+                    int(event_id),
+                    int(session_id),
+                    (index / total) if len(event_ids) > 1 else 0.5,
+                    int(event_id),
+                    int(session_id),
+                )
+                for index, event_id in enumerate(event_ids)
+            ],
+        )
+        connection.commit()
+
+
+def insert_session_links(links: list[dict]) -> int:
+    if not links:
+        return 0
+    created_at = datetime.now().isoformat(sep=" ", timespec="seconds")
+    with get_connection() as connection:
+        connection.executemany(
+            """
+            INSERT INTO session_links (
+                source_session_id,
+                target_session_id,
+                link_type,
+                strength,
+                created_at
+            ) VALUES (?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    int(link["source_session_id"]),
+                    int(link["target_session_id"]),
+                    str(link["link_type"]),
+                    float(link.get("strength", 0.0)),
+                    created_at,
+                )
+                for link in links
+            ],
+        )
+        connection.commit()
+    return len(links)
 
 
 def save_anchor(

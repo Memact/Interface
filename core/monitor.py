@@ -14,6 +14,7 @@ from pywinauto import Desktop
 
 from core.browser_bridge import BrowserStateStore
 from core.database import append_event
+from core.network import build_network, get_network_stats, should_rebuild_incremental
 from core.settings import load_excluded_apps
 
 
@@ -425,12 +426,37 @@ class WindowMonitor(threading.Thread):
         self._last_activity_kind: str | None = None
         self._last_activity_at = 0.0
         self._last_error_at = 0.0
+        self._network_build_thread: threading.Thread | None = None
 
     def stop(self) -> None:
         self._stop_event.set()
 
     def reload_excluded_apps(self) -> None:
         self._excluded_apps = load_excluded_apps()
+
+    def _maybe_schedule_network_build(self) -> None:
+        try:
+            if not should_rebuild_incremental():
+                return
+            if self._network_build_thread is not None and self._network_build_thread.is_alive():
+                return
+            stats = get_network_stats()
+            last_built_at = stats.get("last_built_at") if isinstance(stats, dict) else None
+
+            def _run_network_build() -> None:
+                try:
+                    build_network(since=last_built_at)
+                except Exception:
+                    logger.exception("Incremental network build failed.")
+
+            self._network_build_thread = threading.Thread(
+                target=_run_network_build,
+                name="memact-network-build",
+                daemon=True,
+            )
+            self._network_build_thread.start()
+        except Exception:
+            logger.exception("Failed to schedule incremental network build.")
 
     def _emit_event(self, snapshot: WindowSnapshot, browser_context: BrowserContext, interaction_type: str) -> None:
         append_event(
@@ -445,6 +471,7 @@ class WindowMonitor(threading.Thread):
             tab_urls=browser_context.tab_urls,
             source="monitor",
         )
+        self._maybe_schedule_network_build()
         self._last_recorded_at = time.monotonic()
         if self.on_new_event is not None:
             self.on_new_event()

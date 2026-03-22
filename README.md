@@ -1,6 +1,6 @@
 **Memact**
 
-**Version** `v0.5`
+**Version** `v0.6`
 
 Memact is a searchable memory of your activity.
 It quietly records what you do on your computer and lets you find it later.
@@ -42,6 +42,9 @@ You can ask things like:
 - What did I watch today?
 - When did I last use Chrome?
 - Did I look at the grocery order?
+- What led me to start working on this?
+- What was I doing before I opened that repo?
+- Show me everything connected to that research session
 
 ---
 
@@ -67,7 +70,7 @@ It does not record keystrokes, passwords, or screenshots.
 
 **How It Works**
 
-`capture activity -> store it locally -> search it later`
+`capture activity -> understand connections -> build network -> search it later`
 
 No folders.
 No tagging.

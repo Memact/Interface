@@ -20,6 +20,7 @@ from core.database import (
 )
 from core.engine_client import engine_candidates, first_available
 from core.meaning_extractor import extract_query_meaning, warmup_spacy
+from core.network import find_related_sessions, get_session_chain
 from core.semantic import cosine_similarity, embed_text, rerank_query_text_pairs, tokenize
 from core.skill_loader import Skill, get_skills
 from core.skill_router import route_skill
@@ -199,6 +200,7 @@ class QueryAnswer:
     time_scope_label: str | None
     result_count: int
     related_queries: list[str]
+    session_context: dict | None = None
 
 
 @dataclass(slots=True)
@@ -214,6 +216,43 @@ class GraphEdge:
     target: str
     relation: str
     weight: float
+
+
+def _network_session_context(query_embedding: list[float]) -> dict | None:
+    if not query_embedding:
+        return None
+    try:
+        related = find_related_sessions(query_embedding, limit=1)
+    except Exception:
+        return None
+    if not related:
+        return None
+    strongest = related[0]
+    if float(strongest.get("similarity") or 0.0) <= 0.0:
+        return None
+    try:
+        return get_session_chain(int(strongest["session_id"]))
+    except Exception:
+        return None
+
+
+def _attach_session_context(answer: QueryAnswer, session_context: dict | None) -> QueryAnswer:
+    if not session_context:
+        return answer
+    session = session_context.get("session")
+    if not isinstance(session, dict):
+        return answer
+    label = str(session.get("label") or "").strip()
+    if not label:
+        return answer
+    answer.session_context = session_context
+    addition = f"Part of a larger session: {label}"
+    if answer.summary:
+        if addition not in answer.summary:
+            answer.summary = f"{answer.summary} {addition}"
+    else:
+        answer.summary = addition
+    return answer
 
 
 def _parse_timestamp(value: str) -> datetime:
@@ -2792,10 +2831,14 @@ def answer_query(query: str) -> QueryAnswer:
     _start_background_warmup()
 
     meaning = extract_query_meaning(query)
-    skill = route_skill(query, get_skills())
-
     base_query_text = meaning.embedding_text() or query
     query_vector = embed_text(base_query_text)
+    session_context = _network_session_context(query_vector)
+
+    def _final(result: QueryAnswer) -> QueryAnswer:
+        return _attach_session_context(result, session_context)
+
+    skill = route_skill(query, get_skills())
     intent_categories = _intent_category_candidates(query, query_vector)
     if intent_categories:
         expanded_text = f"{base_query_text} {' '.join(name for name, _ in intent_categories)}"
@@ -2885,7 +2928,7 @@ def answer_query(query: str) -> QueryAnswer:
     if not ranked:
         if _duration_query(query):
             fallback_answer = answer_duration_query(meaning)
-            return QueryAnswer(
+            return _final(QueryAnswer(
                 answer=fallback_answer,
                 summary="This estimate comes from your local activity timeline.",
                 details_label="",
@@ -2897,8 +2940,8 @@ def answer_query(query: str) -> QueryAnswer:
                     query_category=meaning.activity_type,
                     time_scope=time_scope,
                 ),
-            )
-        return QueryAnswer(
+            ))
+        return _final(QueryAnswer(
             answer="I could not find a strong local memory for that yet.",
             summary="Try a clearer app name, site, or time window like today, yesterday evening, or around 3 PM.",
             details_label="",
@@ -2906,7 +2949,7 @@ def answer_query(query: str) -> QueryAnswer:
             time_scope_label=time_scope,
             result_count=0,
             related_queries=[],
-        )
+        ))
 
     intent = _detect_intent(query)
     spans = _build_spans(
@@ -2924,7 +2967,7 @@ def answer_query(query: str) -> QueryAnswer:
         app_hint=app_hint,
     )
     if not spans:
-        return QueryAnswer(
+        return _final(QueryAnswer(
             answer="I found events, but not enough structure to answer clearly yet.",
             summary="There are matching events in local memory, but they are too weak or fragmented to summarize cleanly.",
             details_label="",
@@ -2932,7 +2975,7 @@ def answer_query(query: str) -> QueryAnswer:
             time_scope_label=time_scope,
             result_count=len(ranked),
             related_queries=[],
-        )
+        ))
 
     relevant_spans = [span for span in spans if span.relevance >= max(spans[0].relevance * 0.42, 0.22)]
     if not relevant_spans:
@@ -2968,7 +3011,7 @@ def answer_query(query: str) -> QueryAnswer:
             query=query,
             time_scope=time_scope,
         )
-        return QueryAnswer(
+        return _final(QueryAnswer(
             answer=content_answer,
             summary=content_summary,
             details_label="Show top matches",
@@ -2976,7 +3019,7 @@ def answer_query(query: str) -> QueryAnswer:
             time_scope_label=time_scope,
             result_count=len(ranked),
             related_queries=content_related,
-        )
+        ))
 
     if _broad_summary_query(
         query,
@@ -2996,7 +3039,7 @@ def answer_query(query: str) -> QueryAnswer:
             time_scope=time_scope,
             query_category=query_category,
         )
-        return QueryAnswer(
+        return _final(QueryAnswer(
             answer=broad_answer,
             summary=broad_summary,
             details_label="Show top matches",
@@ -3004,7 +3047,7 @@ def answer_query(query: str) -> QueryAnswer:
             time_scope_label=time_scope,
             result_count=len(ranked),
             related_queries=_broad_summary_related_queries(broad_spans, time_scope),
-        )
+        ))
 
     summary = _query_summary(relevant_spans, time_scope)
     related_queries = _build_related_queries(
@@ -3021,7 +3064,7 @@ def answer_query(query: str) -> QueryAnswer:
             query=query,
             intent_categories=intent_categories,
         )
-        return QueryAnswer(
+        return _final(QueryAnswer(
             answer=fallback_answer,
             summary=fallback_summary,
             details_label="Show closest matches",
@@ -3029,7 +3072,7 @@ def answer_query(query: str) -> QueryAnswer:
             time_scope_label=time_scope,
             result_count=len(ranked),
             related_queries=related_queries,
-        )
+        ))
     contextual_kind, contextual_anchor = _contextual_recall_query(query)
 
     if contextual_kind and contextual_anchor:
@@ -3072,7 +3115,7 @@ def answer_query(query: str) -> QueryAnswer:
                 if around_parts:
                     answer = " then ".join(around_parts)
                     contextual_summary = f"Around {anchor.session_title.lower()}, nearby context included {' and then '.join(around_parts)}."
-            return QueryAnswer(
+            return _final(QueryAnswer(
                 answer=answer,
                 summary=contextual_summary,
                 details_label="Show anchor moment",
@@ -3080,7 +3123,7 @@ def answer_query(query: str) -> QueryAnswer:
                 time_scope_label=time_scope,
                 result_count=len(anchor_ranked),
                 related_queries=_moment_follow_ups(anchor, time_scope),
-            )
+            ))
 
     if _duration_query(query):
         duration_spans = relevant_spans
@@ -3135,7 +3178,7 @@ def answer_query(query: str) -> QueryAnswer:
             top_topics=top_topics,
             best_span=duration_spans[0] if duration_spans else None,
         )
-        return QueryAnswer(
+        return _final(QueryAnswer(
             answer=answer,
             summary=detail_summary,
             details_label="Show top matches",
@@ -3147,12 +3190,12 @@ def answer_query(query: str) -> QueryAnswer:
                 query_category=query_category,
                 time_scope=time_scope,
             ),
-        )
+        ))
 
     if _last_time_query(query):
         span = relevant_spans[0]
         answer = f"{_format_clock(span.start_at)} on {span.start_at.strftime('%b %d')}"
-        return QueryAnswer(
+        return _final(QueryAnswer(
             answer=answer,
             summary=_memory_summary(span, time_scope, include_context=not bool(target_domains)),
             details_label="Show top matches",
@@ -3160,7 +3203,7 @@ def answer_query(query: str) -> QueryAnswer:
             time_scope_label=time_scope,
             result_count=len(ranked),
             related_queries=related_queries,
-        )
+        ))
 
     if _yes_no_query(query):
         if query_category:
@@ -3174,7 +3217,7 @@ def answer_query(query: str) -> QueryAnswer:
                     lead = _time_scope_lead(time_scope)
                     if lead:
                         summary = f"{lead} {summary[0].lower()}{summary[1:]}"
-                return QueryAnswer(
+                return _final(QueryAnswer(
                     answer="I do not have clear evidence for that.",
                     summary=summary,
                     details_label="Show closest matches",
@@ -3182,7 +3225,7 @@ def answer_query(query: str) -> QueryAnswer:
                     time_scope_label=time_scope,
                     result_count=len(ranked),
                     related_queries=related_queries,
-                )
+                ))
         strongest = relevant_spans[0]
         threshold = 0.25 if time_scope else 0.31
         answer = "I do not have clear evidence for that."
@@ -3193,7 +3236,7 @@ def answer_query(query: str) -> QueryAnswer:
             summary = (
                 f"I did not find a strong signal, but the closest local moment suggests you {_flow_phrase(strongest)}."
             )
-        return QueryAnswer(
+        return _final(QueryAnswer(
             answer=answer,
             summary=summary,
             details_label="Show top matches",
@@ -3201,7 +3244,7 @@ def answer_query(query: str) -> QueryAnswer:
             time_scope_label=time_scope,
             result_count=len(ranked),
             related_queries=related_queries,
-        )
+        ))
 
     if _listing_query(query):
         labels = _unique_session_titles(relevant_spans, limit=5)
@@ -3216,7 +3259,7 @@ def answer_query(query: str) -> QueryAnswer:
                 time_scope,
                 include_context=not bool(target_domains),
             )
-        return QueryAnswer(
+        return _final(QueryAnswer(
             answer=answer,
             summary=summary,
             details_label="Show top matches",
@@ -3224,7 +3267,7 @@ def answer_query(query: str) -> QueryAnswer:
             time_scope_label=time_scope,
             result_count=len(ranked),
             related_queries=related_queries,
-        )
+        ))
 
     top_spans = relevant_spans[:3]
     if time_scope and len(_meaningful_tokens(query)) <= 4:
@@ -3254,7 +3297,7 @@ def answer_query(query: str) -> QueryAnswer:
                 time_scope,
                 include_context=not bool(target_domains),
             )
-    return QueryAnswer(
+    return _final(QueryAnswer(
         answer=answer,
         summary=summary,
         details_label="Show top matches",
@@ -3262,7 +3305,7 @@ def answer_query(query: str) -> QueryAnswer:
         time_scope_label=time_scope,
         result_count=len(ranked),
         related_queries=related_queries,
-    )
+    ))
 
 
 def dynamic_suggestions(limit: int = 4, time_filter: str | None = None) -> list[SearchSuggestion]:
