@@ -2444,7 +2444,7 @@ class MainWindow(QMainWindow):
         upstream_count = len(session_context.get("upstream") or [])
         downstream_count = len(session_context.get("downstream") or [])
         foundational_count = len(session_context.get("foundational_events") or [])
-        parts = [label]
+        parts = [f"From session: {label}"]
         if event_count:
             parts.append(f"{event_count} events")
         if upstream_count:
@@ -2453,21 +2453,24 @@ class MainWindow(QMainWindow):
             parts.append(f"{downstream_count} after")
         if foundational_count:
             parts.append(f"{foundational_count} foundational")
-        self.session_summary.setText("  |  ".join(parts))
-        for prompt in (
-            "What led me to this?",
-            "What happened after this?",
-            "Show everything connected to this session",
-        ):
+        self.session_summary.setText("  ·  ".join(parts))
+        prompts: list[str] = []
+        if upstream_count:
+            prompts.append("What led me here?")
+        if downstream_count:
+            prompts.append("What happened after?")
+        if not prompts:
+            prompts.append("Show session chain")
+        for prompt in prompts[:2]:
             button = QPushButton(prompt)
             button.setObjectName("RefineButton")
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             button.clicked.connect(lambda _checked=False, value=prompt: self._apply_suggestion(value))
             self.session_action_row.addWidget(button)
         self.session_action_row.addStretch(1)
-        self.session_heading.show()
+        self.session_heading.hide()
         self.session_summary.show()
-        self.session_action_host.show()
+        self.session_action_host.setVisible(bool(prompts))
 
     def _render_related_queries(self, queries: list[str]) -> None:
         while self.refine_row.count():
@@ -2475,11 +2478,30 @@ class MainWindow(QMainWindow):
             widget = item.widget()
             if widget is not None:
                 widget.deleteLater()
-        if not queries:
+        blocked = {
+            "what led me to this?",
+            "what happened after this?",
+            "show everything connected to this session",
+            "what led me here?",
+            "what happened after?",
+            "show session chain",
+        }
+        cleaned: list[str] = []
+        seen: set[str] = set()
+        for query in queries:
+            text = str(query).strip()
+            key = text.casefold()
+            if not text or key in seen or key in blocked:
+                continue
+            cleaned.append(text)
+            seen.add(key)
+            if len(cleaned) >= 3:
+                break
+        if not cleaned:
             self.refine_heading.hide()
             self.refine_host.hide()
             return
-        for query in queries:
+        for query in cleaned:
             button = QPushButton(query)
             button.setObjectName("RefineButton")
             button.setCursor(Qt.CursorShape.PointingHandCursor)

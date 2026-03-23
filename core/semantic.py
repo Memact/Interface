@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import math
+import os
 import re
 from functools import lru_cache
 
@@ -93,6 +94,9 @@ def _transformer_backend():
 def _reranker_backend():
     global _RERANKER_BACKEND_ERROR
     _RERANKER_BACKEND_ERROR = None
+    if os.environ.get("MEMACT_ENABLE_CROSS_ENCODER", "").strip().lower() not in {"1", "true", "yes"}:
+        _RERANKER_BACKEND_ERROR = "Cross-encoder reranker disabled for fast local retrieval."
+        return None
     try:
         from sentence_transformers import CrossEncoder  # type: ignore
     except Exception as exc:

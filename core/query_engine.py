@@ -248,26 +248,6 @@ def _attach_session_context(answer: QueryAnswer, session_context: dict | None) -
     if not label:
         return answer
     answer.session_context = session_context
-    addition = f"Part of a larger session: {label}"
-    if answer.summary:
-        if addition not in answer.summary:
-            answer.summary = f"{answer.summary} {addition}"
-    else:
-        answer.summary = addition
-    prompts = [
-        "What led me to this?",
-        "What happened after this?",
-        "Show everything connected to this session",
-    ]
-    existing = {query.casefold() for query in answer.related_queries}
-    for prompt in prompts:
-        key = prompt.casefold()
-        if key in existing:
-            continue
-        answer.related_queries.append(prompt)
-        existing.add(key)
-        if len(answer.related_queries) >= 6:
-            break
     return answer
 
 
@@ -1110,21 +1090,15 @@ def _content_query_answer(
     source_text = domain or app_name
     summary_parts = [f"Best match: {when_text} in {source_text}."]
     if ui_feature_match:
-        summary_parts.append("This looked more like an app feature or control label than article-style content.")
-    if source_label and top_topic and top_topic.casefold() not in source_label.casefold():
-        summary_parts.append(f"Closest title: {source_label}.")
-    if passage_hint and source_label and passage_hint.casefold() not in source_label.casefold() and best_overlap >= 2:
+        summary_parts.append("This looked more like a feature label than article content.")
+    elif top_topic:
+        summary_parts.append(f"Topic: {top_topic}.")
+    elif related_topics:
+        summary_parts.append(f"Nearby topics: {_join_labels(related_topics[:2])}.")
+    elif passage_hint and best_overlap >= 2:
         summary_parts.append(f"Closest passage: {passage_hint}.")
-    elif passage_hint and not source_label and best_overlap >= 2:
-        summary_parts.append(f"Closest passage: {passage_hint}.")
-    if related_topics and not ui_feature_match:
-        summary_parts.append(f"Related topics nearby: {_join_labels(related_topics[:2])}.")
-    elif top_topic and source_label and top_topic.casefold() not in source_label.casefold():
-        summary_parts.append(f"It looks like this page was about {top_topic}.")
-    elif top_topic and best_phrase_match:
-        summary_parts.append(f"This lines up strongly with {top_topic}.")
     if time_scope:
-        summary_parts.append(f"This came from your local activity {time_scope}.")
+        summary_parts.append(f"Found {time_scope}.")
 
     prompts: list[str] = []
     if top_topic and not ui_feature_match:
@@ -1975,10 +1949,9 @@ def _start_background_warmup() -> None:
         try:
             warmup_spacy()
             embed_text("warmup")
-            rerank_query_text_pairs("warmup", ["warmup memory result"])
             try:
                 if chroma_available():
-                    ensure_seeded(list_recent_events(limit=2000))
+                    ensure_seeded(list_recent_events(limit=800))
             except Exception:
                 pass
             _WARMUP_DONE = True
@@ -2072,18 +2045,49 @@ def _time_window_for_query(query: str) -> tuple[datetime | None, datetime | None
     return start, end, label
 
 
-def _load_candidate_events(query: str, start_at: datetime | None, end_at: datetime | None) -> list[Event]:
+def _load_candidate_events(
+    query: str,
+    start_at: datetime | None,
+    end_at: datetime | None,
+    *,
+    target_domains: set[str] | None = None,
+    app_hint: str | None = None,
+) -> list[Event]:
     start_text = start_at.isoformat(sep=" ", timespec="seconds") if start_at else None
     end_text = end_at.isoformat(sep=" ", timespec="seconds") if end_at else None
-    recent_pool = list_events_between(start_text, end_text, limit=1200)
-    engine_pool = engine_candidates(query, start_at=start_text, end_at=end_text, limit=180)
+    focused_query = bool(target_domains or app_hint or _last_time_query(query) or _duration_query(query) or _yes_no_query(query))
+    recent_limit = 450 if focused_query else 1200
+    lexical_limit = 120 if focused_query else 180
+    fallback_limit = 180 if focused_query else 500
+
+    recent_pool = list_events_between(start_text, end_text, limit=recent_limit)
+    engine_pool = engine_candidates(query, start_at=start_text, end_at=end_text, limit=lexical_limit)
     lexical_pool = first_available([engine_pool]) or lexical_candidates(
         query,
         start_at=start_text,
         end_at=end_text,
-        limit=180,
+        limit=lexical_limit,
     )
-    fallback_pool = list_recent_events(limit=500)
+    fallback_pool = list_recent_events(limit=fallback_limit)
+
+    if target_domains:
+        domain_filtered_recent = [
+            event for event in recent_pool if any(_event_matches_domain(event, domain) for domain in target_domains)
+        ]
+        if domain_filtered_recent:
+            recent_pool = domain_filtered_recent
+        domain_filtered_fallback = [
+            event for event in fallback_pool if any(_event_matches_domain(event, domain) for domain in target_domains)
+        ]
+        if domain_filtered_fallback:
+            fallback_pool = domain_filtered_fallback
+    elif app_hint:
+        app_filtered_recent = [event for event in recent_pool if _event_matches_app(event, app_hint)]
+        if app_filtered_recent:
+            recent_pool = app_filtered_recent
+        app_filtered_fallback = [event for event in fallback_pool if _event_matches_app(event, app_hint)]
+        if app_filtered_fallback:
+            fallback_pool = app_filtered_fallback
 
     combined: list[Event] = []
     seen_ids: set[int] = set()
@@ -2150,7 +2154,8 @@ def _rank_events(
     query_tokens = query_tokens or _meaningful_tokens(query)
     query_embedding = query_embedding or embed_text(query)
     normalized_query = " ".join(tokenize(query))
-    idf = _idf_by_token(events)
+    fast_exact_mode = bool(target_domains or app_hint or len(query_tokens) <= 2)
+    idf = {} if fast_exact_mode else _idf_by_token(events)
     now = datetime.now()
     matches: list[EventMatch] = []
     for event in events:
@@ -2160,8 +2165,12 @@ def _rank_events(
             event_embedding = embed_text(event.searchable_text)
         semantic_score = max(cosine_similarity(query_embedding, event_embedding), 0.0)
         event_tokens = set(tokenize(event.searchable_text))
-        lexical_score = sum(idf.get(token, 1.0) for token in query_tokens if token in event_tokens)
-        fuzzy_score = _fuzzy_overlap(query_tokens, event_tokens)
+        lexical_score = (
+            float(sum(1 for token in query_tokens if token in event_tokens))
+            if fast_exact_mode
+            else sum(idf.get(token, 1.0) for token in query_tokens if token in event_tokens)
+        )
+        fuzzy_score = 0.0 if fast_exact_mode else _fuzzy_overlap(query_tokens, event_tokens)
         searchable_text = " ".join(tokenize(event.searchable_text))
         phrase_match = bool(normalized_query and normalized_query in searchable_text)
         domain = (_domain(event.url) or "").lower()
@@ -3649,7 +3658,13 @@ def answer_query(query: str) -> QueryAnswer:
                 pass
     fallback_events: list[Event] = []
     if not chroma_events or len(chroma_events) < 48:
-        fallback_events = _load_candidate_events(query, start_at, end_at)
+        fallback_events = _load_candidate_events(
+            query,
+            start_at,
+            end_at,
+            target_domains=target_domains,
+            app_hint=app_hint,
+        )
     base_candidates = _merge_event_pools(chroma_events, fallback_events)
     candidates = base_candidates or fallback_events
     if "content_match" in skill_filters:
@@ -3873,7 +3888,13 @@ def answer_query(query: str) -> QueryAnswer:
     contextual_kind, contextual_anchor = _contextual_recall_query(query)
 
     if contextual_kind and contextual_anchor:
-        anchor_candidates = _load_candidate_events(contextual_anchor, start_at, end_at)
+        anchor_candidates = _load_candidate_events(
+            contextual_anchor,
+            start_at,
+            end_at,
+            target_domains=anchor_domains,
+            app_hint=anchor_app_hint,
+        )
         anchor_domains = _extract_domains(contextual_anchor)
         anchor_app_hint = _extract_app_hint(contextual_anchor, anchor_candidates)
         anchor_ranked = _rank_events(
