@@ -5,6 +5,8 @@ import re
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
+from core.content_intel import normalize_capture_text
+
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +54,7 @@ def _read_pdf(path: Path) -> str:
     except Exception:
         logger.exception("Failed to read PDF text from %s", path)
         return ""
-    return "\n".join(parts)
+    return "\n\n".join(parts)
 
 
 def _read_docx(path: Path) -> str:
@@ -86,7 +88,7 @@ def _read_pptx(path: Path) -> str:
     except Exception:
         logger.exception("Failed to read PPTX text from %s", path)
         return ""
-    return "\n".join(chunks)
+    return "\n\n".join(chunks)
 
 
 def _read_text(path: Path) -> str:
@@ -119,7 +121,7 @@ def extract_file_text(path: str | Path | None, *, max_chars: int = 8000) -> str 
     else:
         text = _read_text(file_path)
 
-    normalized = " ".join(str(text or "").split()).strip()
+    normalized = normalize_capture_text(text, preserve_paragraphs=True, max_chars=max_chars)
     if not normalized:
         return None
-    return normalized[:max_chars]
+    return normalized

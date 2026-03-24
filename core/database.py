@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+from core.content_intel import extract_content_profile, normalize_capture_text
 from core.keywords import extract_keyphrases, keyphrases_to_text
 from core.semantic import embed_text
 
@@ -442,15 +443,23 @@ def append_event(
     source: str = "monitor",
 ) -> int:
     timestamp = occurred_at or datetime.now().isoformat(sep=" ", timespec="seconds")
-    normalized_full_text = str(full_text or "").strip() or None
-    keyphrases = extract_keyphrases(normalized_full_text) if normalized_full_text else []
+    normalized_full_text = normalize_capture_text(full_text, preserve_paragraphs=True, max_chars=8000) or None
+    profile = extract_content_profile(
+        normalized_full_text or content_text or window_title,
+        title=window_title,
+        app_name=application,
+        url=url,
+    )
+    keyphrase_source = profile.keyphrase_source or normalized_full_text or str(content_text or "").strip()
+    searchable_full_text = profile.cleaned_text or normalized_full_text
+    keyphrases = extract_keyphrases(keyphrase_source) if keyphrase_source else []
     keyphrases_json = _encode_json_list(keyphrases)
     searchable_text = _compose_searchable_text(
         application=application,
         window_title=window_title,
         url=url,
         content_text=content_text,
-        full_text=normalized_full_text,
+        full_text=searchable_full_text,
         keyphrases=keyphrases,
         tab_titles=tab_titles,
         tab_urls=tab_urls,

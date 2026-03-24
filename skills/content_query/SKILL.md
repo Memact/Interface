@@ -1,13 +1,19 @@
 ---
 name: content_query
 triggers:
+  - "what did i read about"
+  - "what did i read on"
   - "where did i see"
   - "where did i read about"
+  - "what was in that pdf"
+  - "what was in that doc"
+  - "what was in that file"
   - "where did i see that"
   - "did i look at"
   - "did i read"
   - "what was that page about"
   - "what was that message about"
+  - "what was this about"
   - "i remember something about"
   - "i saw something about"
   - "that article"

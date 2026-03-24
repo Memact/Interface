@@ -8,8 +8,10 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from difflib import SequenceMatcher
+from functools import lru_cache
 from urllib.parse import urlparse
 
+from core.content_intel import ContentProfile, extract_content_profile
 from core.database import (
     Event,
     get_event_session,
@@ -122,7 +124,7 @@ def _activity_semantic_scores(event: Event) -> dict[str, float]:
     try:
         event_embedding = json.loads(event.embedding_json)
     except Exception:
-        event_embedding = embed_text(event.searchable_text or "")
+        event_embedding = embed_text(_event_search_corpus(event))
     scores: dict[str, float] = {}
     for name, embedding in _activity_category_embeddings().items():
         scores[name] = cosine_similarity(event_embedding, embedding)
@@ -218,6 +220,45 @@ class GraphEdge:
     target: str
     relation: str
     weight: float
+
+
+@lru_cache(maxsize=4096)
+def _cached_content_profile(
+    event_id: int,
+    window_title: str,
+    content_text: str,
+    full_text: str,
+    application: str,
+    url: str,
+) -> ContentProfile:
+    return extract_content_profile(
+        full_text or content_text or window_title,
+        title=window_title,
+        app_name=application,
+        url=url,
+    )
+
+
+def _content_profile_for_event(event: Event) -> ContentProfile:
+    return _cached_content_profile(
+        int(event.id),
+        str(event.window_title or ""),
+        str(event.content_text or ""),
+        str(event.full_text or ""),
+        str(event.application or ""),
+        str(event.url or ""),
+    )
+
+
+def _event_search_corpus(event: Event) -> str:
+    profile = _content_profile_for_event(event)
+    parts = [
+        str(event.searchable_text or "").strip(),
+        profile.cleaned_text,
+        " ".join(profile.headings[:2]),
+        " ".join(event.keyphrases[:6]),
+    ]
+    return " ".join(part for part in parts if part).strip()
 
 
 def _episodic_graph_session_context(query_embedding: list[float]) -> dict | None:
@@ -387,7 +428,7 @@ def _event_matches_domain(event: Event, domain: str) -> bool:
         return True
     if event_domain.endswith(f".{domain}"):
         return True
-    return domain in event.searchable_text.lower()
+    return domain in _event_search_corpus(event).lower()
 
 
 def _event_label(event: Event) -> str:
@@ -462,7 +503,7 @@ def _semantic_activity_category(event: Event, interaction_types: set[str]) -> st
     try:
         event_embedding = json.loads(event.embedding_json)
     except Exception:
-        event_embedding = embed_text(event.searchable_text)
+        event_embedding = embed_text(_event_search_corpus(event))
     best_name = None
     best_score = -1.0
     second_score = -1.0
@@ -757,6 +798,70 @@ def _reading_style_query(query: str) -> bool:
     )
 
 
+def _content_first_query(
+    query: str,
+    *,
+    query_category: str | None,
+    target_domains: set[str],
+    app_hint: str | None,
+) -> bool:
+    text = query.strip().casefold().rstrip("?")
+    if not text:
+        return False
+    if _duration_query(query) or _last_time_query(query) or _yes_no_query(query) or _listing_query(query):
+        return False
+    if any(
+        text.startswith(prefix)
+        for prefix in (
+            "what led ",
+            "what happened after ",
+            "what was i doing before ",
+            "what did i do after ",
+            "what else was open around ",
+        )
+    ):
+        return False
+    explicit_patterns = (
+        r"^what did i read\b",
+        r"^where did i read\b",
+        r"^what did i see\b",
+        r"^where did i see\b",
+        r"^what did i look at\b",
+        r"^what was (?:that|this)\b",
+        r"^what was in\b",
+        r"^what was .* about\b",
+    )
+    if any(re.match(pattern, text) for pattern in explicit_patterns):
+        return True
+    content_markers = (
+        " about",
+        " article",
+        " page",
+        " pdf",
+        " doc",
+        " docs",
+        " document",
+        " note",
+        " notes",
+        " paper",
+        " post",
+        " thread",
+        " message",
+        " video",
+        " slide",
+        " slides",
+        " presentation",
+        " file",
+    )
+    if text.startswith(("what ", "where ")) and any(marker in f" {text}" for marker in content_markers):
+        return True
+    if query_category in {"reading", "watching"} and text.startswith(("what ", "where ")):
+        return True
+    if (target_domains or app_hint) and text.startswith("what "):
+        return True
+    return False
+
+
 def _topic_matches_context(topic: str, event: Event) -> bool:
     topic_tokens = {token for token in _meaningful_tokens(topic) if len(token) >= 3}
     if not topic_tokens:
@@ -774,12 +879,13 @@ def _topic_matches_context(topic: str, event: Event) -> bool:
 
 
 def _recall_source_text(event: Event) -> str | None:
-    if event.full_text:
-        segments = re.split(r"[.!?]\s+|\n+", event.full_text)
-        for segment in segments:
-            cleaned = re.sub(r"\s+", " ", segment).strip()
-            if len(cleaned) >= 40:
-                return cleaned
+    profile = _content_profile_for_event(event)
+    if profile.passages:
+        return profile.passages[0]
+    if profile.cleaned_text:
+        cleaned = re.sub(r"\s+", " ", profile.cleaned_text).strip()
+        if len(cleaned) >= 40:
+            return cleaned[:320]
     return None
 
 
@@ -792,9 +898,33 @@ def _is_recall_rich_event(event: Event) -> bool:
     return len(_meaningful_tokens(source_text)) >= 8
 
 
+def _span_has_precise_capture(span: ActivitySpan) -> bool:
+    for event in span.events:
+        profile = _content_profile_for_event(event)
+        if profile.passages and len(profile.cleaned_text) >= 80:
+            return True
+    return False
+
+
 def _event_suggestion_topics(event: Event) -> list[str]:
     topics: list[str] = []
     seen: set[str] = set()
+    profile = _content_profile_for_event(event)
+    for heading in profile.headings:
+        normalized = _normalize_suggestion_topic(heading)
+        if not normalized:
+            continue
+        if _looks_like_ui_feature_text(normalized):
+            continue
+        if _topic_matches_context(normalized, event):
+            continue
+        key = normalized.casefold()
+        if key in seen:
+            continue
+        topics.append(normalized)
+        seen.add(key)
+        if len(topics) >= 3:
+            return topics
     for phrase in event.keyphrases:
         normalized = _normalize_suggestion_topic(phrase)
         if not normalized:
@@ -912,14 +1042,17 @@ def _query_topic_hint(query: str, *, max_terms: int = 4) -> str | None:
 
 def _content_event_signal_strength(event: Event) -> float:
     score = 0.0
+    profile = _content_profile_for_event(event)
     if event.keyphrases:
         score += min(len(event.keyphrases), 5) * 0.07
-    if event.full_text:
+    if profile.passages:
         score += 0.24
-        if len(_meaningful_tokens(event.full_text[:1200])) >= 18:
+        if len(_meaningful_tokens(profile.cleaned_text[:1200])) >= 18:
             score += 0.08
     if event.content_text and len(_meaningful_tokens(event.content_text)) >= 6:
         score += 0.08
+    if profile.headings:
+        score += 0.06
     return score
 
 
@@ -1022,7 +1155,9 @@ def _content_source_label_for_span(span: ActivitySpan) -> str | None:
     domain = (_domain(span.url) or "").casefold()
     candidates: list[str] = []
     for event in span.events:
+        profile = _content_profile_for_event(event)
         for value in (
+            *profile.headings[:2],
             (event.window_title or "").strip(),
             (event.content_text or "").strip(),
         ):
@@ -1069,12 +1204,31 @@ def _content_query_answer(
         for topic in _top_content_topics(spans, limit=4)
         if topic.casefold() != (top_topic or "").casefold()
     ]
+    generic_topic_labels = {
+        (domain or "").casefold(),
+        app_name.casefold(),
+        _friendly_app_name(best_event.application).casefold(),
+    }
+    if top_topic and top_topic.casefold() in generic_topic_labels:
+        top_topic = related_topics[0] if related_topics else None
     passage_hint = _condense_source_label(best_passage, max_len=88)
     if passage_hint and _looks_like_ui_feature_text(passage_hint) and source_label:
         passage_hint = None
+    source_label_tokens = set(_meaningful_tokens(source_label or ""))
+    query_label_overlap = sum(1 for token in _meaningful_tokens(query) if token in source_label_tokens)
+    prefer_topic_answer = bool(
+        top_topic
+        and (
+            not source_label
+            or query_label_overlap == 0
+            or _looks_like_ui_feature_text(source_label)
+        )
+    )
 
     if ui_feature_match and passage_hint and domain:
         answer = f"I found that phrase in {domain}: {passage_hint}."
+    elif prefer_topic_answer and domain:
+        answer = f"I found a strong match on {domain} about {top_topic}."
     elif source_label and len(source_label) <= 96 and domain:
         answer = f"I found a strong match on {domain}: {source_label}."
     elif top_topic and domain:
@@ -1092,11 +1246,11 @@ def _content_query_answer(
     if ui_feature_match:
         summary_parts.append("This looked more like a feature label than article content.")
     elif top_topic:
-        summary_parts.append(f"Topic: {top_topic}.")
+        summary_parts.append(f"Main idea: {top_topic}.")
     elif related_topics:
-        summary_parts.append(f"Nearby topics: {_join_labels(related_topics[:2])}.")
+        summary_parts.append(f"Related ideas: {_join_labels(related_topics[:2])}.")
     elif passage_hint and best_overlap >= 2:
-        summary_parts.append(f"Closest passage: {passage_hint}.")
+        summary_parts.append(f"Closest content: {passage_hint}.")
     if time_scope:
         summary_parts.append(f"Found {time_scope}.")
 
@@ -1127,7 +1281,7 @@ def _event_embedding_vector(event: Event) -> list[float]:
     try:
         raw = json.loads(event.embedding_json)
     except Exception:
-        raw = embed_text(event.searchable_text or "")
+        raw = embed_text(_event_search_corpus(event))
     vector: list[float] = []
     for value in raw:
         try:
@@ -1658,7 +1812,7 @@ def _filter_content_matches(events: list[Event], query: str) -> list[Event]:
     required = 1 if len(tokens) <= 2 else 2
     filtered: list[Event] = []
     for event in events:
-        searchable = (event.searchable_text or "").casefold()
+        searchable = _event_search_corpus(event).casefold()
         matches = sum(1 for token in tokens if token in searchable)
         if matches >= required:
             filtered.append(event)
@@ -1668,6 +1822,7 @@ def _filter_content_matches(events: list[Event], query: str) -> list[Event]:
 def _candidate_passages_for_event(event: Event, query_tokens: list[str]) -> list[str]:
     passages: list[str] = []
     seen: set[str] = set()
+    profile = _content_profile_for_event(event)
 
     def add_passage(value: str | None) -> None:
         text = re.sub(r"\s+", " ", str(value or "")).strip()
@@ -1681,12 +1836,16 @@ def _candidate_passages_for_event(event: Event, query_tokens: list[str]) -> list
         passages.append(text)
         seen.add(key)
 
+    for heading in profile.headings:
+        add_passage(heading)
     add_passage(event.window_title)
     add_passage(event.content_text)
     if event.keyphrases:
         add_passage(". ".join(event.keyphrases[:8]))
+    for passage in profile.passages[:6]:
+        add_passage(passage)
 
-    if event.full_text:
+    if event.full_text and not profile.passages:
         segments = re.split(r"[.!?]\s+|\n+", event.full_text)
         scored_segments: list[tuple[int, int, str]] = []
         for index, segment in enumerate(segments[:32]):
@@ -1737,7 +1896,7 @@ def _best_passage_for_event(event: Event, query: str) -> tuple[str, float, int, 
     normalized_query = " ".join(query_tokens)
     passages = _candidate_passages_for_event(event, query_tokens)
     if not passages:
-        fallback = re.sub(r"\s+", " ", event.searchable_text or "").strip()
+        fallback = re.sub(r"\s+", " ", _event_search_corpus(event)).strip()
         passages = [fallback[:320]] if fallback else [_friendly_app_name(event.application)]
 
     best_text = passages[0]
@@ -1796,7 +1955,7 @@ def _apply_pairwise_reranker(
             new_score *= 0.65
         if phrase_match and match.lexical_score >= 1.0:
             new_score += 0.08
-        searchable = (match.event.searchable_text or "").casefold()
+        searchable = _event_search_corpus(match.event).casefold()
         if query_tokens and all(token not in searchable for token in query_tokens[: min(2, len(query_tokens))]):
             new_score *= 0.8
         reranked_matches.append(
@@ -2115,7 +2274,7 @@ def _merge_event_pools(*pools: list[Event]) -> list[Event]:
 def _idf_by_token(events: list[Event]) -> dict[str, float]:
     document_frequency: Counter[str] = Counter()
     for event in events:
-        for token in set(tokenize(event.searchable_text)):
+        for token in set(tokenize(_event_search_corpus(event))):
             document_frequency[token] += 1
     total = max(len(events), 1)
     return {
@@ -2162,16 +2321,17 @@ def _rank_events(
         try:
             event_embedding = json.loads(event.embedding_json)
         except Exception:
-            event_embedding = embed_text(event.searchable_text)
+            event_embedding = embed_text(_event_search_corpus(event))
         semantic_score = max(cosine_similarity(query_embedding, event_embedding), 0.0)
-        event_tokens = set(tokenize(event.searchable_text))
+        searchable_corpus = _event_search_corpus(event)
+        event_tokens = set(tokenize(searchable_corpus))
         lexical_score = (
             float(sum(1 for token in query_tokens if token in event_tokens))
             if fast_exact_mode
             else sum(idf.get(token, 1.0) for token in query_tokens if token in event_tokens)
         )
         fuzzy_score = 0.0 if fast_exact_mode else _fuzzy_overlap(query_tokens, event_tokens)
-        searchable_text = " ".join(tokenize(event.searchable_text))
+        searchable_text = " ".join(tokenize(searchable_corpus))
         phrase_match = bool(normalized_query and normalized_query in searchable_text)
         domain = (_domain(event.url) or "").lower()
         app_name = _friendly_app_name(event.application).lower()
@@ -2257,6 +2417,9 @@ def _best_event_for_span(events: list[Event], score_by_id: dict[int, float]) -> 
 
 
 def _snippet_from_event(event: Event) -> str:
+    profile = _content_profile_for_event(event)
+    if profile.snippet:
+        return profile.snippet
     candidates = [
         (event.full_text or "").strip(),
         (event.content_text or "").strip(),
@@ -3546,6 +3709,12 @@ def _build_related_queries(
         target_label = sorted(target_domains)[0]
     elif app_hint:
         target_label = app_hint
+    if any(_span_has_precise_capture(span) for span in spans[:3]):
+        top_topic = _top_content_topics(spans, limit=1)
+        if top_topic:
+            prompts.append(f"What else did I read about {top_topic[0]}?")
+        if target_label:
+            prompts.append(f"What did I read on {target_label}?")
     for span in spans[:3]:
         label = _display_label(span)
         app = _friendly_app_name(span.application)
@@ -3799,13 +3968,26 @@ def answer_query(query: str) -> QueryAnswer:
         if category_spans:
             relevant_spans = category_spans
 
-    if active_skill is not None and active_skill.name == "content_query":
+    content_first = bool(active_skill is not None and active_skill.name == "content_query")
+    if not content_first and _content_first_query(
+        query,
+        query_category=query_category,
+        target_domains=target_domains,
+        app_hint=app_hint,
+    ):
+        if any(_span_has_precise_capture(span) for span in relevant_spans[:6]):
+            content_first = True
+
+    if content_first:
+        precise_spans = [span for span in relevant_spans if _span_has_precise_capture(span)]
+        if precise_spans:
+            relevant_spans = precise_spans
         relevant_spans = _rerank_spans_for_content_query(relevant_spans, query)
 
     if skill_limit:
         relevant_spans = relevant_spans[:skill_limit]
 
-    if active_skill is not None and active_skill.name == "content_query":
+    if content_first:
         content_answer, content_summary, content_related = _content_query_answer(
             relevant_spans,
             query=query,

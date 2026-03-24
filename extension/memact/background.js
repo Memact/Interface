@@ -66,6 +66,24 @@ function normalizeText(value, maxLen) {
   return text.length > maxLen ? `${text.slice(0, maxLen - 3)}...` : text;
 }
 
+function normalizeRichText(value, maxLen) {
+  const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const blocks = text
+    .split(/\n{2,}/)
+    .map((block) =>
+      block
+        .split(/\n+/)
+        .map((line) => line.replace(/[ \t]+/g, " ").trim())
+        .filter(Boolean)
+        .join("\n")
+    )
+    .filter(Boolean);
+  const normalized = blocks.join("\n\n").trim();
+  if (!normalized) return "";
+  if (!maxLen) return normalized;
+  return normalized.length > maxLen ? normalized.slice(0, maxLen) : normalized;
+}
+
 function truncateText(value, maxLen) {
   const text = String(value || "");
   if (!text || !maxLen) {
@@ -122,6 +140,21 @@ async function captureActiveTabContext(tab) {
         const normalizeVisibleText = (value) =>
           String(value || "")
             .replace(/\s+/g, " ")
+            .trim();
+        const normalizeStructuredText = (value) =>
+          String(value || "")
+            .replace(/\r\n/g, "\n")
+            .replace(/\r/g, "\n")
+            .split(/\n{2,}/)
+            .map((block) =>
+              block
+                .split(/\n+/)
+                .map((line) => line.replace(/[ \t]+/g, " ").trim())
+                .filter(Boolean)
+                .join("\n")
+            )
+            .filter(Boolean)
+            .join("\n\n")
             .trim();
         const hostname = location.hostname.replace(/^www\./, "");
         const isVisible = (node) => {
@@ -195,7 +228,7 @@ async function captureActiveTabContext(tab) {
           if (!node || !isVisible(node) || isNoiseNode(node)) {
             return "";
           }
-          return normalizeVisibleText(node.innerText || node.textContent || "");
+          return normalizeStructuredText(node.innerText || node.textContent || "");
         };
         const siteSelectors = [];
         if (hostname.includes("github.com")) {
@@ -253,7 +286,7 @@ async function captureActiveTabContext(tab) {
           return candidates[0] || "";
         };
         const visibleBodyText = () => {
-          const text = normalizeVisibleText(document.body?.innerText || "");
+          const text = normalizeStructuredText(document.body?.innerText || "");
           if (text.length < 200) {
             return "";
           }
@@ -266,7 +299,15 @@ async function captureActiveTabContext(tab) {
           const parseArticle = () => {
             try {
               const articleData = new Readability(document.cloneNode(true)).parse();
-              return normalizeVisibleText(articleData?.textContent || "");
+              if (articleData?.content) {
+                const container = document.createElement("div");
+                container.innerHTML = articleData.content;
+                const htmlText = normalizeStructuredText(container.innerText || container.textContent || "");
+                if (htmlText) {
+                  return htmlText;
+                }
+              }
+              return normalizeStructuredText(articleData?.textContent || "");
             } catch (error) {
               return "";
             }
@@ -304,9 +345,9 @@ async function captureActiveTabContext(tab) {
             fullText = fallbackText.slice(0, fullTextMaxLen);
           }
         }
-        fullText = normalizeVisibleText(fullText).slice(0, fullTextMaxLen);
+        fullText = normalizeStructuredText(fullText).slice(0, fullTextMaxLen);
         const snippetSource = fullText || pageContent || visibleBodyText() || "";
-        const snippet = snippetSource.slice(0, snippetMaxLen);
+        const snippet = normalizeVisibleText(snippetSource).slice(0, snippetMaxLen);
         const now = Date.now();
         const activeEl = document.activeElement;
         const activeTag = activeEl?.tagName || "";
@@ -342,7 +383,7 @@ async function captureActiveTabContext(tab) {
       h1: normalizeText(result.h1, 120),
       selection: normalizeText(result.selection, 200),
       snippet: normalizeText(result.snippet, SNIPPET_MAX_LEN),
-      fullText: truncateText(normalizeText(result.fullText), FULL_TEXT_MAX_LEN),
+      fullText: normalizeRichText(result.fullText, FULL_TEXT_MAX_LEN),
       activeTag: normalizeText(result.activeTag, 40),
       activeType: normalizeText(result.activeType, 40),
       typingActive: Boolean(result.typingActive),
