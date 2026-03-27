@@ -1,30 +1,68 @@
 {
   "manifest_version": 3,
   "name": "Memact",
-  "version": "0.7.0",
-  "description": "Capture browser tab context for Memact.",
+  "version": "1.0.0",
+  "description": "Local browser memory search.",
   "icons": {
     "16": "icons/memact_16.png",
     "32": "icons/memact_32.png",
     "48": "icons/memact_48.png",
     "128": "icons/memact_128.png"
   },
-  "permissions": ["tabs", "windows", "scripting"],
+  "permissions": ["tabs", "windows", "scripting", "storage", "unlimitedStorage", "webNavigation"],
   "host_permissions": [
     "<all_urls>",
-    "http://127.0.0.1:38453/*",
-    "http://localhost:38453/*"
+    "http://localhost/*",
+    "https://localhost/*",
+    "http://127.0.0.1/*",
+    "https://127.0.0.1/*",
+    "http://0.0.0.0/*",
+    "https://0.0.0.0/*",
+    "https://memact.com/*",
+    "https://www.memact.com/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "action": {
-    "default_title": "Memact",
+    "default_title": "Memact | Query the Past.",
     "default_icon": {
       "16": "icons/memact_16.png",
       "32": "icons/memact_32.png",
       "48": "icons/memact_48.png",
       "128": "icons/memact_128.png"
     }
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost/*",
+        "https://localhost/*",
+        "http://127.0.0.1/*",
+        "https://127.0.0.1/*",
+        "http://0.0.0.0/*",
+        "https://0.0.0.0/*",
+        "https://memact.com/*",
+        "https://www.memact.com/*"
+      ],
+      "js": ["bridge.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["Readability.js", "embed-worker.js", "vendor/transformers.min.js"],
+      "matches": [
+        "http://localhost/*",
+        "https://localhost/*",
+        "http://127.0.0.1/*",
+        "https://127.0.0.1/*",
+        "http://0.0.0.0/*",
+        "https://0.0.0.0/*",
+        "https://memact.com/*",
+        "https://www.memact.com/*"
+      ]
+    }
+  ]
 }
