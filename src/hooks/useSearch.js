@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { polishAnswerSummary } from '../lib/localLanguageModel'
+import { structureAnswerMeta } from '../lib/localLanguageModel'
 
 const RECENT_SEARCHES_KEY = 'memact.recent-searches'
 const MAX_RECENTS = 10
@@ -105,6 +105,13 @@ function formatMetaValue(label, value) {
   return normalizedValue
 }
 
+function toTitleCase(value) {
+  return String(value || '')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+}
+
 function normalizeResult(item, index = 0) {
   const url = normalize(item?.url)
   const domain = formatDomain(url, normalize(item?.domain || item?.application))
@@ -178,6 +185,28 @@ function normalizeResult(item, index = 0) {
     searchResults: Array.isArray(item?.search_results || item?.searchResults)
       ? (item?.search_results || item?.searchResults).map((value) => normalize(value)).filter(Boolean)
       : [],
+    graphSummary: normalize(item?.graph_summary || item?.graphSummary),
+    connectedEvents: Array.isArray(item?.connected_events || item?.connectedEvents)
+      ? (item?.connected_events || item?.connectedEvents)
+          .map((entry) => ({
+            id: normalize(entry?.event_id || entry?.id),
+            title: normalize(entry?.title),
+            url: normalize(entry?.url),
+            domain: normalize(entry?.domain),
+            application: normalize(entry?.application),
+            occurred_at: normalize(entry?.occurred_at),
+            pageType: normalize(entry?.page_type || entry?.pageType),
+            relationshipType: normalize(entry?.relationship_type || entry?.relationshipType),
+            relationshipLabel:
+              normalize(entry?.relationship_label || entry?.relationshipLabel) ||
+              normalize(entry?.relationship_type || entry?.relationshipType),
+            relationshipScore: Number(entry?.relationship_score ?? entry?.relationshipScore ?? 0),
+            relationshipReason:
+              normalize(entry?.relationship_reason || entry?.relationshipReason),
+            direction: normalize(entry?.direction),
+          }))
+          .filter((entry) => entry.title)
+      : [],
     raw: item || {},
   }
 }
@@ -195,6 +224,93 @@ function normalizeSuggestion(item, index = 0) {
     subtitle: normalize(item?.subtitle) || 'Activity captured locally on this device.',
     completion,
   }
+}
+
+function pushSuggestionItem(items, seen, entry) {
+  const normalized = normalizeSuggestion(entry, items.length)
+  if (!normalized) {
+    return
+  }
+
+  const key = normalized.completion.toLowerCase()
+  if (seen.has(key)) {
+    return
+  }
+
+  seen.add(key)
+  items.push(normalized)
+}
+
+function buildSearchDrivenSuggestions(query, answerMeta, results, limit = SUGGESTION_LIMIT) {
+  const items = []
+  const seen = new Set()
+  const normalizedQuery = normalize(query)
+  const primary = results?.[0]
+
+  for (const value of answerMeta?.relatedQueries || []) {
+    pushSuggestionItem(items, seen, {
+      id: `related-${value}`,
+      category: 'Related query',
+      title: value,
+      subtitle: primary?.title
+        ? `Based on ${primary.title}`
+        : 'Based on strong local matches.',
+      completion: value,
+    })
+  }
+
+  for (const value of answerMeta?.sessionPrompts || []) {
+    pushSuggestionItem(items, seen, {
+      id: `session-${value}`,
+      category: 'Connected activity',
+      title: value,
+      subtitle: primary?.graphSummary || 'Connected local activity.',
+      completion: value,
+    })
+  }
+
+  if (primary?.domain) {
+    pushSuggestionItem(items, seen, {
+      id: `domain-${primary.domain}`,
+      category: 'Matched site',
+      title: `Show activity from ${primary.domain}`,
+      subtitle: primary.title || 'Related captured activity.',
+      completion: `Show activity from ${primary.domain}`,
+    })
+  }
+
+  if (primary?.application) {
+    const app = toTitleCase(primary.application)
+    pushSuggestionItem(items, seen, {
+      id: `app-${primary.application}`,
+      category: 'Matched app',
+      title: `What was I doing in ${app}?`,
+      subtitle: primary.domain || primary.title || 'Related captured activity.',
+      completion: `What was I doing in ${app}?`,
+    })
+  }
+
+  if (primary?.contextSubject && primary.contextSubject.toLowerCase() !== normalizedQuery.toLowerCase()) {
+    pushSuggestionItem(items, seen, {
+      id: `subject-${primary.contextSubject}`,
+      category: 'Matched topic',
+      title: `What did I read about "${primary.contextSubject}"?`,
+      subtitle: primary.pageTypeLabel || primary.domain || 'Related captured activity.',
+      completion: `What did I read about "${primary.contextSubject}"?`,
+    })
+  }
+
+  if (primary?.title && primary.title.toLowerCase() !== normalizedQuery.toLowerCase()) {
+    pushSuggestionItem(items, seen, {
+      id: `title-${primary.title}`,
+      category: 'Matched page',
+      title: `Where did I see "${primary.title}"?`,
+      subtitle: primary.domain || primary.pageTypeLabel || 'Related captured activity.',
+      completion: `Where did I see "${primary.title}"?`,
+    })
+  }
+
+  return items.slice(0, limit)
 }
 
 function suggestionMatches(item, query) {
@@ -329,31 +445,72 @@ export function useSearch(extension, activeTimeFilter = null) {
     suggestionRequestRef.current = requestId
 
     const timer = window.setTimeout(async () => {
-      const response = await extension.getSuggestions(query, activeTimeFilter, SUGGESTION_LIMIT)
+      const tasks = [
+        Promise.resolve(
+          extension.getSuggestions(query, activeTimeFilter, SUGGESTION_LIMIT)
+        ).catch(() => null),
+      ]
+
+      if (normalizedQuery.length >= 2 && typeof extension.search === 'function') {
+        tasks.push(Promise.resolve(extension.search(normalizedQuery, 8)).catch(() => null))
+      }
+
+      const [suggestionResponse, searchResponse] = await Promise.all(tasks)
       if (cancelled || suggestionRequestRef.current !== requestId) {
         return
       }
 
-      const items = Array.isArray(response)
-        ? response
-        : Array.isArray(response?.results)
-          ? response.results
+      const rawSuggestionItems = Array.isArray(suggestionResponse)
+        ? suggestionResponse
+        : Array.isArray(suggestionResponse?.results)
+          ? suggestionResponse.results
           : []
+      const normalizedItems = rawSuggestionItems.map(normalizeSuggestion).filter(Boolean)
 
-      const normalizedItems = items.map(normalizeSuggestion).filter(Boolean)
-      suggestionCacheRef.current.set(cacheKey, normalizedItems)
+      let searchDrivenItems = []
+      if (searchResponse && !searchResponse.error) {
+        const resultItems = Array.isArray(searchResponse?.results)
+          ? searchResponse.results.map(normalizeResult)
+          : Array.isArray(searchResponse)
+            ? searchResponse.map(normalizeResult)
+            : []
+        const answer = normalizeAnswerMeta(searchResponse?.answer)
+        searchDrivenItems = buildSearchDrivenSuggestions(
+          normalizedQuery,
+          answer,
+          resultItems,
+          SUGGESTION_LIMIT
+        )
 
-      if (!normalizedQuery) {
-        suggestionCacheRef.current.set(broadKey, normalizedItems)
-        broadSuggestionsRef.current = normalizedItems
-      } else if (normalizedItems.length > broadSuggestionsRef.current.length) {
-        broadSuggestionsRef.current = normalizedItems
+        if (resultItems.length || answer) {
+          resultCacheRef.current.set(cacheKey, {
+            results: resultItems,
+            answerMeta: answer,
+          })
+        }
       }
 
-      setSuggestions(
-        normalizedQuery ? filterSuggestions(normalizedItems, normalizedQuery) : normalizedItems
-      )
-    }, 0)
+      const mergedItems = []
+      const seen = new Set()
+      for (const item of [...searchDrivenItems, ...normalizedItems]) {
+        pushSuggestionItem(mergedItems, seen, item)
+      }
+
+      const finalItems = normalizedQuery
+        ? filterSuggestions(mergedItems, normalizedQuery)
+        : mergedItems.slice(0, SUGGESTION_LIMIT)
+
+      suggestionCacheRef.current.set(cacheKey, finalItems)
+
+      if (!normalizedQuery) {
+        suggestionCacheRef.current.set(broadKey, finalItems)
+        broadSuggestionsRef.current = finalItems
+      } else if (finalItems.length > broadSuggestionsRef.current.length) {
+        broadSuggestionsRef.current = finalItems
+      }
+
+      setSuggestions(finalItems)
+    }, normalizedQuery.length >= 2 ? 70 : 0)
 
     return () => {
       cancelled = true
@@ -443,15 +600,15 @@ export function useSearch(extension, activeTimeFilter = null) {
         setAnswerMeta(normalizedAnswerMeta)
         setResults(normalizedResults)
 
-        if (normalizedAnswerMeta?.summary) {
-          void polishAnswerSummary({
+        if (normalizedAnswerMeta) {
+          void structureAnswerMeta({
             query: normalized,
             answerMeta: normalizedAnswerMeta,
             results: normalizedResults,
             environment: extension?.environment,
-          }).then((polished) => {
+          }).then((structured) => {
             if (
-              !polished?.applied ||
+              !structured ||
               latestSearchRef.current !== searchId
             ) {
               return
@@ -464,9 +621,12 @@ export function useSearch(extension, activeTimeFilter = null) {
 
               return {
                 ...current,
-                summary: polished.summary,
-                polishedByLocalModel: true,
-                localModel: polished.model,
+                overview: structured.overview || current.overview,
+                answer: structured.answer || current.answer,
+                summary: structured.summary || current.summary,
+                polishedByLocalModel: Boolean(structured.applied),
+                localModel: structured.model,
+                localModelDevice: structured.device,
               }
             })
           })

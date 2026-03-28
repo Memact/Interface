@@ -173,10 +173,14 @@ export async function classifyLocalPage(profile, { embedText, cosineSimilarity }
   const [label, bestScore] = ranked[0];
   const secondScore = ranked[1]?.[1] || 0;
   const confidence = Math.max(0, bestScore - secondScore);
+  const isQuerySearchPage = Boolean(query) && (
+    normalizeText(profile?.pageType).toLowerCase() === "search" ||
+    SEARCH_ENGINE_DOMAINS.has(domain)
+  );
   const shouldSkip =
     label === "shell" &&
     confidence >= 0.08 &&
-    (!query || SEARCH_ENGINE_DOMAINS.has(domain));
+    !isQuerySearchPage;
 
   return {
     qualityLabel: label,

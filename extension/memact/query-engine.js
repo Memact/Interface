@@ -10,6 +10,9 @@ const SESSION_MAX_GAP_MS = 45 * 60 * 1000;
 const SESSION_SEMANTIC_THRESHOLD = 0.18;
 const CHAIN_WINDOW_MS = 45 * 60 * 1000;
 const CHAIN_THRESHOLD = 0.22;
+const EVENT_GRAPH_WINDOW_MS = 45 * 60 * 1000;
+const EVENT_GRAPH_THRESHOLD = 0.34;
+const EVENT_GRAPH_MAX_NEIGHBORS = 6;
 const TOP_KEYPHRASES = 6;
 
 const STOPWORDS = new Set([
@@ -246,6 +249,24 @@ function shortLabel(value, maxLength = 48) {
     return text;
   }
   return `${text.slice(0, maxLength - 1).trim()}...`;
+}
+
+function overlapRatio(left, right) {
+  if (!left?.length || !right?.length) {
+    return 0;
+  }
+  const leftSet = new Set(left.map((value) => normalizeText(value).toLowerCase()).filter(Boolean));
+  const rightSet = new Set(right.map((value) => normalizeText(value).toLowerCase()).filter(Boolean));
+  if (!leftSet.size || !rightSet.size) {
+    return 0;
+  }
+  let hits = 0;
+  for (const value of leftSet) {
+    if (rightSet.has(value)) {
+      hits += 1;
+    }
+  }
+  return hits / Math.max(1, Math.min(leftSet.size, rightSet.size));
 }
 
 function quoteLabel(value) {
@@ -1032,6 +1053,267 @@ function buildSessionGraph(sessions, cosineSimilarity) {
   return byId;
 }
 
+function eventGraphLabel(event) {
+  return shortLabel(
+    event.context_subject ||
+      event.title ||
+      event.domain ||
+      event.application ||
+      "Related activity",
+    84
+  );
+}
+
+function relationshipTypeLabel(type) {
+  return toTitleCase(String(type || "").replace(/_/g, " "));
+}
+
+function lowerSet(values) {
+  return new Set(
+    (values || [])
+      .map((value) => normalizeText(value, 120).toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+function buildRelationshipReasonSummary(reasons) {
+  return normalizeText(reasons.join(" - "), 220);
+}
+
+function classifyEventRelationship(source, target, semanticScore, gapMs) {
+  const sameSession = Boolean(source.session_id && source.session_id === target.session_id);
+  const sameDomain = Boolean(source.domain && target.domain && source.domain === target.domain);
+  const sameApp = Boolean(
+    source.application &&
+      target.application &&
+      source.application.toLowerCase() === target.application.toLowerCase()
+  );
+  const entityOverlap = overlapRatio(source.context_entities, target.context_entities);
+  const topicOverlap = Math.max(
+    overlapRatio(source.context_topics, target.context_topics),
+    overlapRatio(source.keyphrases, target.keyphrases)
+  );
+  const temporalScore = Math.max(0, 1 - gapMs / EVENT_GRAPH_WINDOW_MS);
+  const appDomainScore = sameDomain ? 1 : sameApp ? 0.72 : 0;
+
+  let type = "task_continuation";
+  let typedBonus = 0;
+  const reasons = [];
+
+  if (sameSession) {
+    reasons.push("same session");
+  }
+  if (gapMs <= 8 * 60 * 1000) {
+    reasons.push("close in time");
+  }
+  if (sameDomain) {
+    reasons.push(`same site ${source.domain}`);
+  }
+  if (sameApp) {
+    reasons.push(`same app ${toTitleCase(source.application)}`);
+  }
+  if (entityOverlap >= 0.5) {
+    reasons.push("same entities");
+  }
+  if (topicOverlap >= 0.45) {
+    reasons.push("same topics");
+  }
+
+  const sourceApp = (source.application || "").toLowerCase();
+  const targetApp = (target.application || "").toLowerCase();
+  const sourcePageType = normalizeText(source.page_type).toLowerCase();
+
+  if (
+    sourcePageType === "search" &&
+    !isSearchResultsPage(target) &&
+    gapMs <= 20 * 60 * 1000 &&
+    (sameDomain || entityOverlap > 0 || topicOverlap > 0 || semanticScore >= 0.22)
+  ) {
+    type = "search_to_open";
+    typedBonus = 0.18;
+    reasons.push("search led to an opened page");
+  } else if (
+    ["docs", "qa"].includes(sourcePageType) &&
+    (TERMINAL_APPS.has(targetApp) || EDITOR_APPS.has(targetApp)) &&
+    gapMs <= 25 * 60 * 1000
+  ) {
+    type = "docs_to_command";
+    typedBonus = 0.2;
+    reasons.push("documentation led to action");
+  } else if (
+    ["article", "discussion", "qa", "docs"].includes(sourcePageType) &&
+    (TERMINAL_APPS.has(targetApp) || EDITOR_APPS.has(targetApp)) &&
+    gapMs <= 25 * 60 * 1000
+  ) {
+    type = "read_to_action";
+    typedBonus = 0.18;
+    reasons.push("reading led to action");
+  } else if (
+    TERMINAL_APPS.has(sourceApp) &&
+    TERMINAL_APPS.has(targetApp) &&
+    gapMs <= 12 * 60 * 1000
+  ) {
+    type = "task_continuation";
+    typedBonus = 0.16;
+    reasons.push("terminal task continued");
+  } else if (sameSession && (sameApp || sameDomain || entityOverlap > 0 || topicOverlap > 0)) {
+    type = "task_continuation";
+    typedBonus = 0.14;
+  } else if (entityOverlap >= 0.55) {
+    type = "same_entity";
+    typedBonus = 0.08;
+  } else if (topicOverlap >= 0.5) {
+    type = "same_topic";
+    typedBonus = 0.07;
+  } else if (sameDomain) {
+    type = "same_domain";
+    typedBonus = 0.06;
+  } else if (sameApp) {
+    type = "same_app";
+    typedBonus = 0.05;
+  } else if (gapMs <= 6 * 60 * 1000) {
+    type = "temporal_near";
+    typedBonus = 0.04;
+  }
+
+  const score = Math.min(
+    1,
+    0.22 * temporalScore +
+      0.24 * (sameSession ? 1 : 0) +
+      0.16 * entityOverlap +
+      0.14 * topicOverlap +
+      0.12 * appDomainScore +
+      0.12 * Math.max(0, semanticScore) +
+      typedBonus
+  );
+
+  if (
+    !(
+      sameSession ||
+      sameDomain ||
+      sameApp ||
+      entityOverlap > 0 ||
+      topicOverlap > 0 ||
+      semanticScore >= 0.26 ||
+      typedBonus > 0
+    )
+  ) {
+    return null;
+  }
+
+  if (score < EVENT_GRAPH_THRESHOLD) {
+    return null;
+  }
+
+  return {
+    type,
+    score,
+    reasons,
+    reasonSummary: buildRelationshipReasonSummary(reasons),
+  };
+}
+
+function pushSparseGraphEdge(list, edge) {
+  list.push(edge);
+  list.sort((left, right) => right.relationship_score - left.relationship_score);
+  if (list.length > EVENT_GRAPH_MAX_NEIGHBORS) {
+    list.length = EVENT_GRAPH_MAX_NEIGHBORS;
+  }
+}
+
+function buildConnectedEdges(incoming, outgoing) {
+  const bestByEventId = new Map();
+  for (const edge of [...incoming, ...outgoing]) {
+    const existing = bestByEventId.get(edge.event_id);
+    if (!existing || edge.relationship_score > existing.relationship_score) {
+      bestByEventId.set(edge.event_id, edge);
+    }
+  }
+  return [...bestByEventId.values()]
+    .sort((left, right) => right.relationship_score - left.relationship_score)
+    .slice(0, EVENT_GRAPH_MAX_NEIGHBORS);
+}
+
+function buildEpisodicGraph(events, cosineSimilarity) {
+  const ordered = [...events].sort((left, right) => left.timestamp - right.timestamp || left.id - right.id);
+  const graphByEventId = new Map(
+    ordered.map((event) => [
+      event.id,
+      {
+        event_id: event.id,
+        incoming: [],
+        outgoing: [],
+        connected: [],
+      },
+    ])
+  );
+
+  for (let index = 0; index < ordered.length; index += 1) {
+    const source = ordered[index];
+    for (let targetIndex = index + 1; targetIndex < ordered.length; targetIndex += 1) {
+      const target = ordered[targetIndex];
+      const gapMs = target.timestamp - source.timestamp;
+
+      if (gapMs < 0) {
+        continue;
+      }
+      if (gapMs > EVENT_GRAPH_WINDOW_MS && source.session_id !== target.session_id) {
+        break;
+      }
+
+      const semanticScore =
+        source.embedding.length && target.embedding.length
+          ? cosineSimilarity(source.embedding, target.embedding)
+          : 0;
+      const relationship = classifyEventRelationship(source, target, semanticScore, gapMs);
+      if (!relationship) {
+        continue;
+      }
+
+      const outgoingEdge = {
+        event_id: target.id,
+        title: eventGraphLabel(target),
+        url: target.url || "",
+        domain: target.domain || "",
+        application: target.application || "",
+        occurred_at: target.occurred_at || "",
+        page_type: target.page_type || "",
+        relationship_type: relationship.type,
+        relationship_label: relationshipTypeLabel(relationship.type),
+        relationship_score: relationship.score,
+        relationship_reason: relationship.reasonSummary,
+        relationship_reasons: relationship.reasons,
+        direction: "after",
+      };
+
+      const incomingEdge = {
+        event_id: source.id,
+        title: eventGraphLabel(source),
+        url: source.url || "",
+        domain: source.domain || "",
+        application: source.application || "",
+        occurred_at: source.occurred_at || "",
+        page_type: source.page_type || "",
+        relationship_type: relationship.type,
+        relationship_label: relationshipTypeLabel(relationship.type),
+        relationship_score: relationship.score,
+        relationship_reason: relationship.reasonSummary,
+        relationship_reasons: relationship.reasons,
+        direction: "before",
+      };
+
+      pushSparseGraphEdge(graphByEventId.get(source.id).outgoing, outgoingEdge);
+      pushSparseGraphEdge(graphByEventId.get(target.id).incoming, incomingEdge);
+    }
+  }
+
+  for (const node of graphByEventId.values()) {
+    node.connected = buildConnectedEdges(node.incoming, node.outgoing);
+  }
+
+  return graphByEventId;
+}
+
 const MONTH_LOOKUP = new Map([
   ["january", "01"],
   ["jan", "01"],
@@ -1461,6 +1743,46 @@ function rerankWithSessionContext(events) {
     .sort((left, right) => right.score - left.score || right.timestamp - left.timestamp);
 }
 
+function rerankWithEpisodicGraphContext(events, graphByEventId) {
+  const eventScoreById = new Map(events.map((event) => [event.id, event.score]));
+
+  return events
+    .map((event) => {
+      const graphNode = graphByEventId.get(event.id);
+      if (!graphNode?.connected?.length) {
+        return event;
+      }
+
+      const supportingEdges = graphNode.connected
+        .filter((edge) => eventScoreById.has(edge.event_id))
+        .sort((left, right) => right.relationship_score - left.relationship_score)
+        .slice(0, 3);
+
+      if (!supportingEdges.length) {
+        return event;
+      }
+
+      const graphBonus = Math.min(
+        0.16,
+        supportingEdges.reduce((total, edge) => {
+          const neighborScore = Math.max(0, eventScoreById.get(edge.event_id) || 0);
+          return (
+            total +
+            edge.relationship_score * 0.05 +
+            Math.max(0, neighborScore - 0.18) * 0.04
+          );
+        }, 0)
+      );
+
+      return {
+        ...event,
+        episodic_graph_bonus: graphBonus,
+        score: event.score + graphBonus,
+      };
+    })
+    .sort((left, right) => right.score - left.score || right.timestamp - left.timestamp);
+}
+
 async function rerankWithLocalJudge(events, embedText, cosineSimilarity, limit = 48) {
   const leading = events.slice(0, limit);
   const trailing = events.slice(limit);
@@ -1630,11 +1952,20 @@ function buildRelatedQueries(primaryEvent, primarySession, operator) {
   return Array.from(new Set(queries.map((query) => normalizeText(query)).filter(Boolean))).slice(0, 3);
 }
 
-function decorateEvent(event, session) {
+function graphSummary(graphNode) {
+  if (!graphNode?.connected?.length) {
+    return "";
+  }
+  const strongest = graphNode.connected[0];
+  return `Connected to ${pluralize(graphNode.connected.length, "related activity")} with strongest ${strongest.relationship_label.toLowerCase()} link.`;
+}
+
+function decorateEvent(event, session, graphByEventId) {
   const pageType = event.page_type || inferPageType(event);
   const factItems = Array.isArray(event.fact_items) && event.fact_items.length
     ? event.fact_items
     : buildStructuredFacts(event, pageType);
+  const graphNode = graphByEventId?.get(event.id) || null;
   return {
     ...event,
     page_type: pageType,
@@ -1655,13 +1986,15 @@ function decorateEvent(event, session) {
           ended_at: session.ended_at,
         }
       : null,
-    before_context: session?.upstream?.[0]?.label || "",
-    after_context: session?.downstream?.[0]?.label || "",
+    before_context: graphNode?.incoming?.[0]?.title || session?.upstream?.[0]?.label || "",
+    after_context: graphNode?.outgoing?.[0]?.title || session?.downstream?.[0]?.label || "",
     moment_summary: session ? `${session.label}.` : "",
+    graph_summary: graphSummary(graphNode),
+    connected_events: Array.isArray(graphNode?.connected) ? graphNode.connected : [],
   };
 }
 
-function selectRepresentativeEvents(dedupedEvents, sessionsById, limit = 10) {
+function selectRepresentativeEvents(dedupedEvents, sessionsById, graphByEventId, limit = 10) {
   const selected = [];
   const perSession = new Map();
 
@@ -1671,7 +2004,7 @@ function selectRepresentativeEvents(dedupedEvents, sessionsById, limit = 10) {
     if (sessionId && sessionCount >= 2) {
       continue;
     }
-    selected.push(decorateEvent(event, sessionsById.get(sessionId) || null));
+    selected.push(decorateEvent(event, sessionsById.get(sessionId) || null, graphByEventId));
     perSession.set(sessionId, sessionCount + 1);
     if (selected.length >= limit) {
       break;
@@ -1705,6 +2038,9 @@ function buildMatchAnswer(query, results, primarySession) {
     primary.application ? { label: "App", value: toTitleCase(primary.application) } : null,
     primary.domain ? { label: "Site", value: primary.domain } : null,
     primary.occurred_at ? { label: "Captured", value: primary.occurred_at } : null,
+    primary.connected_events?.length
+      ? { label: "Connected", value: `${primary.connected_events.length} linked activities` }
+      : null,
     { label: "Evidence", value: `${evidenceCount} matching captures` },
   ].filter(Boolean);
 
@@ -1718,6 +2054,9 @@ function buildMatchAnswer(query, results, primarySession) {
   ];
   if (primary.duplicate_count > 1) {
     summaryParts.push(`This page was captured ${primary.duplicate_count} times.`);
+  }
+  if (primary.graph_summary) {
+    summaryParts.push(primary.graph_summary);
   }
   if (primarySession) {
     summaryParts.push(`Most relevant session: ${quoteLabel(primarySession.label)}.`);
@@ -1740,7 +2079,7 @@ function buildMatchAnswer(query, results, primarySession) {
   };
 }
 
-function buildSessionResults(sessionIds, sessionsById, rankedEvents, limit) {
+function buildSessionResults(sessionIds, sessionsById, graphByEventId, rankedEvents, limit) {
   const rankedBySession = new Map();
   for (const event of rankedEvents) {
     if (!rankedBySession.has(event.session_id)) {
@@ -1757,7 +2096,7 @@ function buildSessionResults(sessionIds, sessionsById, rankedEvents, limit) {
     if (!best || seenEventIds.has(best.id)) {
       continue;
     }
-    selected.push(decorateEvent(best, session));
+    selected.push(decorateEvent(best, session, graphByEventId));
     seenEventIds.add(best.id);
     if (selected.length >= limit) {
       break;
@@ -1766,12 +2105,26 @@ function buildSessionResults(sessionIds, sessionsById, rankedEvents, limit) {
   return selected;
 }
 
-function buildOperatorAnswer(operator, anchorLabel, anchorSession, relatedSessions, rankedEvents, limit) {
+function buildOperatorAnswer(
+  operator,
+  anchorLabel,
+  anchorSession,
+  relatedSessions,
+  graphByEventId,
+  rankedEvents,
+  limit
+) {
   const sessionsById = new Map([
     ...(anchorSession ? [[anchorSession.id, anchorSession]] : []),
     ...relatedSessions.map((session) => [session.id, session]),
   ]);
-  const results = buildSessionResults(relatedSessions.map((session) => session.id), sessionsById, rankedEvents, limit);
+  const results = buildSessionResults(
+    relatedSessions.map((session) => session.id),
+    sessionsById,
+    graphByEventId,
+    rankedEvents,
+    limit
+  );
   const quotedAnchor = quoteLabel(anchorLabel);
 
   const summaries = {
@@ -1814,9 +2167,15 @@ function buildOperatorAnswer(operator, anchorLabel, anchorSession, relatedSessio
   };
 }
 
-function buildAggregateAnswer(queryLabel, label, sessions, rankedEvents, limit, kind) {
+function buildAggregateAnswer(queryLabel, label, sessions, graphByEventId, rankedEvents, limit, kind) {
   const sessionsById = new Map(sessions.map((session) => [session.id, session]));
-  const results = buildSessionResults(sessions.map((session) => session.id), sessionsById, rankedEvents, limit);
+  const results = buildSessionResults(
+    sessions.map((session) => session.id),
+    sessionsById,
+    graphByEventId,
+    rankedEvents,
+    limit
+  );
   const primary = sessions[0] || null;
   const totalEvents = sessions.reduce((total, session) => total + session.events.length, 0);
 
@@ -1843,12 +2202,17 @@ function buildAggregateAnswer(queryLabel, label, sessions, rankedEvents, limit, 
   };
 }
 
-function buildExactListAnswer(operator, results, sessionsById) {
+function buildExactListAnswer(operator, results, sessionsById, graphByEventId) {
   const label =
     operator.name === "month"
       ? operator.label || formatMonthKey(operator.anchor)
       : operator.anchor;
-  const decorated = selectRepresentativeEvents(results, sessionsById, Math.min(results.length, 12));
+  const decorated = selectRepresentativeEvents(
+    results,
+    sessionsById,
+    graphByEventId,
+    Math.min(results.length, 12)
+  );
 
   const overview =
     operator.name === "month"
@@ -1908,11 +2272,11 @@ export async function answerLocalQuery({ query, limit = 20, rawEvents, embedText
   }
 
   const { sessions, eventToSession } = buildSessions(events, cosineSimilarity);
-  const sessionsById = buildSessionGraph(sessions, cosineSimilarity);
-
   for (const event of events) {
     event.session_id = eventToSession.get(event.id) || 0;
   }
+  const sessionsById = buildSessionGraph(sessions, cosineSimilarity);
+  const episodicGraphByEventId = buildEpisodicGraph(events, cosineSimilarity);
 
   const operator = detectOperator(normalizedQuery);
   const exactRankedEvents = dedupeRankedEvents(exactRetrieve(operator, events)).map((event) => ({
@@ -1925,9 +2289,13 @@ export async function answerLocalQuery({ query, limit = 20, rawEvents, embedText
       operatorName: operator.name,
     })
   );
+  const graphRankedEvents = rerankWithEpisodicGraphContext(
+    initiallyRankedEvents,
+    episodicGraphByEventId
+  );
 
   const qualityRankedEvents = await rerankWithLocalJudge(
-    initiallyRankedEvents,
+    graphRankedEvents,
     embedText,
     cosineSimilarity
   );
@@ -1979,6 +2347,7 @@ export async function answerLocalQuery({ query, limit = 20, rawEvents, embedText
       shortLabel(primarySession?.label || primaryEvent.title || operator.anchor),
       primarySession,
       relatedSessions,
+      episodicGraphByEventId,
       rankedEvents,
       Math.min(limit, 10)
     );
@@ -1990,7 +2359,15 @@ export async function answerLocalQuery({ query, limit = 20, rawEvents, embedText
       .filter((session) => [...session.domains].some((domain) => domain.includes(target)))
       .sort((left, right) => right.endedTimestamp - left.endedTimestamp);
     if (matchedSessions.length) {
-      return buildAggregateAnswer(operator.anchor, operator.anchor, matchedSessions, rankedEvents, Math.min(limit, 10), "domain");
+      return buildAggregateAnswer(
+        operator.anchor,
+        operator.anchor,
+        matchedSessions,
+        episodicGraphByEventId,
+        rankedEvents,
+        Math.min(limit, 10),
+        "domain"
+      );
     }
   }
 
@@ -2000,14 +2377,27 @@ export async function answerLocalQuery({ query, limit = 20, rawEvents, embedText
       .filter((session) => [...session.applications].some((application) => application.toLowerCase().includes(target)))
       .sort((left, right) => right.endedTimestamp - left.endedTimestamp);
     if (matchedSessions.length) {
-      return buildAggregateAnswer(operator.anchor, toTitleCase(operator.anchor), matchedSessions, rankedEvents, Math.min(limit, 10), "app");
+      return buildAggregateAnswer(
+        operator.anchor,
+        toTitleCase(operator.anchor),
+        matchedSessions,
+        episodicGraphByEventId,
+        rankedEvents,
+        Math.min(limit, 10),
+        "app"
+      );
     }
   }
 
   if (["month", "search_query", "topic", "seen"].includes(operator.name) && exactRankedEvents.length) {
-    return buildExactListAnswer(operator, exactRankedEvents, sessionsById);
+    return buildExactListAnswer(operator, exactRankedEvents, sessionsById, episodicGraphByEventId);
   }
 
-  const results = selectRepresentativeEvents(rankedEvents, sessionsById, Math.min(limit, 12));
+  const results = selectRepresentativeEvents(
+    rankedEvents,
+    sessionsById,
+    episodicGraphByEventId,
+    Math.min(limit, 12)
+  );
   return buildMatchAnswer(normalizedQuery, results, primarySession);
 }

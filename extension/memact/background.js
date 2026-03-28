@@ -175,6 +175,12 @@ function chooseStoredCaptureContent(active, initialProfile, captureIntent, clutt
     initialProfile.fullText || active.fullText || structuredFullText,
     FULL_TEXT_MAX_LEN
   );
+  const searchFallbackFullText =
+    captureIntent?.pagePurpose === "search_results" &&
+    /No clean result cards were captured\./i.test(structuredFullText) &&
+    readableFullText
+      ? readableFullText
+      : structuredFullText
 
   if (!captureIntent.shouldCapture || clutterAudit.shouldSkip) {
     return { snippet: "", fullText: "" };
@@ -190,7 +196,7 @@ function chooseStoredCaptureContent(active, initialProfile, captureIntent, clutt
   if (captureIntent.shouldPreferStructured || clutterAudit.shouldPreferStructured) {
     return {
       snippet: summarySnippet,
-      fullText: structuredFullText,
+      fullText: searchFallbackFullText,
     };
   }
 
@@ -509,6 +515,21 @@ async function captureActiveTabContext(tab) {
         if (hostname.includes("twitter.com") || hostname.includes("x.com")) siteSelectors.push("[data-testid='tweetText']");
         if (hostname.includes("reddit.com")) siteSelectors.push("[data-testid='post-content']", ".md.feed-link-description");
         if (hostname.includes("discord.com")) siteSelectors.push("[class*='messageContent']");
+        if (hostname.includes("google.com")) {
+          siteSelectors.push("#search", "#rso", "#center_col", "[data-async-context*='query:']");
+        }
+        if (hostname.includes("bing.com")) {
+          siteSelectors.push("#b_results", ".b_algo", "#results");
+        }
+        if (hostname.includes("duckduckgo.com")) {
+          siteSelectors.push("[data-testid='mainline']", "[data-layout='organic']", "#links");
+        }
+        if (hostname.includes("search.brave.com")) {
+          siteSelectors.push("#results", ".snippet", "[data-type='web']");
+        }
+        if (hostname.includes("search.yahoo.com")) {
+          siteSelectors.push("#web", "#results", ".algo");
+        }
         const generalSelectors = [
           "article",
           "main",
@@ -533,9 +554,15 @@ async function captureActiveTabContext(tab) {
         const pickContentText = () => {
           const candidates = [];
           const seen = new Set();
+          const isSearchEngineHost =
+            hostname.includes("google.com") ||
+            hostname.includes("bing.com") ||
+            hostname.includes("duckduckgo.com") ||
+            hostname.includes("search.brave.com") ||
+            hostname.includes("search.yahoo.com");
           for (const node of queryAllDeep([...siteSelectors, ...generalSelectors])) {
             const text = scrapeNodeText(node);
-            if (!text || text.length < 100) {
+            if (!text || text.length < (isSearchEngineHost ? 60 : 100)) {
               continue;
             }
             const key = text.slice(0, 800);
@@ -546,7 +573,7 @@ async function captureActiveTabContext(tab) {
             candidates.push(text);
           }
           candidates.sort((left, right) => right.length - left.length);
-          return candidates[0] || "";
+          return isSearchEngineHost ? candidates.slice(0, 3).join("\n\n") : candidates[0] || "";
         };
         const visibleBodyText = () => {
           const text = normalizeStructuredText(document.body?.innerText || "");

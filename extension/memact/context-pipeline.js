@@ -907,7 +907,23 @@ function extractSearchResultItems(raw) {
     candidates.push(cleaned);
   }
 
-  return dedupeStrings(candidates, 6);
+  if (candidates.length) {
+    return dedupeStrings(candidates, 6);
+  }
+
+  const fallbackCandidates = lines
+    .map((line) => normalizeText(line, 180))
+    .filter((line) => {
+      if (!line || isNoiseLine(line)) {
+        return false;
+      }
+      if (query && line.toLowerCase() === query.toLowerCase()) {
+        return false;
+      }
+      return line.length >= 6;
+    });
+
+  return dedupeStrings(fallbackCandidates, 6);
 }
 
 export function buildDisplayExcerpt(raw, pageType = inferPageType(raw)) {
@@ -1056,7 +1072,17 @@ function buildDisplayFullText(raw, pageType = inferPageType(raw)) {
         lines.push(`${index + 1}. ${item}`);
       });
     } else {
-      lines.push("No clean result cards were captured.");
+      const fallbackLines = splitReadableLines(fullText)
+        .filter((line) => !isNoiseLine(line))
+        .slice(0, 6);
+      if (fallbackLines.length) {
+        lines.push("Captured page text:");
+        fallbackLines.forEach((line, index) => {
+          lines.push(`${index + 1}. ${line}`);
+        });
+      } else {
+        lines.push("No clean result cards were captured.");
+      }
     }
     return lines.join("\n");
   }

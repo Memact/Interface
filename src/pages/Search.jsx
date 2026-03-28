@@ -63,6 +63,14 @@ function toTitleCase(value) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
+function formatRelationshipScore(value) {
+  const score = Number(value || 0)
+  if (!Number.isFinite(score) || score <= 0) {
+    return ''
+  }
+  return score.toFixed(2)
+}
+
 function openExternal(url) {
   if (!url) return
   window.open(url, '_blank', 'noreferrer')
@@ -207,7 +215,7 @@ function PrivacyDialog({ onClose }) {
   return (
     <GlassDialog
       title="Privacy Notice"
-      subtitle="Memact stores events, embeddings, and answers locally on this device. It does not call cloud APIs or send your activity off-machine. If local language polish is available in your browser, Memact may download local model files to this device."
+      subtitle="Memact stores events, embeddings, and answers locally on this device. It does not call cloud APIs or send your activity off-machine. Memact may download small local model files to this device so answer text can be structured locally."
       onClose={onClose}
       footer={
         <button type="button" className="dialog-primary-button" onClick={onClose}>
@@ -527,6 +535,7 @@ function MemoryDetailDialog({ result, onOpen, onClose }) {
   const snippetText = String(result.snippet || '').trim()
   const displayUrl = String(result.displayUrl || result.url || '').trim()
   const searchResults = Array.isArray(result.searchResults) ? result.searchResults : []
+  const connectedEvents = Array.isArray(result.connectedEvents) ? result.connectedEvents : []
   const primaryTextHeading = result.pageType === 'search' ? 'CAPTURED PAGE VIEW' : 'FULL EXTRACTED TEXT'
   const showRawCapturedText = rawFullText && rawFullText !== fullText
 
@@ -564,6 +573,9 @@ function MemoryDetailDialog({ result, onOpen, onClose }) {
           <div className="dialog-body">
             <MathRichText text={result.structuredSummary} />
           </div>
+          {result.graphSummary ? (
+            <p className="connection-summary">{result.graphSummary}</p>
+          ) : null}
         </div>
       ) : null}
 
@@ -589,6 +601,60 @@ function MemoryDetailDialog({ result, onOpen, onClose }) {
                 value={item.value}
                 values={item.values}
               />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {connectedEvents.length ? (
+        <div className="memory-detail-body">
+          <div className="refine-heading">CONNECTED ACTIVITY</div>
+          <div className="connection-list">
+            {connectedEvents.map((entry) => (
+              <div
+                key={`${entry.id || entry.title}-${entry.relationshipType}-${entry.direction}`}
+                className="connection-card"
+              >
+                <div className="connection-card__top">
+                  <span className="connection-badge">
+                    {entry.relationshipLabel || toTitleCase(entry.relationshipType)}
+                  </span>
+                  {formatRelationshipScore(entry.relationshipScore) ? (
+                    <span className="connection-score">
+                      Score {formatRelationshipScore(entry.relationshipScore)}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="connection-title">
+                  <MathRichText text={entry.title} />
+                </div>
+                <p className="connection-meta">
+                  {[
+                    entry.direction === 'before'
+                      ? 'Earlier activity'
+                      : entry.direction === 'after'
+                        ? 'Later activity'
+                        : '',
+                    entry.application ? toTitleCase(entry.application) : '',
+                    entry.domain,
+                    entry.occurred_at ? formatHistoryTime(entry.occurred_at) : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' - ')}
+                </p>
+                {entry.relationshipReason ? (
+                  <p className="connection-reason">{entry.relationshipReason}</p>
+                ) : null}
+                {entry.url ? (
+                  <button
+                    type="button"
+                    className="dialog-secondary-button connection-open-button"
+                    onClick={() => openExternal(entry.url)}
+                  >
+                    Open connected page
+                  </button>
+                ) : null}
+              </div>
             ))}
           </div>
         </div>
@@ -1120,7 +1186,7 @@ export default function Search({ extension }) {
 
           <footer className={`status-text ${dockVisible ? 'is-hidden' : ''}`}>
             <span>{statusText}</span>
-            <span className="status-text__version">MVP v1.0</span>
+            <span className="status-text__version">v1.1</span>
           </footer>
 
           <div className={`loading-bar ${showLoadingBar ? 'is-visible' : ''}`}>

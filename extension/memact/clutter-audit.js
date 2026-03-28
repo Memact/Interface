@@ -74,6 +74,30 @@ function punctuationDensity(line) {
   return (matches?.length || 0) / Math.max(text.length, 1);
 }
 
+function isSearchQueryCapture(profile, captureIntent) {
+  const pageType = normalizeText(profile?.pageType || profile?.page_type).toLowerCase();
+  const query = normalizeText(
+    captureIntent?.query ||
+      (() => {
+        try {
+          const parsed = new URL(profile?.url || '');
+          return (
+            parsed.searchParams.get('q') ||
+            parsed.searchParams.get('p') ||
+            parsed.searchParams.get('query') ||
+            parsed.searchParams.get('text') ||
+            parsed.searchParams.get('search_query') ||
+            ''
+          )
+        } catch {
+          return ''
+        }
+      })()
+  );
+
+  return Boolean(query) && (pageType === 'search' || captureIntent?.pagePurpose === 'search_results');
+}
+
 export function auditCapturedContent(profile, captureIntent = null) {
   const lines = candidateLines(profile);
   const fullText = normalizeRichText(profile?.fullText || profile?.displayFullText || "");
@@ -131,13 +155,14 @@ export function auditCapturedContent(profile, captureIntent = null) {
   }
 
   let cleaningPlan = "keep";
+  const isSearchCapture = isSearchQueryCapture(profile, captureIntent);
   if (captureIntent?.shouldSkip) {
     cleaningPlan = "skip";
-  } else if (clutterScore >= 0.78 && usefulLineCount <= 1) {
+  } else if (clutterScore >= 0.78 && usefulLineCount <= 1 && !isSearchCapture) {
     cleaningPlan = "skip";
   } else if (captureIntent?.shouldKeepMetadataOnly) {
     cleaningPlan = "metadata_only";
-  } else if (captureIntent?.shouldPreferStructured || clutterScore >= 0.62) {
+  } else if (captureIntent?.shouldPreferStructured || clutterScore >= 0.62 || isSearchCapture) {
     cleaningPlan = "structured_only";
   } else if (clutterScore >= 0.38) {
     cleaningPlan = "clean";

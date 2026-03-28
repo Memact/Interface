@@ -19,6 +19,23 @@
   --safe-right: env(safe-area-inset-right);
   --safe-bottom: env(safe-area-inset-bottom);
   --safe-left: env(safe-area-inset-left);
+  --ui-font-stack:
+    'IBM Plex Sans',
+    'Segoe UI',
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  --content-font-stack:
+    'IBM Plex Sans',
+    'Segoe UI Symbol',
+    'Cambria Math',
+    'STIX Two Math',
+    'Noto Sans Math',
+    'Noto Sans Symbols 2',
+    'Noto Sans Symbols',
+    'Arial Unicode MS',
+    'Segoe UI',
+    sans-serif;
   --bg: #00011b;
   --surface: rgba(255, 255, 255, 0.08);
   --surface-deep: rgba(8, 10, 34, 0.98);
@@ -61,7 +78,7 @@ body.has-dialog-open {
 body {
   margin: 0;
   min-height: 100dvh;
-  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  font-family: var(--ui-font-stack);
   color: var(--text);
   background: var(--bg);
   overflow: hidden;
@@ -575,6 +592,7 @@ button:disabled {
   color: var(--text-soft);
   font-size: 15px;
   line-height: 1.6;
+  font-family: var(--content-font-stack);
   overflow-wrap: anywhere;
 }
 
@@ -594,6 +612,7 @@ button:disabled {
   font-size: 15px;
   line-height: 1.55;
   max-width: 32ch;
+  font-family: var(--content-font-stack);
   overflow-wrap: anywhere;
 }
 
@@ -633,6 +652,7 @@ button:disabled {
   color: var(--text);
   font-size: 14px;
   line-height: 1.45;
+  font-family: var(--content-font-stack);
   min-width: 0;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -652,6 +672,7 @@ button:disabled {
   color: var(--text-soft);
   font-size: 12px;
   line-height: 1.45;
+  font-family: var(--content-font-stack);
   max-width: 100%;
   overflow-wrap: anywhere;
 }
@@ -772,6 +793,7 @@ button:disabled {
   color: var(--text);
   font-size: 16px;
   line-height: 1.55;
+  font-family: var(--content-font-stack);
   overflow-wrap: anywhere;
 }
 
@@ -859,6 +881,7 @@ button:disabled {
   color: var(--text-faint);
   font-size: 14px;
   line-height: 1.6;
+  font-family: var(--content-font-stack);
   overflow-wrap: anywhere;
 }
 
@@ -890,7 +913,7 @@ button:disabled {
   border: 1px solid var(--border-soft);
   background: rgba(255, 255, 255, 0.04);
   color: rgba(255, 255, 255, 0.9);
-  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  font-family: var(--content-font-stack);
   font-size: 14px;
   line-height: 1.65;
   white-space: pre-wrap;
@@ -909,6 +932,7 @@ button:disabled {
 
 .math-rich-text {
   min-width: 0;
+  font-family: var(--content-font-stack);
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -1099,6 +1123,7 @@ button:disabled {
   color: var(--text-soft);
   font-size: 14px;
   line-height: 1.6;
+  font-family: var(--content-font-stack);
   overflow-wrap: anywhere;
 }
 
@@ -1165,6 +1190,7 @@ button:disabled {
   color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
   line-height: 1.55;
+  font-family: var(--content-font-stack);
 }
 
 .browser-tile {
@@ -1224,6 +1250,7 @@ button:disabled {
   margin: 0;
   color: rgba(255, 255, 255, 0.6);
   font-size: 12px;
+  font-family: var(--content-font-stack);
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -1231,6 +1258,95 @@ button:disabled {
 .memory-result-list {
   display: grid;
   gap: 10px;
+}
+
+.connection-summary {
+  margin: 0;
+  color: var(--info);
+  font-size: 13px;
+  line-height: 1.55;
+  font-family: var(--content-font-stack);
+}
+
+.connection-list {
+  display: grid;
+  gap: 10px;
+}
+
+.connection-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.connection-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.connection-badge,
+.connection-score {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.connection-badge {
+  border: 1px solid var(--accent-border);
+  background: rgba(40, 74, 128, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.connection-score {
+  border: 1px solid var(--border-soft);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-soft);
+}
+
+.connection-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  font-family: var(--content-font-stack);
+  overflow-wrap: anywhere;
+}
+
+.connection-meta,
+.connection-reason {
+  margin: 0;
+  font-family: var(--content-font-stack);
+  overflow-wrap: anywhere;
+}
+
+.connection-meta {
+  color: var(--text-faint);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.connection-reason {
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.connection-open-button {
+  width: auto;
 }
 
 .setup-guide {
@@ -1252,6 +1368,7 @@ button:disabled {
   color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
   line-height: 1.55;
+  font-family: var(--content-font-stack);
 }
 
 .setup-code-grid {
@@ -1269,6 +1386,7 @@ button:disabled {
   color: var(--text);
   font-size: 14px;
   line-height: 1.55;
+  font-family: var(--content-font-stack);
   word-break: break-word;
 }
 
@@ -1290,6 +1408,7 @@ button:disabled {
 
 .memory-result-copy {
   min-width: 0;
+  font-family: var(--content-font-stack);
   overflow-wrap: anywhere;
 }
 
