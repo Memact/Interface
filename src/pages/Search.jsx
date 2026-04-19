@@ -27,8 +27,8 @@ function domainFromResult(result) {
 }
 
 function formatStatus(extension, search, resultCount, tracedThought) {
-  if (search.loading) return 'Tracing captured evidence...'
-  if (extension?.requiresBridge) return 'Capture extension needed to trace real activity.'
+  if (search.loading) return 'Finding citations from captured activity...'
+  if (extension?.requiresBridge) return 'Capture extension needed for real citations.'
   if (extension?.ready || extension?.bridgeDetected) return tracedThought ? `${resultCount} evidence candidates found.` : 'Capture connected.'
   if (extension?.mode === 'web-fallback') return tracedThought ? `${resultCount} local candidates found.` : 'Local memory mode.'
   return 'Ready.'
@@ -64,7 +64,7 @@ export default function Search({ extension }) {
   const resultCount = search.results.length
   const status = formatStatus(extension, search, resultCount, tracedThought)
 
-  const traceThought = async (event) => {
+  const answerWithCitations = async (event) => {
     event?.preventDefault()
     const query = normalize(thought)
     if (!query) return
@@ -86,16 +86,16 @@ export default function Search({ extension }) {
             <span className="brand-mark">memact</span>
             <span className="version-pill">v0.0</span>
           </div>
-          <h1 id="memact-title">Citations for your thoughts.</h1>
+          <h1 id="memact-title">Answers with citations.</h1>
           <p>
-            Enter a thought. Memact surfaces captured evidence that may have introduced it or shaped
-            it over time.
+            Enter a thought or question. Memact answers with citations from the websites, videos,
+            posts, searches, and pages you actually consumed.
           </p>
         </header>
 
-        <form className="thought-form" onSubmit={traceThought}>
+        <form className="thought-form" onSubmit={answerWithCitations}>
           <label className="thought-label" htmlFor="thought-input">
-            Thought
+            Thought or question
           </label>
           <textarea
             id="thought-input"
@@ -104,12 +104,12 @@ export default function Search({ extension }) {
               setThought(event.target.value)
               search.setQuery(event.target.value)
             }}
-            placeholder="What thought do you want to trace?"
+            placeholder="What do you want Memact to answer from your captured activity?"
             rows={5}
           />
           <div className="form-actions">
             <button type="submit" className="primary-action" disabled={!normalize(thought) || search.loading}>
-              Trace thought
+              Answer with citations
             </button>
             <button type="button" className="secondary-action" onClick={useSample}>
               Try example
@@ -119,7 +119,7 @@ export default function Search({ extension }) {
 
         <section className="trace-panel" aria-live="polite">
           <div className="trace-panel__top">
-            <span className="trace-label">Thought Trace</span>
+            <span className="trace-label">Answer engine</span>
             <span className="trace-status">{status}</span>
           </div>
 
@@ -128,17 +128,17 @@ export default function Search({ extension }) {
               <blockquote>{tracedThought}</blockquote>
               <div className="claim-grid">
                 <div>
-                  <span>Origin</span>
-                  <p>Specific source candidates require strong wording or phrase overlap.</p>
+                  <span>Answer</span>
+                  <p>Memact should only answer from captured evidence, not unsupported guessing.</p>
                 </div>
                 <div>
-                  <span>Influence</span>
-                  <p>Repeated exposure and schema patterns can shape the thought over time.</p>
+                  <span>Citations</span>
+                  <p>Every answer should point back to source pages, posts, videos, or searches.</p>
                 </div>
               </div>
             </>
           ) : (
-            <p className="empty-copy">No trace yet. The interface stays quiet until you ask.</p>
+            <p className="empty-copy">No answer yet. Ask something and Memact will cite the evidence it can find.</p>
           )}
         </section>
 

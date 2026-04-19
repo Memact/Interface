@@ -10,9 +10,9 @@ It answers:
 
 Memact is being redesigned around a clearer promise:
 
-`Citation, but for your thoughts.`
+`Answers with citations from your own captured digital activity.`
 
-The user enters a thought. Interface will query the lower engines and render a cited Thought Trace: possible origin candidates, influence patterns, active schema signals, and the evidence behind each claim.
+The user enters a thought or question. Interface queries the lower engines and renders a cited answer: possible origin candidates, influence patterns, active schema signals, and the evidence behind each claim.
 
 ## Pipeline Position
 
@@ -20,7 +20,7 @@ The user enters a thought. Interface will query the lower engines and render a c
 Capture -> Inference -> Schema -> Interface / Query -> Origin + Influence
 ```
 
-Interface is the point where the user enters a thought query. Origin and Influence become meaningful after this query exists.
+Interface is the point where the user enters a thought or question. Origin and Influence become meaningful after this query exists.
 
 ## Product Meaning
 
@@ -30,10 +30,10 @@ Old Memact was mostly memory search:
 Where did I see this?
 ```
 
-New Memact is thought citation:
+New Memact is citation-backed answering:
 
 ```text
-What may have introduced this thought, and what may have shaped it over time?
+What can Memact answer from my captured activity, and which sources support it?
 ```
 
 ## Engine Map
@@ -45,7 +45,7 @@ What may have introduced this thought, and what may have shaped it over time?
 - `Schema`
   Detects repeated mental-frame signals from inferred themes.
 - `Interface`
-  Accepts the user thought and renders the Thought Trace.
+  Accepts the user thought/question and renders the cited answer.
 - `Origin`
   Finds high-precision source candidates that may have introduced the thought.
 - `Influence`
@@ -101,12 +101,12 @@ npm run preview
 
 ## Current Status
 
-This repo is the current Memact product surface. It is runnable today, but the product direction is moving from memory search toward Thought Trace.
+This repo is the current Memact product surface. It is runnable today, but the product direction is moving from memory search toward a citation and answer engine.
 
 The next redesign should make the main user action:
 
 ```text
-Enter a thought -> get cited origin/influence evidence
+Enter a thought or question -> get an evidence-backed answer with citations
 ```
 
 ## Repository Layout
