@@ -2,73 +2,32 @@
 
 Version: `v0.0`
 
-Interface is the product layer of Memact.
+Interface is the user-facing Memact app.
 
-It answers:
-
-`How does the user inspect the evidence behind a thought?`
-
-Memact is being redesigned around a clearer promise:
-
-`Answers with citations from your own digital evidence trail.`
-
-The user enters a thought or question. Interface queries the lower engines and renders a cited answer: possible origin candidates, influence patterns, active schema signals, and the evidence behind each claim.
-
-## Pipeline Position
+The product is simple:
 
 ```text
-Capture -> Inference -> Schema -> Interface / Query -> Influence / Origin
+Enter a thought -> see the sources that may have formed or shaped it.
 ```
 
-Interface is the point where the user enters a thought or question. Influence and Origin become meaningful after this query exists.
+Memact is not a generic search box. It uses the user's own evidence trail: pages, posts, videos, searches, and revisits saved by Capture.
 
-## Product Meaning
-
-Old Memact was mostly memory search:
+## How It Works
 
 ```text
-Where did I see this?
+Capture -> Inference -> Schema -> Interface -> Influence / Origin
 ```
 
-New Memact is citation-backed answering:
+- `Capture` saves useful digital activity.
+- `Inference` turns that activity into cleaner meaning.
+- `Schema` notices repeated themes.
+- `Interface` lets the user enter a thought.
+- `Influence` shows what may have shaped the thought over time.
+- `Origin` finds possible source candidates that may have introduced it.
 
-```text
-What can Memact answer from my evidence trail, and which sources support it?
-```
+The app should stay honest. It shows source candidates and patterns, not proof of causation.
 
-## Engine Map
-
-- `Capture`
-  Records observed digital activity.
-- `Inference`
-  Turns raw activity into canonical themes.
-- `Schema`
-  Detects repeated mental-frame signals from inferred themes.
-- `Interface`
-  Accepts the user thought/question and renders the cited answer.
-- `Influence`
-  Maps repeated shaping patterns, transitions, and source trails.
-- `Origin`
-  Finds high-precision source candidates that may have introduced the thought.
-
-## Claim Rules
-
-Interface must preserve the distinction between claim types:
-
-- `observed`
-  Directly observed evidence.
-- `inferred`
-  Deterministic theme/meaning derived from captured evidence.
-- `schema_signal`
-  A repeated possible mental frame, not a diagnosis.
-- `influence_pattern`
-  A repeated shaping pattern, not a claim that something created the thought.
-- `origin_candidate`
-  A possible direct source, not proof of causation.
-
-Every claim should link back to evidence.
-
-## Terminal Quickstart
+## Run Locally
 
 Prerequisites:
 
@@ -81,32 +40,22 @@ Install:
 npm install
 ```
 
-Run the local interface:
+Run:
 
 ```powershell
 npm run dev
 ```
 
-Build production assets:
+Build:
 
 ```powershell
 npm run build
 ```
 
-Preview the production build:
+Preview:
 
 ```powershell
 npm run preview
-```
-
-## Current Status
-
-This repo is the current Memact product surface. It is runnable today, but the product direction is moving from memory search toward a citation and answer engine.
-
-The next redesign should make the main user action:
-
-```text
-Enter a thought or question -> get an evidence-backed answer with citations
 ```
 
 ## Repository Layout
@@ -114,13 +63,13 @@ Enter a thought or question -> get an evidence-backed answer with citations
 - `src/`
   Product UI and interaction layer.
 - `extension/memact/`
-  Website-facing extension bundle used for local setup and packaging.
+  Browser extension bundle used for local setup and packaging.
 - `public/`
   Static assets.
 - `assets/`
   Fonts and visual assets.
 - `scripts/`
-  Packaging and local setup helpers.
+  Packaging and setup helpers.
 
 ## License
 

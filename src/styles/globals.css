@@ -344,9 +344,9 @@ button {
 }
 
 .answer-card,
-.citation-panel,
-.citation-card,
-.empty-citations {
+.source-panel,
+.source-card,
+.empty-sources {
   border: 1px solid var(--white-16);
   border-radius: 30px;
   background: var(--panel);
@@ -355,7 +355,7 @@ button {
 }
 
 .answer-card,
-.citation-panel {
+.source-panel {
   padding: clamp(20px, 3vw, 32px);
 }
 
@@ -391,31 +391,31 @@ blockquote {
   line-height: 1.65;
 }
 
-.citation-panel {
+.source-panel {
   display: grid;
   gap: 16px;
 }
 
-.citation-list {
+.source-list {
   display: grid;
   gap: 14px;
 }
 
-.citation-card {
+.source-card {
   display: grid;
   gap: 8px;
   padding: clamp(18px, 2.5vw, 24px);
   background: var(--panel-strong);
 }
 
-.citation-card__top {
+.source-card__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.citation-card__rank {
+.source-card__rank {
   color: var(--ink);
   font-size: 12px;
   font-weight: 900;
@@ -423,7 +423,7 @@ blockquote {
   text-transform: uppercase;
 }
 
-.citation-card button {
+.source-card button {
   min-height: 40px;
   border: 1px solid var(--white-16);
   border-radius: 999px;
@@ -433,7 +433,7 @@ blockquote {
   font-weight: 900;
 }
 
-.citation-card h3 {
+.source-card h3 {
   margin: 0;
   color: var(--ink);
   font-size: clamp(21px, 2.5vw, 30px);
@@ -441,21 +441,21 @@ blockquote {
   letter-spacing: -0.04em;
 }
 
-.citation-card__domain {
+.source-card__domain {
   margin: 0;
   color: var(--white-62);
   font-size: 16px;
   font-weight: 900;
 }
 
-.citation-card__text,
-.empty-citations {
+.source-card__text,
+.empty-sources {
   color: var(--white-62);
   font-size: 16px;
   line-height: 1.6;
 }
 
-.empty-citations {
+.empty-sources {
   padding: 20px;
 }
 
@@ -526,12 +526,12 @@ blockquote {
     position: static;
   }
 
-  .citation-card__top {
+  .source-card__top {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .citation-card button {
+  .source-card button {
     width: 100%;
   }
 }
@@ -569,9 +569,9 @@ blockquote {
   }
 
   .answer-card,
-  .citation-panel,
-  .citation-card,
-  .empty-citations {
+  .source-panel,
+  .source-card,
+  .empty-sources {
     border-radius: 22px;
   }
 

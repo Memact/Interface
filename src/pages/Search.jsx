@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import MathRichText from '../components/MathRichText'
 import SearchBar from '../components/SearchBar'
 import { useSearch } from '../hooks/useSearch'
@@ -32,11 +32,11 @@ function compactText(value, maxLength = 190) {
 }
 
 function buildStatus(extension, search, submittedQuery) {
-  if (search.loading) return 'Finding cited evidence...'
+  if (search.loading) return 'Finding sources...'
   if (search.error) return search.error
-  if (submittedQuery && search.results.length) return `${search.results.length} cited source candidates`
-  if (submittedQuery) return 'No strong citation match yet'
-  if (extension?.requiresBridge) return 'Connect Capture for evidence-backed suggestions'
+  if (submittedQuery && search.results.length) return `${search.results.length} source candidates`
+  if (submittedQuery) return 'No strong source match yet'
+  if (extension?.requiresBridge) return 'Connect Capture for thought suggestions'
   return 'Ready'
 }
 
@@ -48,7 +48,7 @@ function buildAnswerText(query, answerMeta, results) {
   if (answer) return answer
 
   if (!results.length) {
-    return 'Memact did not find strong enough evidence to cite for this thought yet.'
+    return 'Memact did not find strong enough sources for this thought yet.'
   }
 
   const primary = results[0]
@@ -57,10 +57,10 @@ function buildAnswerText(query, answerMeta, results) {
   const secondaryTitle = secondary?.title || domainFromResult(secondary)
 
   if (secondary) {
-    return `The strongest citation candidate is ${primaryTitle} [1]. A related source also appears in ${secondaryTitle} [2].`
+    return `The strongest source candidate is ${primaryTitle} [1]. A related source also appears in ${secondaryTitle} [2].`
   }
 
-  return `The strongest citation candidate is ${primaryTitle} [1].`
+  return `The strongest source candidate is ${primaryTitle} [1].`
 }
 
 function buildActivitySuggestions(search) {
@@ -75,7 +75,7 @@ function buildEmptySuggestionMessage(extension) {
   return 'No thought suggestions yet. Once there is enough evidence, suggestions will appear here.'
 }
 
-function CitationCard({ result, index }) {
+function SourceCard({ result, index }) {
   const domain = domainFromResult(result)
   const text = compactText(
     result?.structuredSummary ||
@@ -86,9 +86,9 @@ function CitationCard({ result, index }) {
   )
 
   return (
-    <article className="citation-card">
-      <div className="citation-card__top">
-        <span className="citation-card__rank">[{index + 1}] {index === 0 ? 'Strong match' : 'Related source'}</span>
+    <article className="source-card">
+      <div className="source-card__top">
+        <span className="source-card__rank">[{index + 1}] {index === 0 ? 'Strong match' : 'Related source'}</span>
         {result?.url ? (
           <button type="button" onClick={() => openExternal(result.url)}>
             Open link
@@ -96,9 +96,9 @@ function CitationCard({ result, index }) {
         ) : null}
       </div>
       <h3>{result?.title || 'Evidence source'}</h3>
-      <p className="citation-card__domain">{domain}</p>
+      <p className="source-card__domain">{domain}</p>
       {text ? (
-        <div className="citation-card__text">
+        <div className="source-card__text">
           <MathRichText text={text} />
         </div>
       ) : null}
@@ -110,6 +110,7 @@ export default function Search({ extension }) {
   const search = useSearch(extension, null)
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [infoOpen, setInfoOpen] = useState(false)
+  const infoButtonRef = useRef(null)
 
   const suggestions = useMemo(() => buildActivitySuggestions(search), [search])
   const emptySuggestionMessage = buildEmptySuggestionMessage(extension)
@@ -120,14 +121,48 @@ export default function Search({ extension }) {
   const runQuery = async (value = search.query) => {
     const query = normalize(value)
     if (!query) return
+    setInfoOpen(false)
     search.setQuery(query)
     setSubmittedQuery(query)
     await search.runSearch(query)
   }
 
+  useEffect(() => {
+    if (!infoOpen || typeof window === 'undefined') {
+      return undefined
+    }
+
+    const closeInfo = () => setInfoOpen(false)
+    const timer = window.setTimeout(closeInfo, 30000)
+
+    const handlePointerDown = (event) => {
+      const target = event.target
+      if (infoButtonRef.current?.contains(target)) {
+        return
+      }
+      closeInfo()
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Enter' || event.key === 'Escape') {
+        closeInfo()
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown, true)
+    window.addEventListener('keydown', handleKeyDown, true)
+
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('pointerdown', handlePointerDown, true)
+      window.removeEventListener('keydown', handleKeyDown, true)
+    }
+  }, [infoOpen])
+
   return (
     <main className={`memact-page ${hasSubmitted ? 'has-results' : 'is-home'}`}>
       <button
+        ref={infoButtonRef}
         type="button"
         className="info-button"
         aria-label="About Memact"
@@ -139,14 +174,13 @@ export default function Search({ extension }) {
       {infoOpen ? (
         <aside className="info-popover" role="dialog" aria-label="About Memact">
           <p>
-            Memact cites the thoughts you enter with evidence from what you have read, watched,
-            searched, and revisited. Suggestions and citations stay grounded in local evidence when
-            Capture is connected.
+            See where your thoughts may have formed or been shaped. Memact looks at sources from
+            what you read, watch, search, and revisit when Capture is connected.
           </p>
         </aside>
       ) : null}
 
-      <section className="search-home" aria-label="Memact search">
+      <section className="search-home" aria-label="Memact thought input">
         <h1 className="memact-logo">
           <img src={memactLogo} alt="memact" />
         </h1>
@@ -155,7 +189,7 @@ export default function Search({ extension }) {
           onChange={search.setQuery}
           onSubmit={runQuery}
           onSuggestionClick={runQuery}
-          placeholder="Enter a thought to cite"
+          placeholder="Enter a thought"
           loading={search.loading}
           suggestions={suggestions}
           emptySuggestionMessage={emptySuggestionMessage}
@@ -173,17 +207,17 @@ export default function Search({ extension }) {
             </div>
           </article>
 
-          <section className="citation-panel" aria-label="Citations">
-            <p className="eyebrow">Citations</p>
+          <section className="source-panel" aria-label="Sources">
+            <p className="eyebrow">Sources</p>
             {search.results.length ? (
-              <div className="citation-list">
+              <div className="source-list">
                 {search.results.slice(0, 4).map((result, index) => (
-                  <CitationCard key={result.id} result={result} index={index} />
+                  <SourceCard key={result.id} result={result} index={index} />
                 ))}
               </div>
             ) : (
-              <div className="empty-citations">
-                No source was strong enough to cite for this thought.
+              <div className="empty-sources">
+                No source was strong enough for this thought.
               </div>
             )}
           </section>

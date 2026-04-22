@@ -43,7 +43,7 @@ export default function SearchBar({
       : null
   const previewActive = Boolean(selectedSuggestion)
   const inputValue = previewActive ? selectedSuggestion.completion : value
-  const hasSearchText = Boolean(inputValue.trim())
+  const hasActiveSearchText = focused && Boolean(inputValue.trim())
 
   useEffect(() => {
     onFocusChange?.(focused)
@@ -260,16 +260,16 @@ export default function SearchBar({
           spellCheck={false}
           inputMode="search"
           enterKeyHint="search"
-          aria-label="Search"
+          aria-label="Thought input"
         />
 
         <button
-          className={`search-button ${hasSearchText ? 'is-enter' : 'is-search'}`}
+          className={`search-button ${hasActiveSearchText ? 'is-enter' : 'is-search'}`}
           type="submit"
-          aria-label={hasSearchText ? 'Submit search' : 'Search'}
+          aria-label={hasActiveSearchText ? 'Submit thought' : 'Find sources'}
           disabled={loading}
         >
-          <img src={hasSearchText ? enterIcon : searchIcon} alt="" aria-hidden="true" />
+          <img src={hasActiveSearchText ? enterIcon : searchIcon} alt="" aria-hidden="true" />
         </button>
       </form>
 
