@@ -66,6 +66,14 @@ function buildActivitySuggestions(search) {
   return search.suggestions
 }
 
+function buildEmptySuggestionMessage(extension) {
+  if (extension?.requiresBridge) {
+    return 'No activity suggestions yet. Connect the Capture extension to generate suggestions from your browsing.'
+  }
+
+  return 'No activity suggestions yet. Once Capture has saved activity, suggestions will appear here.'
+}
+
 function CitationCard({ result, index }) {
   const domain = domainFromResult(result)
   const text = compactText(
@@ -103,6 +111,7 @@ export default function Search({ extension }) {
   const [infoOpen, setInfoOpen] = useState(false)
 
   const suggestions = useMemo(() => buildActivitySuggestions(search), [search])
+  const emptySuggestionMessage = buildEmptySuggestionMessage(extension)
   const status = buildStatus(extension, search, submittedQuery)
   const answerText = buildAnswerText(submittedQuery, search.answerMeta, search.results)
   const hasSubmitted = Boolean(submittedQuery)
@@ -145,6 +154,7 @@ export default function Search({ extension }) {
           placeholder="Search your captured activity"
           loading={search.loading}
           suggestions={suggestions}
+          emptySuggestionMessage={emptySuggestionMessage}
         />
         <p className="search-status">{status}</p>
       </section>

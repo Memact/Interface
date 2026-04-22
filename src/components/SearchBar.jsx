@@ -22,6 +22,7 @@ export default function SearchBar({
   onTimeFilter,
   onFocusChange,
   onDockVisibilityChange,
+  emptySuggestionMessage = '',
 }) {
   const [focused, setFocused] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
@@ -33,8 +34,9 @@ export default function SearchBar({
   const [dockStyle, setDockStyle] = useState(null)
 
   const visibleSuggestions = useMemo(() => suggestions.slice(0, 12), [suggestions])
-  const chipsVisible = focused && !value.trim()
-  const dockVisible = focused && (chipsVisible || visibleSuggestions.length > 0)
+  const chipsVisible = focused && !value.trim() && timeFilters.length > 0
+  const emptySuggestionsVisible = focused && Boolean(emptySuggestionMessage) && visibleSuggestions.length === 0
+  const dockVisible = focused && (chipsVisible || visibleSuggestions.length > 0 || emptySuggestionsVisible)
   const selectedSuggestion =
     selectedIndex >= 0 && selectedIndex < visibleSuggestions.length
       ? visibleSuggestions[selectedIndex]
@@ -375,6 +377,12 @@ export default function SearchBar({
                 ))}
               </div>
             </>
+          ) : null}
+
+          {emptySuggestionsVisible ? (
+            <div className="suggestion-empty">
+              {emptySuggestionMessage}
+            </div>
           ) : null}
         </div>
       ) : null}

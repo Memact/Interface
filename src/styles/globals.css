@@ -15,15 +15,24 @@
 }
 
 :root {
-  --bg: #00011b;
-  --ink: #ffffff;
-  --muted: rgba(255, 255, 255, 0.62);
-  --faint: rgba(255, 255, 255, 0.4);
-  --line: rgba(255, 255, 255, 0.16);
-  --line-strong: rgba(255, 255, 255, 0.28);
-  --panel: rgba(255, 255, 255, 0.06);
-  --panel-strong: rgba(255, 255, 255, 0.1);
-  --shadow: 0 26px 80px rgba(0, 0, 0, 0.45);
+  --bg: #00011B;
+  --white: #ffffff;
+  --white-90: rgba(255, 255, 255, 0.9);
+  --white-76: rgba(255, 255, 255, 0.76);
+  --white-62: rgba(255, 255, 255, 0.62);
+  --white-46: rgba(255, 255, 255, 0.46);
+  --white-24: rgba(255, 255, 255, 0.24);
+  --white-16: rgba(255, 255, 255, 0.16);
+  --white-10: rgba(255, 255, 255, 0.1);
+  --white-06: rgba(255, 255, 255, 0.06);
+  --shadow: 0 28px 88px rgba(0, 0, 0, 0.36);
+  --ink: var(--white);
+  --muted: var(--white-62);
+  --faint: var(--white-46);
+  --line: var(--white-16);
+  --line-strong: var(--white-24);
+  --panel: var(--white-06);
+  --panel-strong: rgba(255, 255, 255, 0.04);
   --ui-font: 'IBM Plex Sans', 'Segoe UI', sans-serif;
   --brand-font: 'Orbitron', 'Segoe UI', sans-serif;
   --safe-top: env(safe-area-inset-top);
@@ -43,14 +52,20 @@ body,
 }
 
 html {
+  scroll-behavior: smooth;
   background: var(--bg);
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
+  overflow-x: hidden;
   min-height: 100dvh;
   color: var(--ink);
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 10% 4%, rgba(255, 255, 255, 0.16), transparent 30%),
+    radial-gradient(circle at 86% 18%, rgba(255, 255, 255, 0.09), transparent 28%),
+    var(--bg);
   font-family: var(--ui-font);
 }
 
@@ -92,19 +107,19 @@ button {
   z-index: 40;
   width: 42px;
   height: 42px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--white-16);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--ink);
+  background: var(--white-06);
+  color: var(--white);
   font-weight: 900;
   line-height: 1;
 }
 
 .info-button:hover,
 .info-button:focus-visible {
-  border-color: var(--line-strong);
+  border-color: var(--white-24);
   outline: none;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
 }
 
 .info-popover {
@@ -113,16 +128,16 @@ button {
   right: max(18px, calc(18px + var(--safe-right)));
   z-index: 35;
   width: min(330px, calc(100vw - 36px));
-  border: 1px solid var(--line);
+  border: 1px solid var(--white-16);
   border-radius: 24px;
-  background: #00011b;
+  background: var(--bg);
   box-shadow: var(--shadow);
   padding: 18px;
 }
 
 .info-popover p {
   margin: 0;
-  color: var(--muted);
+  color: var(--white-76);
   font-size: 14px;
   line-height: 1.65;
 }
@@ -167,15 +182,15 @@ button {
   display: grid;
   grid-template-columns: 1fr 52px;
   align-items: center;
-  border: 1px solid var(--line);
+  border: 1px solid var(--white-16);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.24);
+  box-shadow: var(--shadow);
   overflow: hidden;
 }
 
 .search-shell.is-active {
-  border-color: rgba(255, 255, 255, 0.42);
+  border-color: var(--white-24);
 }
 
 .search-shell.is-attached {
@@ -242,12 +257,12 @@ button {
 
 .suggestion-dock {
   z-index: 25;
-  border: 1px solid rgba(255, 255, 255, 0.42);
+  border: 1px solid var(--white-24);
   border-top: 0;
   border-radius: 0 0 32px 32px;
   background: rgba(255, 255, 255, 0.96);
   color: var(--bg);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.34);
+  box-shadow: var(--shadow);
   overflow: auto;
   padding: 8px;
 }
@@ -302,6 +317,15 @@ button {
   line-height: 1.4;
 }
 
+.suggestion-empty {
+  padding: 14px 16px 16px;
+  color: rgba(0, 1, 27, 0.62);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.45;
+  text-align: left;
+}
+
 .time-chip-row {
   display: none;
 }
@@ -327,10 +351,11 @@ button {
 .citation-panel,
 .citation-card,
 .empty-citations {
-  border: 1px solid var(--line);
+  border: 1px solid var(--white-16);
   border-radius: 30px;
   background: var(--panel);
   box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
 }
 
 .answer-card,
@@ -365,7 +390,7 @@ blockquote {
 }
 
 .answer-copy {
-  color: var(--muted);
+  color: var(--white-90);
   font-size: clamp(18px, 2vw, 22px);
   line-height: 1.65;
 }
@@ -404,10 +429,10 @@ blockquote {
 
 .citation-card button {
   min-height: 40px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--white-16);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--ink);
+  background: var(--white-06);
+  color: var(--white);
   padding: 0 16px;
   font-weight: 900;
 }
@@ -422,14 +447,14 @@ blockquote {
 
 .citation-card__domain {
   margin: 0;
-  color: var(--muted);
+  color: var(--white-62);
   font-size: 16px;
   font-weight: 900;
 }
 
 .citation-card__text,
 .empty-citations {
-  color: var(--muted);
+  color: var(--white-62);
   font-size: 16px;
   line-height: 1.6;
 }
@@ -516,6 +541,12 @@ blockquote {
 }
 
 @media (max-width: 440px) {
+  body {
+    background:
+      radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.055), transparent 34%),
+      var(--bg);
+  }
+
   .info-button {
     width: 38px;
     height: 38px;
