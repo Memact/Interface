@@ -277,12 +277,16 @@ button {
 }
 
 .control-icon--trash {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 
 .control-icon--trash path {
-  stroke-width: 1.9;
+  stroke-width: 2.25;
+}
+
+.control-icon--trash rect {
+  fill: currentColor;
 }
 
 .info-popover,

@@ -135,11 +135,11 @@ function DeleteIcon() {
 function TrashIcon() {
   return (
     <svg className="control-icon control-icon--trash" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M7.25 8.25h9.5" />
-      <path d="M10 8.25V6.25h4v2" />
-      <path d="M8.5 10.25 9.1 18.5h5.8l.6-8.25" />
-      <path d="M11 12.2v4.3" />
-      <path d="M13 12.2v4.3" />
+      <rect x="8.1" y="3.2" width="7.8" height="2.4" rx="1.2" />
+      <rect x="4.8" y="7.1" width="14.4" height="2.7" rx="1.35" />
+      <path d="M6.9 12v5.1c0 1.9 1.35 3.2 3.25 3.2h3.7c1.9 0 3.25-1.3 3.25-3.2V12" />
+      <rect x="9.4" y="12.5" width="2.1" height="5.3" rx="1.05" />
+      <rect x="12.5" y="12.5" width="2.1" height="5.3" rx="1.05" />
     </svg>
   )
 }
