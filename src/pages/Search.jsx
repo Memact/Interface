@@ -44,6 +44,10 @@ function buildStatus(extension, search, submittedQuery, voiceState) {
   if (search.error) return search.error
   if (submittedQuery && search.results.length) return `${search.results.length} source candidates`
   if (submittedQuery) return 'No strong source match yet.'
+  if (extension?.bootstrap?.status === 'running') return 'Seeding from recent browser activity...'
+  if (extension?.bootstrap?.status === 'complete' && Number(extension?.bootstrap?.imported_count || 0) > 0) {
+    return `${extension.bootstrap.imported_count} early activity sources seeded.`
+  }
   if (extension?.requiresBridge) return 'Connect Capture to form suggestions.'
   return 'Ready.'
 }
@@ -76,6 +80,10 @@ function buildActivitySuggestions(search) {
 }
 
 function buildEmptySuggestionMessage(extension) {
+  if (extension?.bootstrap?.status === 'running') {
+    return 'Memact is forming suggestions from recent browser activity.'
+  }
+
   if (extension?.requiresBridge) {
     return 'No suggestions formed yet. Connect Capture to form them from your activity.'
   }
@@ -369,6 +377,9 @@ export default function Search({ extension }) {
           <p>
             Memact helps you make better decisions by showing the sources around a thought,
             spotting one-sided views, and noticing emotions shaped by what you consume.
+            {extension?.bootstrap?.imported_count
+              ? ` It has already seeded ${extension.bootstrap.imported_count} early activity sources from recent browser history on this device.`
+              : ''}
           </p>
         </aside>
       ) : null}

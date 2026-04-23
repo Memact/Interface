@@ -322,6 +322,22 @@ function buildSearchDrivenSuggestions(query, answerMeta, results, limit = SUGGES
   return items.slice(0, limit)
 }
 
+function mergeSuggestionCollections(collections = [], limit = SUGGESTION_LIMIT) {
+  const items = []
+  const seen = new Set()
+
+  for (const collection of collections) {
+    for (const entry of Array.isArray(collection) ? collection : []) {
+      pushSuggestionItem(items, seen, entry)
+      if (items.length >= limit) {
+        return items
+      }
+    }
+  }
+
+  return items
+}
+
 function suggestionMatches(item, query) {
   const normalizedQuery = normalize(query).toLowerCase()
   if (!normalizedQuery) {
@@ -426,7 +442,10 @@ export function useSearch(extension, activeTimeFilter = null) {
 
   useEffect(() => {
     if (!extension?.detected || typeof extension.getSuggestions !== 'function') {
-      setSuggestions([])
+      const knowledgeSuggestions = Array.isArray(extension?.knowledge?.suggestionSeed)
+        ? extension.knowledge.suggestionSeed.map(normalizeSuggestion).filter(Boolean)
+        : []
+      setSuggestions(knowledgeSuggestions.slice(0, SUGGESTION_LIMIT))
       return undefined
     }
 
@@ -483,7 +502,12 @@ export function useSearch(extension, activeTimeFilter = null) {
           : Array.isArray(searchResponse)
             ? searchResponse.map(normalizeResult)
             : []
-        const answer = normalizeAnswerMeta(searchResponse?.answer)
+        const deterministicAnalysis = normalizedQuery
+          ? extension?.analyzeThought?.(normalizedQuery)
+          : null
+        const answer =
+          normalizeAnswerMeta(deterministicAnalysis?.answer) ||
+          normalizeAnswerMeta(searchResponse?.answer)
         searchDrivenItems = buildSearchDrivenSuggestions(
           normalizedQuery,
           answer,
@@ -505,9 +529,16 @@ export function useSearch(extension, activeTimeFilter = null) {
         pushSuggestionItem(mergedItems, seen, item)
       }
 
+      const knowledgeItems = Array.isArray(extension?.knowledge?.suggestionSeed)
+        ? extension.knowledge.suggestionSeed.map(normalizeSuggestion).filter(Boolean)
+        : []
+      const mergedCollections = mergeSuggestionCollections(
+        [mergedItems, knowledgeItems],
+        SUGGESTION_LIMIT
+      )
       const finalItems = normalizedQuery
-        ? filterSuggestions(mergedItems, normalizedQuery)
-        : mergedItems.slice(0, SUGGESTION_LIMIT)
+        ? filterSuggestions(mergedCollections, normalizedQuery)
+        : mergedCollections.slice(0, SUGGESTION_LIMIT)
 
       suggestionCacheRef.current.set(cacheKey, finalItems)
 
@@ -602,14 +633,16 @@ export function useSearch(extension, activeTimeFilter = null) {
 
         const normalizedResults = items.map(normalizeResult)
         const normalizedAnswerMeta = normalizeAnswerMeta(response?.answer)
+        const deterministicAnalysis = extension?.analyzeThought?.(normalized)
+        const deterministicAnswerMeta = normalizeAnswerMeta(deterministicAnalysis?.answer)
         resultCacheRef.current.set(cacheKey, {
           results: normalizedResults,
-          answerMeta: normalizedAnswerMeta,
+          answerMeta: deterministicAnswerMeta || normalizedAnswerMeta,
         })
-        setAnswerMeta(normalizedAnswerMeta)
+        setAnswerMeta(deterministicAnswerMeta || normalizedAnswerMeta)
         setResults(normalizedResults)
 
-        if (normalizedAnswerMeta) {
+        if (normalizedAnswerMeta && !deterministicAnswerMeta) {
           void structureAnswerMeta({
             query: normalized,
             answerMeta: normalizedAnswerMeta,

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { detectClientEnvironment } from '../lib/environment'
+import { analyzeThoughtQuery, buildMemactKnowledge } from '../lib/memactPipeline'
 import {
   clearWebMemories,
   initializeWebMemoryStore,
@@ -24,6 +25,9 @@ function isResponseType(type) {
     type === 'MEMACT_STATUS_RESULT' ||
     type === 'MEMACT_STATS_RESULT' ||
     type === 'MEMACT_CLEAR_ALL_DATA_RESULT' ||
+    type === 'CAPTURE_GET_SNAPSHOT_RESULT' ||
+    type === 'CAPTURE_BOOTSTRAP_STATUS_RESULT' ||
+    type === 'CAPTURE_BOOTSTRAP_HISTORY_RESULT' ||
     type === 'MEMACT_ERROR'
   )
 }
@@ -36,6 +40,8 @@ export function useExtension() {
   const [detected, setDetected] = useState(useWebFallback)
   const [bridgeDetected, setBridgeDetected] = useState(false)
   const [webMemoryCount, setWebMemoryCount] = useState(0)
+  const [knowledge, setKnowledge] = useState(null)
+  const [bootstrap, setBootstrap] = useState(null)
   const pending = useRef(new Map())
 
   useEffect(() => {
@@ -147,6 +153,9 @@ export function useExtension() {
         setDetected(true)
         setBridgeDetected(true)
         setReady(Boolean(data.status.ready))
+        if (data.status.bootstrap) {
+          setBootstrap(data.status.bootstrap)
+        }
       }
 
       resolver(data.results ?? data.status ?? data.stats ?? data.response ?? null)
@@ -169,6 +178,9 @@ export function useExtension() {
         if (status && !status.error) {
           setDetected(true)
           setReady(Boolean(status.ready))
+          if (status.bootstrap) {
+            setBootstrap(status.bootstrap)
+          }
           return
         }
         await sleep(1800)
@@ -210,6 +222,27 @@ export function useExtension() {
     return sendToExtension('MEMACT_STATS', {})
   }, [bridgeDetected, sendToExtension, useWebFallback])
 
+  const getSnapshot = useCallback((limit = 3000) => {
+    if (useWebFallback && !bridgeDetected) {
+      return Promise.resolve(null)
+    }
+    return sendToExtension('CAPTURE_GET_SNAPSHOT', { limit })
+  }, [bridgeDetected, sendToExtension, useWebFallback])
+
+  const getBootstrapStatus = useCallback(() => {
+    if (useWebFallback && !bridgeDetected) {
+      return Promise.resolve(null)
+    }
+    return sendToExtension('CAPTURE_BOOTSTRAP_STATUS', {})
+  }, [bridgeDetected, sendToExtension, useWebFallback])
+
+  const bootstrapHistory = useCallback((options = {}) => {
+    if (useWebFallback && !bridgeDetected) {
+      return Promise.resolve({ ok: false, skipped: true })
+    }
+    return sendToExtension('CAPTURE_BOOTSTRAP_HISTORY', options, 20000)
+  }, [bridgeDetected, sendToExtension, useWebFallback])
+
   const clearAllData = useCallback(async () => {
     if (useWebFallback && !bridgeDetected) {
       const response = await clearWebMemories()
@@ -220,6 +253,78 @@ export function useExtension() {
     }
     return sendToExtension('MEMACT_CLEAR_ALL_DATA', {})
   }, [bridgeDetected, sendToExtension, useWebFallback])
+
+  useEffect(() => {
+    if (!bridgeDetected) {
+      return undefined
+    }
+
+    let cancelled = false
+
+    const hydrateKnowledge = async () => {
+      const [statusResult, bootstrapResult] = await Promise.all([
+        getStatus().catch(() => null),
+        getBootstrapStatus().catch(() => null),
+      ])
+
+      if (cancelled) {
+        return
+      }
+
+      const bootstrapState =
+        bootstrapResult?.bootstrap || bootstrapResult || statusResult?.bootstrap || null
+      if (bootstrapState) {
+        setBootstrap(bootstrapState)
+      }
+
+      const eventCount = Number(statusResult?.eventCount || 0)
+      const shouldBootstrap =
+        eventCount < 40 &&
+        bootstrapState?.status !== 'running' &&
+        bootstrapState?.status !== 'complete'
+
+      if (shouldBootstrap) {
+        const bootstrapResponse = await bootstrapHistory({
+          days: 21,
+          limit: 320,
+        }).catch(() => null)
+
+        if (cancelled) {
+          return
+        }
+
+        const nextBootstrap =
+          bootstrapResponse?.bootstrap || bootstrapResponse || bootstrapState
+        if (nextBootstrap) {
+          setBootstrap(nextBootstrap)
+        }
+      }
+
+      const snapshotResponse = await getSnapshot(3000).catch(() => null)
+      if (cancelled) {
+        return
+      }
+      const snapshot = snapshotResponse?.snapshot || snapshotResponse || null
+      if (snapshot?.events?.length || snapshot?.activities?.length) {
+        setKnowledge(buildMemactKnowledge(snapshot))
+      } else {
+        setKnowledge(null)
+      }
+    }
+
+    hydrateKnowledge()
+
+    return () => {
+      cancelled = true
+    }
+  }, [bootstrapHistory, bridgeDetected, getBootstrapStatus, getSnapshot, getStatus])
+
+  const analyzeThought = useCallback((query) => {
+    if (!knowledge) {
+      return null
+    }
+    return analyzeThoughtQuery(query, knowledge)
+  }, [knowledge])
 
   const mode = bridgeDetected ? 'extension' : useWebFallback ? 'web-fallback' : 'bridge-required'
   const requiresBridge = mode === 'bridge-required'
@@ -233,21 +338,33 @@ export function useExtension() {
       requiresBridge,
       environment,
       webMemoryCount,
+      knowledge,
+      bootstrap,
       search,
       getSuggestions,
       getStatus,
       getStats,
+      getSnapshot,
+      getBootstrapStatus,
+      bootstrapHistory,
+      analyzeThought,
       clearAllData,
       sendToExtension,
     }),
     [
+      analyzeThought,
+      bootstrap,
+      bootstrapHistory,
       bridgeDetected,
       clearAllData,
       detected,
       environment,
+      getBootstrapStatus,
+      getSnapshot,
       getStatus,
       getStats,
       getSuggestions,
+      knowledge,
       mode,
       ready,
       requiresBridge,

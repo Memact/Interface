@@ -40,6 +40,18 @@ Capture -> Inference -> Schema -> Interface -> Influence / Origin
 
 The app should stay honest. It shows source candidates and patterns, not proof of causation.
 
+## First-Use Bootstrap
+
+When Capture connects for the first time, Memact can seed itself with a limited slice of recent browser history so the system does not start empty.
+
+- `Capture` imports recent browser history locally on-device.
+- `Inference` turns that early activity into deterministic themes.
+- `Schema` marks pattern strength as `emerging`, `reinforced`, or `stable`.
+- `Influence` checks for repeated directional movement in those early activities.
+- `Origin` is then used per thought query to find direct source candidates.
+
+These early patterns are provisional. Memact upgrades them as richer live capture replaces bootstrap-only evidence.
+
 ## Local OCR Policy
 
 Capture first uses normal page text, structured page regions, and PDF extraction. Local OCR is only a fallback when a page has weak extractable text.
