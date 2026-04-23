@@ -107,8 +107,8 @@ button {
   z-index: 40;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 7px;
+  gap: 10px;
+  padding: 8px;
   border: 1px solid var(--white-16);
   border-radius: 999px;
   background: var(--white-06);
@@ -117,8 +117,8 @@ button {
 }
 
 .result-controls button {
-  width: 40px;
-  height: 40px;
+  width: 46px;
+  height: 46px;
   display: grid;
   place-items: center;
   border: 0;
@@ -148,8 +148,8 @@ button {
   z-index: 40;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 7px;
+  gap: 10px;
+  padding: 8px;
   border: 1px solid var(--white-16);
   border-radius: 999px;
   background: var(--white-06);
@@ -158,8 +158,8 @@ button {
 }
 
 .top-actions button {
-  width: 40px;
-  height: 40px;
+  width: 46px;
+  height: 46px;
   display: grid;
   place-items: center;
   border: 0;
@@ -178,8 +178,8 @@ button {
 }
 
 .control-icon {
-  width: 23px;
-  height: 23px;
+  width: 26px;
+  height: 26px;
   display: block;
   overflow: visible;
 }
@@ -188,10 +188,15 @@ button {
 .control-icon circle {
   fill: none;
   stroke: currentColor;
-  stroke-width: 2.15;
+  stroke-width: 2.25;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
+}
+
+.control-icon--small {
+  width: 18px;
+  height: 18px;
 }
 
 .info-popover,
@@ -220,6 +225,13 @@ button {
   gap: 12px;
 }
 
+.history-popover__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .history-title,
 .history-empty {
   margin: 0;
@@ -239,13 +251,24 @@ button {
   gap: 6px;
 }
 
-.history-list button {
+.history-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 6px;
+}
+
+.history-query-button,
+.history-delete-button,
+.history-clear-button {
   width: 100%;
   min-height: 40px;
   border: 1px solid var(--white-16);
   border-radius: 999px;
   background: var(--white-06);
   color: var(--white);
+}
+
+.history-query-button {
   padding: 0 14px;
   overflow: hidden;
   text-align: left;
@@ -255,8 +278,24 @@ button {
   font-weight: 900;
 }
 
-.history-list button:hover,
-.history-list button:focus-visible {
+.history-delete-button,
+.history-clear-button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.history-clear-button {
+  width: 40px;
+  min-width: 40px;
+}
+
+.history-query-button:hover,
+.history-query-button:focus-visible,
+.history-delete-button:hover,
+.history-delete-button:focus-visible,
+.history-clear-button:hover,
+.history-clear-button:focus-visible {
   outline: none;
   background: var(--white-10);
 }
@@ -744,19 +783,24 @@ blockquote {
 
   .top-actions,
   .result-controls {
-    gap: 6px;
-    padding: 6px;
+    gap: 7px;
+    padding: 7px;
   }
 
   .top-actions button,
   .result-controls button {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
   }
 
   .control-icon {
-    width: 21px;
-    height: 21px;
+    width: 23px;
+    height: 23px;
+  }
+
+  .control-icon--small {
+    width: 17px;
+    height: 17px;
   }
 
   .search-home {

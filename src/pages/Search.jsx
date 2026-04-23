@@ -90,6 +90,15 @@ function ForwardIcon() {
   )
 }
 
+function ReloadIcon() {
+  return (
+    <svg className="control-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M18.2 7.4A7.2 7.2 0 1 0 19 12" />
+      <path d="M18.2 4.5v4.3h-4.3" />
+    </svg>
+  )
+}
+
 function HistoryIcon() {
   return (
     <svg className="control-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -106,6 +115,27 @@ function InfoIcon() {
       <circle cx="12" cy="12" r="7.5" />
       <path d="M12 11v5" />
       <path d="M12 8h.01" />
+    </svg>
+  )
+}
+
+function DeleteIcon() {
+  return (
+    <svg className="control-icon control-icon--small" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m7 7 10 10" />
+      <path d="m17 7-10 10" />
+    </svg>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg className="control-icon control-icon--small" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M8 8h8" />
+      <path d="M10 8V6h4v2" />
+      <path d="M9 10v7" />
+      <path d="M15 10v7" />
+      <path d="M7.5 8.5 8 19h8l.5-10.5" />
     </svg>
   )
 }
@@ -155,8 +185,9 @@ export default function Search({ extension }) {
   const status = buildStatus(extension, search, submittedQuery)
   const answerText = buildAnswerText(submittedQuery, search.answerMeta, search.results)
   const hasSubmitted = Boolean(submittedQuery)
-  const canGoBack = navigation.index > 0
-  const canGoForward = navigation.index >= 0 && navigation.index < navigation.entries.length - 1
+  const canGoBack = navigation.index >= 0
+  const canGoForward = navigation.index < navigation.entries.length - 1
+  const shouldShowNavigation = hasSubmitted || canGoForward
   const historyItems = search.recentSearches.filter(Boolean).slice(0, 8)
 
   const runQuery = async (value = search.query, { record = true } = {}) => {
@@ -186,6 +217,10 @@ export default function Search({ extension }) {
 
   const goBack = async () => {
     if (!canGoBack) {
+      return
+    }
+
+    if (navigation.index === 0) {
       setSubmittedQuery('')
       search.setQuery('')
       search.clearResults()
@@ -207,6 +242,11 @@ export default function Search({ extension }) {
     if (!query) return
     setNavigation((current) => ({ ...current, index: nextIndex }))
     await runQuery(query, { record: false })
+  }
+
+  const reloadCurrent = async () => {
+    if (!submittedQuery) return
+    await runQuery(submittedQuery, { record: false })
   }
 
   useEffect(() => {
@@ -249,12 +289,13 @@ export default function Search({ extension }) {
 
   return (
     <main className={`memact-page ${hasSubmitted ? 'has-results' : 'is-home'}`}>
-      {hasSubmitted ? (
+      {shouldShowNavigation ? (
         <nav className="result-controls" aria-label="Result navigation">
           <button
             className="nav-button nav-button--back"
             type="button"
-            aria-label={canGoBack ? 'Previous thought' : 'Back to home'}
+            aria-label="Back"
+            disabled={!canGoBack}
             onClick={goBack}
           >
             <BackIcon />
@@ -267,6 +308,15 @@ export default function Search({ extension }) {
             onClick={goForward}
           >
             <ForwardIcon />
+          </button>
+          <button
+            className="nav-button nav-button--reload"
+            type="button"
+            aria-label="Reload"
+            disabled={search.loading}
+            onClick={reloadCurrent}
+          >
+            <ReloadIcon />
           </button>
         </nav>
       ) : null}
@@ -309,17 +359,39 @@ export default function Search({ extension }) {
 
       {historyOpen ? (
         <aside ref={historyPopoverRef} className="history-popover" role="dialog" aria-label="Thought history">
-          <p className="history-title">History</p>
+          <div className="history-popover__top">
+            <p className="history-title">History</p>
+            {historyItems.length ? (
+              <button
+                className="history-clear-button"
+                type="button"
+                aria-label="Clear all history"
+                onClick={() => search.clearHistory()}
+              >
+                <TrashIcon />
+              </button>
+            ) : null}
+          </div>
           {historyItems.length ? (
             <div className="history-list">
               {historyItems.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => runQuery(item)}
-                >
-                  {item}
-                </button>
+                <div className="history-row" key={item}>
+                  <button
+                    className="history-query-button"
+                    type="button"
+                    onClick={() => runQuery(item)}
+                  >
+                    {item}
+                  </button>
+                  <button
+                    className="history-delete-button"
+                    type="button"
+                    aria-label={`Delete ${item}`}
+                    onClick={() => search.removeHistoryQuery(item)}
+                  >
+                    <DeleteIcon />
+                  </button>
+                </div>
               ))}
             </div>
           ) : (
