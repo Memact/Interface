@@ -266,10 +266,15 @@ button {
   height: 18px;
 }
 
+.control-icon--delete {
+  width: 22px;
+  height: 22px;
+}
+
 .info-popover,
 .history-popover {
   position: fixed;
-  top: max(70px, calc(70px + var(--safe-top)));
+  top: max(104px, calc(104px + var(--safe-top)));
   right: max(18px, calc(18px + var(--safe-right)));
   z-index: 35;
   width: min(330px, calc(100vw - 36px));
@@ -320,8 +325,8 @@ button {
 
 .history-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 40px;
-  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: 8px;
 }
 
 .history-query-button,
@@ -353,8 +358,12 @@ button {
 }
 
 .history-clear-button {
-  width: 40px;
-  min-width: 40px;
+  width: 44px;
+  min-width: 44px;
+}
+
+.history-delete-button {
+  color: var(--white-76);
 }
 
 .history-query-button:hover,
@@ -541,8 +550,8 @@ button {
 .search-button img {
   position: relative;
   z-index: 1;
-  width: 25px;
-  height: 25px;
+  width: 28px;
+  height: 28px;
   display: block;
   pointer-events: none;
 }

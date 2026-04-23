@@ -1,6 +1,5 @@
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" shape-rendering="geometricPrecision" xmlns="http://www.w3.org/2000/svg">
-  <path d="M12 4C10.48 4 9.25 5.23 9.25 6.75V12C9.25 13.52 10.48 14.75 12 14.75C13.52 14.75 14.75 13.52 14.75 12V6.75C14.75 5.23 13.52 4 12 4Z" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M6.75 11.25V12C6.75 14.9 9.1 17.25 12 17.25C14.9 17.25 17.25 14.9 17.25 12V11.25" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M12 17.25V20" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M9.5 20H14.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  <path d="M12 3.25C10.2 3.25 8.75 4.7 8.75 6.5V12.2C8.75 14 10.2 15.45 12 15.45C13.8 15.45 15.25 14 15.25 12.2V6.5C15.25 4.7 13.8 3.25 12 3.25Z" stroke="white" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  <path d="M6.25 11.3V12.05C6.25 15.22 8.83 17.8 12 17.8C15.17 17.8 17.75 15.22 17.75 12.05V11.3" stroke="white" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  <path d="M10.15 6.8H13.85" stroke="white" stroke-width="2.35" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
 </svg>
