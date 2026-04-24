@@ -940,7 +940,7 @@ button {
   padding: 18px 18px 16px;
   border: 1px solid var(--white-16);
   border-radius: 26px;
-  background: rgba(7, 8, 38, 0.96);
+  background: rgba(0, 1, 27, 0.96);
   box-shadow: var(--shadow);
   transform: translateX(-50%);
   backdrop-filter: blur(20px);
