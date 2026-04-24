@@ -309,6 +309,7 @@ export default function Search({ extension }) {
   const emptySuggestionMessage = buildEmptySuggestionMessage(extension, importDecision)
   const status = buildStatus(extension, search, submittedQuery, voiceState)
   const answerText = buildAnswerText(submittedQuery, search.answerMeta, search.results)
+  const bootstrapState = extension?.bootstrap || {}
   const shouldShowStatus = status !== 'Ready.'
   const shouldShowLoader =
     search.loading ||
@@ -320,7 +321,6 @@ export default function Search({ extension }) {
   const canGoForward = navigation.index < navigation.entries.length - 1
   const shouldShowNavigation = hasSubmitted || canGoForward
   const historyItems = search.recentSearches.filter(Boolean).slice(0, 8)
-  const bootstrapState = extension?.bootstrap || {}
   const captureEventCount = Number(search.stats?.eventCount || extension?.knowledge?.stats?.eventCount || 0)
   const hasBootstrapData =
     bootstrapState.status === 'complete' && Number(bootstrapState.imported_count || 0) > 0
