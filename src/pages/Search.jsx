@@ -300,19 +300,16 @@ export default function Search({ extension }) {
   const [importDecision, setImportDecision] = useState('')
   const [setupPromptRequested, setSetupPromptRequested] = useState(false)
   const [bootstrapRequested, setBootstrapRequested] = useState(false)
-  const [loadingRailActive, setLoadingRailActive] = useState(false)
   const [thoughtPrompt] = useState(() => THOUGHT_PROMPTS[Math.floor(Math.random() * THOUGHT_PROMPTS.length)])
   const topActionsRef = useRef(null)
   const historyPopoverRef = useRef(null)
   const settingsPopoverRef = useRef(null)
-  const loadingRailTimerRef = useRef(null)
 
   const suggestions = useMemo(() => buildActivitySuggestions(search), [search])
   const emptySuggestionMessage = buildEmptySuggestionMessage(extension, importDecision)
   const status = buildStatus(extension, search, submittedQuery, voiceState)
   const answerText = buildAnswerText(submittedQuery, search.answerMeta, search.results)
   const shouldShowStatus = status !== 'Ready.'
-  const isBusy = search.loading || bootstrapState.status === 'running'
   const hasSubmitted = Boolean(submittedQuery)
   const canGoBack = navigation.index >= 0
   const canGoForward = navigation.index < navigation.entries.length - 1
@@ -521,34 +518,6 @@ export default function Search({ extension }) {
       window.removeEventListener('keydown', handleKeyDown, true)
     }
   }, [historyOpen, infoOpen, settingsOpen])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined
-    }
-
-    if (loadingRailTimerRef.current) {
-      window.clearTimeout(loadingRailTimerRef.current)
-      loadingRailTimerRef.current = null
-    }
-
-    if (isBusy) {
-      setLoadingRailActive(true)
-      return undefined
-    }
-
-    loadingRailTimerRef.current = window.setTimeout(() => {
-      setLoadingRailActive(false)
-      loadingRailTimerRef.current = null
-    }, 900)
-
-    return () => {
-      if (loadingRailTimerRef.current) {
-        window.clearTimeout(loadingRailTimerRef.current)
-        loadingRailTimerRef.current = null
-      }
-    }
-  }, [isBusy])
 
   return (
     <main className={`memact-page ${hasSubmitted ? 'has-results' : 'is-home'}`}>
@@ -890,12 +859,6 @@ export default function Search({ extension }) {
         </section>
       ) : null}
 
-      <div
-        className={`memact-loading-rail ${loadingRailActive ? 'is-active' : 'is-idle'}`}
-        aria-hidden="true"
-      >
-          <span />
-      </div>
     </main>
   )
 }

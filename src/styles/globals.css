@@ -869,59 +869,6 @@ button {
   transition: color 160ms ease, opacity 160ms ease;
 }
 
-.memact-loading-rail {
-  position: fixed;
-  right: 0;
-  bottom: max(0px, var(--safe-bottom));
-  left: 0;
-  z-index: 90;
-  height: 8px;
-  overflow: hidden;
-  background:
-    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08) 12%, rgba(255, 255, 255, 0.14) 50%, rgba(255, 255, 255, 0.08) 88%, transparent);
-  box-shadow:
-    0 -1px 0 rgba(255, 255, 255, 0.08),
-    0 -10px 26px rgba(255, 255, 255, 0.04);
-  opacity: 0.48;
-  pointer-events: none;
-  transition: opacity 180ms ease, box-shadow 180ms ease;
-}
-
-.memact-loading-rail span {
-  display: block;
-  width: 26%;
-  height: 100%;
-  border-radius: 999px;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.9) 48%, rgba(255, 255, 255, 0.05));
-  box-shadow:
-    0 0 16px rgba(255, 255, 255, 0.44),
-    0 0 30px rgba(255, 255, 255, 0.18);
-  opacity: 0;
-  transform: translateX(-130%);
-}
-
-.memact-loading-rail.is-active {
-  opacity: 0.96;
-  box-shadow:
-    0 -1px 0 rgba(255, 255, 255, 0.14),
-    0 -12px 30px rgba(255, 255, 255, 0.08);
-}
-
-.memact-loading-rail.is-active span {
-  opacity: 1;
-  animation: memact-loading-rail 1.18s ease-in-out infinite;
-}
-
-@keyframes memact-loading-rail {
-  0% {
-    transform: translateX(-130%);
-  }
-  100% {
-    transform: translateX(450%);
-  }
-}
-
 .memact-modal-backdrop {
   position: fixed;
   inset: 0;
