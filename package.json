@@ -22,12 +22,8 @@
     "sync-capture-zip": "node scripts/sync-capture-zip.mjs"
   },
   "dependencies": {
-    "@huggingface/transformers": "^4.1.0",
     "dexie": "^4.4.2",
     "flexsearch": "^0.8.212",
-    "katex": "^0.16.45",
-    "mathjax-full": "^3.2.2",
-    "pdfjs-dist": "^5.6.205",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

@@ -51,11 +51,20 @@ const MIME_TYPES = new Map([
   ['.ttf', 'font/ttf'],
 ])
 
+function securityHeaders(extra = {}) {
+  return {
+    'x-frame-options': 'DENY',
+    'x-content-type-options': 'nosniff',
+    'referrer-policy': 'strict-origin-when-cross-origin',
+    ...extra,
+  }
+}
+
 function sendJson(response, statusCode, body, origin = '') {
-  const headers = {
+  const headers = securityHeaders({
     'content-type': 'application/json; charset=utf-8',
     'cache-control': 'no-store',
-  }
+  })
   if (origin && ALLOWED_ORIGINS.has(origin)) {
     headers['access-control-allow-origin'] = origin
     headers.vary = 'origin'
@@ -227,17 +236,21 @@ async function serveStatic(request, response) {
   try {
     const content = await readFile(filePath)
     const extension = path.extname(filePath)
-    response.writeHead(200, {
+    response.writeHead(200, securityHeaders({
       'content-type': MIME_TYPES.get(extension) || 'application/octet-stream',
-      'cache-control': pathname.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache',
-    })
+      'cache-control': pathname.startsWith('/assets/')
+        ? 'public, max-age=31536000, immutable'
+        : pathname === '/memact-extension.zip'
+          ? 'public, max-age=300, must-revalidate'
+          : 'no-cache',
+    }))
     response.end(content)
   } catch {
     const index = await readFile(path.join(DIST_DIR, 'index.html'))
-    response.writeHead(200, {
+    response.writeHead(200, securityHeaders({
       'content-type': 'text/html; charset=utf-8',
       'cache-control': 'no-cache',
-    })
+    }))
     response.end(index)
   }
 }
@@ -245,12 +258,12 @@ async function serveStatic(request, response) {
 const server = http.createServer(async (request, response) => {
   const origin = normalize(request.headers.origin)
   if (request.method === 'OPTIONS') {
-    response.writeHead(204, {
+    response.writeHead(204, securityHeaders({
       'access-control-allow-origin': ALLOWED_ORIGINS.has(origin) ? origin : '',
       'access-control-allow-methods': 'POST, OPTIONS',
       'access-control-allow-headers': 'content-type',
       vary: 'origin',
-    })
+    }))
     response.end()
     return
   }
