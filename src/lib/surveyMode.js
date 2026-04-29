@@ -218,6 +218,7 @@ export function createSurveyPacket(answers = {}, deck = buildSurveyDeck(), optio
     mode: 'survey',
     created_at: timestamp,
     query,
+    context: options.context || {},
     answers: {
       topic,
       intent,

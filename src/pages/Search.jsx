@@ -198,37 +198,103 @@ function surveyLabel(packet, key, fallback = '') {
   return normalize(surveyAnswer(packet, key).label || fallback)
 }
 
+function cleanSurveyTopic(value) {
+  let text = normalize(value)
+    .replace(/\s*[?.!]+$/g, '')
+    .replace(/\s+/g, ' ')
+
+  const patterns = [
+    /^where did my thinking about (.+?) first show up$/i,
+    /^what has been shaping my thinking about (.+?)$/i,
+    /^what keeps repeating around (.+?)$/i,
+    /^how has my thinking about (.+?) changed recently$/i,
+    /^what could be one-sided around (.+?)$/i,
+  ]
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern)
+    if (match?.[1]) {
+      text = match[1]
+      break
+    }
+  }
+
+  return normalize(text.replace(/\.\s*look especially at .+$/i, '')) || 'this thought'
+}
+
+function topicPhrase(value) {
+  const topic = cleanSurveyTopic(value).toLowerCase()
+  if (topic === 'a project') return 'your project thinking'
+  if (topic === 'an idea') return 'your idea'
+  if (topic === 'a decision') return 'your decision'
+  if (topic === 'a feeling') return 'that feeling'
+  if (topic === 'research direction') return 'your research direction'
+  if (topic.startsWith('your ') || topic.startsWith('that ')) return topic
+  return `your thinking about ${topic.replace(/^(a|an|the)\s+/i, '')}`
+}
+
+function displayTopic(value) {
+  const topic = cleanSurveyTopic(value).toLowerCase()
+  if (topic === 'a project') return 'Project thinking'
+  if (topic === 'an idea') return 'Idea'
+  if (topic === 'a decision') return 'Decision'
+  if (topic === 'a feeling') return 'Feeling'
+  if (topic === 'research direction') return 'Research direction'
+  return cleanSurveyTopic(value)
+}
+
+function surveyFocusLabels(packet) {
+  const labels = Array.isArray(packet?.context?.focusLabels)
+    ? packet.context.focusLabels
+    : []
+  return labels.map(normalize).filter(Boolean)
+}
+
 function buildSurveyHeadline(packet) {
-  const topic = surveyLabel(packet, 'topic', 'this thought')
-  if (!topic) return 'Memact made a starting map.'
-  return `Memact made a starting map for ${topic}.`
+  const phrase = topicPhrase(surveyLabel(packet, 'topic', 'this thought'))
+  const intentId = normalize(surveyAnswer(packet, 'intent').id).toLowerCase()
+
+  if (intentId === 'origin') {
+    return `Memact is looking for where ${phrase} may have started.`
+  }
+  if (intentId === 'repetition') {
+    return `Memact is checking what keeps repeating around ${phrase}.`
+  }
+  if (intentId === 'change') {
+    return `Memact is checking how ${phrase} may have changed.`
+  }
+  if (intentId === 'one_sided') {
+    return `Memact is checking what may be one-sided around ${phrase}.`
+  }
+
+  return `Memact is looking at what may have shaped ${phrase}.`
 }
 
 function buildSurveyCopy(packet, results) {
-  const topic = surveyLabel(packet, 'topic', 'this area').toLowerCase()
-  const intent = surveyLabel(packet, 'intent', 'what shaped it').toLowerCase()
-  const evidence = surveyLabel(packet, 'evidence', 'the strongest clues').toLowerCase()
+  const phrase = topicPhrase(surveyLabel(packet, 'topic', 'this thought'))
+  const focus = surveyFocusLabels(packet)
+  const focusText = focus.length ? ` It is focusing on ${focus.join(', ')}.` : ''
 
   if (results.length) {
-    return `Memact is checking ${topic} through ${intent}. It found ${results.length} useful link${results.length === 1 ? '' : 's'} to start with, with ${evidence} as the first focus.`
+    return `Memact found ${results.length} useful link${results.length === 1 ? '' : 's'} while checking ${phrase}.${focusText}`
   }
 
-  return `Memact now knows to check ${topic} through ${intent}, with ${evidence} as the first focus. A direct link is optional here; more answers can make the map sharper.`
+  return `Memact is using your answers to check ${phrase}.${focusText} Direct links are optional; this can update as Capture adds more activity.`
 }
 
 function buildSurveyMapItems(packet, results) {
   return [
     {
       label: 'Area',
-      value: surveyLabel(packet, 'topic', 'Not selected'),
+      value: displayTopic(surveyLabel(packet, 'topic', 'Not selected')),
     },
     {
       label: 'Question',
       value: surveyLabel(packet, 'intent', 'What shaped it'),
     },
     {
-      label: 'First check',
-      value: surveyLabel(packet, 'evidence', 'Useful clues'),
+      label: 'Focus',
+      value: surveyFocusLabels(packet).join(', ') || surveyLabel(packet, 'evidence', 'Useful clues'),
     },
     {
       label: 'Links',
@@ -248,14 +314,68 @@ function needsMoreContext(answerMeta) {
   )
 }
 
-function buildContextQuery(seedQuery, questions, answers) {
-  const choices = (questions || [])
-    .map((question) => answers?.[question.id]?.label)
+function semanticChoiceLabel(option) {
+  const id = normalize(option?.id).toLowerCase()
+  const label = normalize(option?.label)
+  const map = new Map([
+    ['read-watch', 'content you consumed'],
+    ['searches', 'searches you made'],
+    ['projects', 'project work'],
+    ['started', 'where it may have started'],
+    ['shaped', 'what may have shaped it'],
+    ['repeated', 'what keeps repeating'],
+    ['plain', 'a plain answer'],
+    ['map', 'a thought map'],
+    ['angles', 'contrasting viewpoints'],
+    ['before-action', 'moments before action'],
+    ['after-reading', 'after consuming content'],
+    ['while-comparing', 'moments of comparison'],
+    ['build', 'pressure to build'],
+    ['avoid', 'avoidance signals'],
+    ['rethink', 'reconsidering a choice'],
+    ['agreement', 'supporting signals'],
+    ['opposite', 'opposing signals'],
+    ['change', 'recent changes'],
+    ['sources', 'source links'],
+    ['schemas', 'thinking frames'],
+    ['patterns', 'repeated activity'],
+    ['contrasts', 'contrasting viewpoints'],
+    ['new_signal', 'new clues'],
+  ])
+
+  return map.get(id) || label.toLowerCase()
+}
+
+function selectedContextChoices(questions, answers) {
+  return (questions || [])
+    .map((question) => answers?.[question.id])
+    .filter(Boolean)
+}
+
+function semanticChoiceLabels(questions, answers) {
+  return selectedContextChoices(questions, answers)
+    .map(semanticChoiceLabel)
     .map(normalize)
     .filter(Boolean)
+}
 
-  if (!choices.length) return seedQuery
-  return `${seedQuery}. Look especially at ${choices.join(', ')}.`
+function queryForIntent(intent, topic) {
+  const cleanTopic = cleanSurveyTopic(topic).toLowerCase()
+  const intentId = normalize(intent?.id).toLowerCase()
+
+  if (intentId === 'origin') return `Where did my thinking about ${cleanTopic} first show up?`
+  if (intentId === 'repetition') return `What keeps repeating around ${cleanTopic}?`
+  if (intentId === 'change') return `How has my thinking about ${cleanTopic} changed recently?`
+  if (intentId === 'one_sided') return `What could be one-sided around ${cleanTopic}?`
+  return `What has been shaping my thinking about ${cleanTopic}?`
+}
+
+function buildContextQuery(seedQuery, questions, answers, topic = seedQuery, intent = null) {
+  const choices = semanticChoiceLabels(questions, answers)
+  const baseQuery = queryForIntent(intent, topic)
+
+  if (!choices.length) return baseQuery
+  return `${baseQuery} Focus on ${choices.join(', ')}.`
 }
 
 function contextQuestionsForRound(round = 0) {
@@ -753,7 +873,13 @@ export default function Search({ extension }) {
   }
 
   const submitSurvey = async () => {
-    const packet = createSurveyPacket(surveyAnswers, surveyDeck)
+    const focusLabel = semanticChoiceLabel(surveyAnswers.evidence || {})
+    const packet = createSurveyPacket(surveyAnswers, surveyDeck, {
+      context: {
+        focusLabels: focusLabel ? [focusLabel] : [],
+        contextRound: 0,
+      },
+    })
     setLastSurveyPacket(packet)
     saveSurveyPacket(packet)
     setContextSeedQuery('')
@@ -767,20 +893,37 @@ export default function Search({ extension }) {
     const seedQuery = normalize(contextSeedQuery || submittedQuery || search.query)
     if (!seedQuery) return
 
-    const nextQuery = buildContextQuery(seedQuery, contextQuestions, contextAnswers)
-    const firstAnswer = Object.values(contextAnswers).find(Boolean)
+    const previousTopic = cleanSurveyTopic(surveyLabel(lastSurveyPacket, 'topic', seedQuery))
+    const previousIntent = surveyAnswer(lastSurveyPacket, 'intent')
+    const focusLabels = semanticChoiceLabels(contextQuestions, contextAnswers)
+    const nextQuery = buildContextQuery(seedQuery, contextQuestions, contextAnswers, previousTopic, previousIntent)
+    const selectedChoices = selectedContextChoices(contextQuestions, contextAnswers)
+    const firstAnswer = selectedChoices[0]
     const packet = createSurveyPacket(
       {
-        topic: { id: 'typed-thought', label: seedQuery, source: 'typed thought' },
-        intent: { id: 'influence', label: 'What shaped it', relation: 'influenced_by' },
+        topic: {
+          id: normalize(surveyAnswer(lastSurveyPacket, 'topic').id) || 'typed-thought',
+          label: previousTopic,
+          source: surveyAnswer(lastSurveyPacket, 'topic').source || 'typed thought',
+        },
+        intent: previousIntent?.id
+          ? previousIntent
+          : { id: 'influence', label: 'What shaped it', relation: 'influenced_by' },
         evidence: {
           id: firstAnswer?.id || 'context',
-          label: firstAnswer?.label || 'More context',
+          label: focusLabels[0] || 'More context',
           relation: 'self_reported',
         },
       },
       surveyDeck,
-      { query: nextQuery }
+      {
+        query: nextQuery,
+        context: {
+          seedQuery,
+          focusLabels,
+          contextRound,
+        },
+      }
     )
 
     setLastSurveyPacket(packet)

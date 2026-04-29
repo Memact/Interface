@@ -51,6 +51,7 @@ Survey results do not pretend every answer has source links. If Memact has links
 
 Prompt Mode also avoids dead ends. When a typed thought has too little context, Memact moves into Survey Mode instead of showing a failed result.
 The extra questions are progressive. Memact should not keep asking the same set again and again.
+Survey answers are converted into meaning before they are shown back to the user. For example, a choice like `What I read or watched` becomes `content you consumed`, not a copied button label.
 
 ## Infrastructure Contract
 
