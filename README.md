@@ -36,6 +36,17 @@ Capture -> Inference -> Schema -> Memory -> Website / Query -> Influence / Origi
 - `Origin`
   Shows what may have first introduced the thought.
 
+## Prompt And Survey Modes
+
+Website has two input modes:
+
+- `Prompt`
+  Type a thought directly when the thought is already clear.
+- `Survey`
+  Answer a short guided flow when the thought is still vague.
+
+Survey Mode builds its questions from existing schema memories, schema packets, influence chains, and activity themes. If there is no activity yet, it says so and uses broad starter areas such as research, decisions, ideas, projects, and feelings. A completed survey creates a local `survey_response` packet with nodes and edges, then turns that packet into a deterministic query for the same Memact answer flow.
+
 ## Infrastructure Contract
 
 Website is only one Memact client.

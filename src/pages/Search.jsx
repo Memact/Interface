@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import MathRichText from '../components/MathRichText'
 import SearchBar from '../components/SearchBar'
 import { useSearch } from '../hooks/useSearch'
+import { buildSurveyDeck, createSurveyPacket, saveSurveyPacket } from '../lib/surveyMode'
 
 const INSTALL_PROMPT_DISMISSED_KEY = 'memact.install-prompt-dismissed'
 const IMPORT_DECISION_KEY = 'memact.import-decision'
@@ -17,6 +18,11 @@ const THOUGHT_PROMPTS = [
   'What idea keeps returning lately?',
   'What thought have you been circling around?',
   'What have you been quietly carrying?',
+]
+
+const INPUT_MODES = [
+  { id: 'prompt', label: 'Prompt' },
+  { id: 'survey', label: 'Survey' },
 ]
 
 function normalize(value) {
@@ -310,9 +316,88 @@ function SourceCard({ result, index }) {
   )
 }
 
+function ModeSwitch({ mode, onChange }) {
+  return (
+    <div className="mode-switch" role="tablist" aria-label="Input mode">
+      {INPUT_MODES.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          role="tab"
+          aria-selected={mode === item.id}
+          className={mode === item.id ? 'is-active' : ''}
+          onClick={() => onChange(item.id)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function SurveyPanel({
+  deck,
+  step,
+  answers,
+  disabled = false,
+  onSelect,
+  onBack,
+  onNext,
+  onSubmit,
+}) {
+  const questions = deck.questions || []
+  const question = questions[step] || questions[0]
+  const selected = question ? answers[question.id] : null
+  const isLast = step >= questions.length - 1
+
+  if (!question) {
+    return null
+  }
+
+  return (
+    <section className="survey-panel" aria-label="Survey mode">
+      <div className="survey-panel__top">
+        <span>{question.eyebrow}</span>
+        {!deck.hasActivity ? <span>No activity yet</span> : null}
+      </div>
+      <h2>{question.title}</h2>
+      <div className="survey-options">
+        {question.options.map((option) => (
+          <button
+            key={`${question.id}-${option.id}`}
+            type="button"
+            className={selected?.id === option.id ? 'is-selected' : ''}
+            disabled={disabled}
+            onClick={() => onSelect(question.id, option)}
+          >
+            <span>{option.label}</span>
+            {option.source ? <small>{option.source}</small> : null}
+          </button>
+        ))}
+      </div>
+      <div className="survey-actions">
+        <button type="button" disabled={disabled || step === 0} onClick={onBack}>
+          Back
+        </button>
+        <button
+          type="button"
+          disabled={disabled || !selected}
+          onClick={isLast ? onSubmit : onNext}
+        >
+          {isLast ? 'See connections' : 'Next'}
+        </button>
+      </div>
+    </section>
+  )
+}
+
 export default function Search({ extension }) {
   const search = useSearch(extension, null)
+  const [inputMode, setInputMode] = useState('prompt')
   const [submittedQuery, setSubmittedQuery] = useState('')
+  const [lastSurveyPacket, setLastSurveyPacket] = useState(null)
+  const [surveyStep, setSurveyStep] = useState(0)
+  const [surveyAnswers, setSurveyAnswers] = useState({})
   const [navigation, setNavigation] = useState({ entries: [], index: -1 })
   const [historyOpen, setHistoryOpen] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
@@ -329,6 +414,10 @@ export default function Search({ extension }) {
   const historyPopoverRef = useRef(null)
   const settingsPopoverRef = useRef(null)
 
+  const surveyDeck = useMemo(
+    () => buildSurveyDeck(extension?.knowledge || {}),
+    [extension?.knowledge]
+  )
   const suggestions = useMemo(() => buildActivitySuggestions(search), [search])
   const emptySuggestionMessage = buildEmptySuggestionMessage(extension, importDecision)
   const status = buildStatus(extension, search, submittedQuery, voiceState)
@@ -384,6 +473,21 @@ export default function Search({ extension }) {
 
   const requestSetupPrompt = () => {
     setSetupPromptRequested(true)
+  }
+
+  const selectSurveyAnswer = (questionId, option) => {
+    requestSetupPrompt()
+    setSurveyAnswers((current) => ({
+      ...current,
+      [questionId]: option,
+    }))
+  }
+
+  const submitSurvey = async () => {
+    const packet = createSurveyPacket(surveyAnswers, surveyDeck)
+    setLastSurveyPacket(packet)
+    saveSurveyPacket(packet)
+    await runQuery(packet.query)
   }
 
   const requestBootstrapImport = async () => {
@@ -880,22 +984,56 @@ export default function Search({ extension }) {
           </span>
         </h1>
         <div className="brand-divider" aria-hidden="true" />
+        <ModeSwitch
+          mode={inputMode}
+          onChange={(nextMode) => {
+            setInputMode(nextMode)
+            setInfoOpen(false)
+            setHistoryOpen(false)
+            setSettingsOpen(false)
+            if (nextMode === 'survey' && hasSubmitted) {
+              setSubmittedQuery('')
+              search.setQuery('')
+              search.clearResults()
+              setNavigation((current) => ({ ...current, index: -1 }))
+            }
+          }}
+        />
         {!hasSubmitted ? (
           <p className="thought-prompt">{thoughtPrompt}</p>
         ) : null}
-        <SearchBar
-          value={search.query}
-          onChange={search.setQuery}
-          onSubmit={runQuery}
-          onSuggestionClick={runQuery}
-          onInteraction={requestSetupPrompt}
-          onVoiceStateChange={setVoiceState}
-          placeholder={EXAMPLE_PLACEHOLDERS}
-          loading={search.loading}
-          disabled={isBackgroundProcessing}
-          suggestions={suggestions}
-          emptySuggestionMessage={emptySuggestionMessage}
-        />
+        {inputMode === 'survey' && !hasSubmitted ? (
+          <SurveyPanel
+            deck={surveyDeck}
+            step={surveyStep}
+            answers={surveyAnswers}
+            disabled={isBackgroundProcessing || search.loading}
+            onSelect={selectSurveyAnswer}
+            onBack={() => setSurveyStep((current) => Math.max(0, current - 1))}
+            onNext={() => setSurveyStep((current) => Math.min(surveyDeck.questions.length - 1, current + 1))}
+            onSubmit={submitSurvey}
+          />
+        ) : (
+          <SearchBar
+            value={search.query}
+            onChange={search.setQuery}
+            onSubmit={(value) => {
+              setLastSurveyPacket(null)
+              runQuery(value)
+            }}
+            onSuggestionClick={(value) => {
+              setLastSurveyPacket(null)
+              runQuery(value)
+            }}
+            onInteraction={requestSetupPrompt}
+            onVoiceStateChange={setVoiceState}
+            placeholder={inputMode === 'survey' ? ['Survey generated thought'] : EXAMPLE_PLACEHOLDERS}
+            loading={search.loading}
+            disabled={isBackgroundProcessing}
+            suggestions={suggestions}
+            emptySuggestionMessage={emptySuggestionMessage}
+          />
+        )}
         {shouldShowStatus ? (
           <div className={`search-status-wrap ${shouldShowLoader ? 'is-loading' : ''}`}>
             {shouldShowLoader ? (
@@ -918,6 +1056,13 @@ export default function Search({ extension }) {
             <div className="answer-copy">
               <MathRichText text={answerText} />
             </div>
+            {lastSurveyPacket ? (
+              <div className="survey-packet-preview" aria-label="Survey packet">
+                <span>Survey packet</span>
+                <span>{lastSurveyPacket.nodes.length} nodes</span>
+                <span>{lastSurveyPacket.edges.length} edges</span>
+              </div>
+            ) : null}
           </article>
 
           <section className="source-panel" aria-label="Sources">
