@@ -1,5 +1,5 @@
 import { analyzeCaptureSnapshot } from "../../../inference/src/engine.mjs"
-import { buildMemoryStore, retrieveCognitiveSchemas, retrieveMemories } from "../../../memory/src/engine.mjs"
+import { buildMemoryStore, buildRagContext, retrieveCognitiveSchemas, retrieveMemories } from "../../../memory/src/engine.mjs"
 import { detectSchemas } from "../../../schema/src/engine.mjs"
 import { detectOriginCandidates } from "../../../origin/src/engine.mjs"
 import { analyzeInfluenceSnapshot } from "../../../influence/src/engine.mjs"
@@ -347,6 +347,12 @@ export function analyzeThoughtQuery(query, knowledge) {
   })
   const cognitiveSchemas = relevantCognitiveSchemas(normalizedQuery, knowledge)
   const relevantMemories = relevantMemorySignals(normalizedQuery, knowledge)
+  const ragContext = buildRagContext(normalizedQuery, knowledge.memory || {}, {
+    top: 6,
+    schemaTop: 3,
+    minScore: 0.08,
+    schemaMinScore: 0.08,
+  })
   const relevantSchemas = relevantSchemaSignals(origin, knowledge.schema || {})
   const relevantInfluence = relevantInfluenceSignals(normalizedQuery, origin, knowledge.influence || {})
 
@@ -421,6 +427,7 @@ export function analyzeThoughtQuery(query, knowledge) {
     relevantSchemas,
     relevantCognitiveSchemas: cognitiveSchemas,
     relevantMemories,
+    ragContext,
     relevantInfluence,
     answer,
     explanation: createThoughtExplanationEnvelope({
@@ -428,6 +435,7 @@ export function analyzeThoughtQuery(query, knowledge) {
       origin,
       relevantSchemas,
       relevantCognitiveSchemas: cognitiveSchemas,
+      ragContext,
       relevantInfluence,
       answer,
       knowledge,

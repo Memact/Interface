@@ -111,6 +111,7 @@ export function createApiExplanationRequest({
   relevantSchemas,
   relevantCognitiveSchemas,
   relevantMemories,
+  ragContext,
   relevantInfluence,
   answer,
   knowledge,
@@ -167,6 +168,30 @@ export function createApiExplanationRequest({
         themes: compactArray(item?.themes, 10),
         evidence_packet_ids: compactArray(item?.evidence_packet_ids, 10),
       })),
+      rag_context: ragContext
+        ? {
+            contract: normalize(ragContext.contract),
+            version: normalize(ragContext.version),
+            policy: ragContext.policy || {},
+            context_items: compactArray(ragContext.context_items, 6).map((item) => ({
+              id: normalize(item?.id),
+              type: normalize(item?.type),
+              label: normalize(item?.label),
+              summary: normalize(item?.summary),
+              core_interpretation: normalize(item?.core_interpretation),
+              action_tendency: normalize(item?.action_tendency),
+              retrieval_score: Number(item?.retrieval_score || 0),
+              strength: Number(item?.strength || 0),
+              themes: compactArray(item?.themes, 8),
+              evidence_packet_ids: compactArray(item?.evidence_packet_ids, 8),
+            })),
+            sources: compactArray(ragContext.sources, 4).map((source) => ({
+              title: normalize(source?.title),
+              domain: normalize(source?.domain),
+              url: normalize(source?.url),
+            })),
+          }
+        : null,
       influence_signals: compactArray(relevantInfluence, 4).map((chain) => ({
         from: normalize(chain?.from),
         to: normalize(chain?.to),
@@ -185,6 +210,7 @@ export function createThoughtExplanationEnvelope({
   relevantSchemas,
   relevantCognitiveSchemas,
   relevantMemories,
+  ragContext,
   relevantInfluence,
   answer,
   knowledge,
@@ -195,6 +221,7 @@ export function createThoughtExplanationEnvelope({
     relevantSchemas,
     relevantCognitiveSchemas,
     relevantMemories,
+    ragContext,
     relevantInfluence,
     answer,
     knowledge,
@@ -211,6 +238,7 @@ export function createThoughtExplanationEnvelope({
     relevantSchemas,
     relevantCognitiveSchemas,
     relevantMemories,
+    ragContext,
     relevantInfluence,
     apiExplanationRequest,
   }

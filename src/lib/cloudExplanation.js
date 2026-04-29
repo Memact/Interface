@@ -125,6 +125,30 @@ function cleanExplanationRequest(explanationRequest = {}) {
           .map((id) => normalize(id, 80))
           .filter(Boolean),
       })),
+      rag_context: evidence.rag_context
+        ? {
+            contract: normalize(evidence.rag_context.contract, 80),
+            version: normalize(evidence.rag_context.version, 24),
+            policy: evidence.rag_context.policy || {},
+            context_items: compactArray(evidence.rag_context.context_items, 6).map((item) => ({
+              id: normalize(item?.id, 120),
+              type: normalize(item?.type, 60),
+              label: normalize(item?.label, 140),
+              summary: normalize(item?.summary, 220),
+              core_interpretation: normalize(item?.core_interpretation, 220),
+              action_tendency: normalize(item?.action_tendency, 180),
+              retrieval_score: Number(item?.retrieval_score || 0),
+              strength: Number(item?.strength || 0),
+              themes: compactArray(item?.themes, 8).map((theme) => normalize(theme, 40)).filter(Boolean),
+              evidence_packet_ids: compactArray(item?.evidence_packet_ids, 8).map((id) => normalize(id, 80)).filter(Boolean),
+            })),
+            sources: compactArray(evidence.rag_context.sources, 4).map((source) => ({
+              title: normalize(source?.title, 120),
+              domain: normalize(source?.domain, 80),
+              url: normalize(source?.url, 220),
+            })),
+          }
+        : null,
       influence_signals: compactArray(evidence.influence_signals, MAX_INFLUENCE_SIGNALS).map((chain) => ({
         from: normalize(chain?.from, 80),
         to: normalize(chain?.to, 80),
