@@ -253,3 +253,63 @@ export async function requestCloudExplanation({ query, explanation, answerMeta, 
     return null
   }
 }
+
+function followUpEndpoint() {
+  const explicit = normalize(import.meta.env.VITE_MEMACT_GEMINI_FOLLOWUP_ENDPOINT)
+  if (explicit) return explicit
+
+  const answerEndpoint = normalize(import.meta.env.VITE_MEMACT_GEMINI_ENDPOINT)
+  if (!answerEndpoint) return ''
+
+  if (answerEndpoint.includes('/api/gemini-answer')) {
+    return answerEndpoint.replace('/api/gemini-answer', '/api/gemini-followups')
+  }
+
+  return ''
+}
+
+function normalizeFollowUpQuestions(value) {
+  const questions = Array.isArray(value?.questions) ? value.questions : []
+  return questions
+    .map((question, index) => ({
+      id: normalize(question?.id, 48) || `ai-${index + 1}`,
+      title: normalize(question?.title, 96),
+      options: compactArray(question?.options, 4)
+        .map((option, optionIndex) => ({
+          id: normalize(option?.id, 48) || `option-${optionIndex + 1}`,
+          label: normalize(option?.label || option, 64),
+        }))
+        .filter((option) => option.label),
+    }))
+    .filter((question) => question.title && question.options.length >= 2)
+    .slice(0, 3)
+}
+
+export async function requestCloudFollowUpQuestions({ query, mode = 'prompt', reason = 'weak_context' }) {
+  const endpoint = followUpEndpoint()
+  if (!endpoint) {
+    return []
+  }
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: normalize(query, 180),
+        mode: normalize(mode, 40),
+        reason: normalize(reason, 80),
+      }),
+    })
+
+    if (!response.ok) {
+      return []
+    }
+
+    return normalizeFollowUpQuestions(await response.json())
+  } catch {
+    return []
+  }
+}

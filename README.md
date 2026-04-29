@@ -47,7 +47,9 @@ Website has two input modes:
 
 Survey Mode builds its questions from what Memact already knows about the user's activity. If there is no activity yet, it says so and uses broad starter areas such as research, decisions, ideas, projects, and feelings. A completed survey creates a private local memory note, then turns that note into a deterministic query.
 
-Survey results do not pretend every answer has source links. If Memact has links, it shows them. If not, it shows a simple thought map and keeps the survey choice as something to check against future activity.
+Survey results do not pretend every answer has source links. If Memact has links, it shows them. If not, it gives an answer or asks a few more questions.
+
+Prompt Mode also avoids dead ends. When a typed thought has too little context, Memact moves into Survey Mode instead of showing a failed result.
 
 ## Infrastructure Contract
 
@@ -186,6 +188,13 @@ AI modes:
   Allow Gemini to polish short answers from selected evidence more often.
 - `VITE_MEMACT_AI_MODE=off`
   Never call Gemini. Memact still works from Capture, Inference, Schema, Memory, Origin, and Influence.
+
+Follow-up questions:
+
+- Memact can ask Gemini for short Survey follow-up questions when local context is weak.
+- Only the typed thought and the weak-context reason are sent.
+- Raw captured activity is not sent for follow-up question generation.
+- If Gemini is unavailable, deterministic local questions are used.
 
 Server safety:
 

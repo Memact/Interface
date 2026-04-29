@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import MathRichText from '../components/MathRichText'
 import SearchBar from '../components/SearchBar'
 import { useSearch } from '../hooks/useSearch'
+import { requestCloudFollowUpQuestions } from '../lib/cloudExplanation'
 import { buildSurveyDeck, createSurveyPacket, saveSurveyPacket } from '../lib/surveyMode'
 
 const INSTALL_PROMPT_DISMISSED_KEY = 'memact.install-prompt-dismissed'
@@ -23,6 +24,36 @@ const THOUGHT_PROMPTS = [
 const INPUT_MODES = [
   { id: 'prompt', label: 'Prompt' },
   { id: 'survey', label: 'Survey' },
+]
+
+const DEFAULT_CONTEXT_QUESTIONS = [
+  {
+    id: 'look',
+    title: 'Where should Memact look first?',
+    options: [
+      { id: 'read-watch', label: 'What I read or watched' },
+      { id: 'searches', label: 'What I searched' },
+      { id: 'projects', label: 'What I worked on' },
+    ],
+  },
+  {
+    id: 'connection',
+    title: 'What connection matters most?',
+    options: [
+      { id: 'started', label: 'Where it started' },
+      { id: 'shaped', label: 'What shaped it' },
+      { id: 'repeated', label: 'What keeps repeating' },
+    ],
+  },
+  {
+    id: 'answer',
+    title: 'What would help right now?',
+    options: [
+      { id: 'plain', label: 'A plain answer' },
+      { id: 'map', label: 'A thought map' },
+      { id: 'angles', label: 'Different angles' },
+    ],
+  },
 ]
 
 function normalize(value) {
@@ -87,7 +118,7 @@ function buildStatus(extension, search, submittedQuery, voiceState) {
   if (submittedQuery && search.results.length) {
     return `Answer backed by ${search.results.length} source${search.results.length === 1 ? '' : 's'}.`
   }
-  if (submittedQuery) return 'No strong links yet.'
+  if (submittedQuery) return 'Answer ready.'
   if (extension?.bootstrap?.status === 'complete' && Number(extension?.bootstrap?.imported_count || 0) > 0) {
     return `${extension.bootstrap.imported_count} early activity sources seeded.`
   }
@@ -103,7 +134,7 @@ function buildAnswerText(query, answerMeta, results) {
   if (answer) return answer
 
   if (!results.length) {
-    return 'Memact did not find strong enough sources yet.'
+    return 'Memact can still answer, but links are optional here. Add more context if you want Memact to check your activity more tightly.'
   }
 
   const primary = results[0]
@@ -149,7 +180,7 @@ function buildSurveyCopy(packet, results) {
     return `Memact is checking ${topic} through ${intent}. It found ${results.length} useful link${results.length === 1 ? '' : 's'} to start with, with ${evidence} as the first focus.`
   }
 
-  return `Memact now knows to check ${topic} through ${intent}, with ${evidence} as the first focus. No strong links are attached yet, but this will get clearer as Capture sees more relevant activity.`
+  return `Memact now knows to check ${topic} through ${intent}, with ${evidence} as the first focus. A direct link is optional here; more answers can make the map sharper.`
 }
 
 function buildSurveyMapItems(packet, results) {
@@ -168,9 +199,30 @@ function buildSurveyMapItems(packet, results) {
     },
     {
       label: 'Links',
-      value: results.length ? `${results.length} found` : 'Not enough yet',
+      value: results.length ? `${results.length} found` : 'Optional here',
     },
   ]
+}
+
+function needsMoreContext(answerMeta) {
+  if (answerMeta?.needsMoreContext) return true
+  const answer = normalize(answerMeta?.answer).toLowerCase()
+  const summary = normalize(answerMeta?.summary).toLowerCase()
+  return (
+    answer.includes('needs a little more context') ||
+    summary.includes('guided questions') ||
+    summary.includes('more context')
+  )
+}
+
+function buildContextQuery(seedQuery, questions, answers) {
+  const choices = (questions || [])
+    .map((question) => answers?.[question.id]?.label)
+    .map(normalize)
+    .filter(Boolean)
+
+  if (!choices.length) return seedQuery
+  return `${seedQuery}. Look especially at ${choices.join(', ')}.`
 }
 
 function buildActivitySuggestions(search) {
@@ -438,6 +490,60 @@ function SurveyPanel({
   )
 }
 
+function ContextQuestionsPanel({
+  title = 'Help Memact connect this better.',
+  body = 'A few answers can guide Memact without pretending every thought needs a link.',
+  questions = DEFAULT_CONTEXT_QUESTIONS,
+  answers = {},
+  disabled = false,
+  compact = false,
+  onSelect,
+  onSubmit,
+}) {
+  const answeredCount = (questions || []).filter((question) => answers?.[question.id]).length
+  const canSubmit = answeredCount >= Math.min(2, questions.length)
+
+  return (
+    <section className={`context-panel ${compact ? 'context-panel--compact' : ''}`} aria-label="More context">
+      <div className="context-panel__intro">
+        <p className="eyebrow">More context</p>
+        <h2>{title}</h2>
+        <p>{body}</p>
+      </div>
+
+      <div className="context-question-list">
+        {questions.map((question) => (
+          <div className="context-question" key={question.id}>
+            <h3>{question.title}</h3>
+            <div className="context-options">
+              {question.options.map((option) => (
+                <button
+                  key={`${question.id}-${option.id}`}
+                  type="button"
+                  className={answers?.[question.id]?.id === option.id ? 'is-selected' : ''}
+                  disabled={disabled}
+                  onClick={() => onSelect(question.id, option)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        className="context-submit"
+        type="button"
+        disabled={disabled || !canSubmit}
+        onClick={onSubmit}
+      >
+        Continue
+      </button>
+    </section>
+  )
+}
+
 export default function Search({ extension }) {
   const search = useSearch(extension, null)
   const [inputMode, setInputMode] = useState('prompt')
@@ -445,6 +551,9 @@ export default function Search({ extension }) {
   const [lastSurveyPacket, setLastSurveyPacket] = useState(null)
   const [surveyStep, setSurveyStep] = useState(0)
   const [surveyAnswers, setSurveyAnswers] = useState({})
+  const [contextSeedQuery, setContextSeedQuery] = useState('')
+  const [contextAnswers, setContextAnswers] = useState({})
+  const [contextQuestions, setContextQuestions] = useState(DEFAULT_CONTEXT_QUESTIONS)
   const [navigation, setNavigation] = useState({ entries: [], index: -1 })
   const [historyOpen, setHistoryOpen] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
@@ -530,6 +639,9 @@ export default function Search({ extension }) {
     setLastSurveyPacket(null)
     setSurveyStep(0)
     setSurveyAnswers({})
+    setContextSeedQuery('')
+    setContextAnswers({})
+    setContextQuestions(DEFAULT_CONTEXT_QUESTIONS)
     setNavigation({ entries: [], index: -1 })
     setInfoOpen(false)
     setHistoryOpen(false)
@@ -546,11 +658,48 @@ export default function Search({ extension }) {
     }))
   }
 
+  const selectContextAnswer = (questionId, option) => {
+    requestSetupPrompt()
+    setContextAnswers((current) => ({
+      ...current,
+      [questionId]: option,
+    }))
+  }
+
   const submitSurvey = async () => {
     const packet = createSurveyPacket(surveyAnswers, surveyDeck)
     setLastSurveyPacket(packet)
     saveSurveyPacket(packet)
-    await runQuery(packet.query)
+    setContextSeedQuery('')
+    setContextAnswers({})
+    await runQuery(packet.query, { mode: 'survey' })
+  }
+
+  const submitContextQuestions = async () => {
+    const seedQuery = normalize(contextSeedQuery || submittedQuery || search.query)
+    if (!seedQuery) return
+
+    const nextQuery = buildContextQuery(seedQuery, contextQuestions, contextAnswers)
+    const firstAnswer = Object.values(contextAnswers).find(Boolean)
+    const packet = createSurveyPacket(
+      {
+        topic: { id: 'typed-thought', label: seedQuery, source: 'typed thought' },
+        intent: { id: 'influence', label: 'What shaped it', relation: 'influenced_by' },
+        evidence: {
+          id: firstAnswer?.id || 'context',
+          label: firstAnswer?.label || 'More context',
+          relation: 'self_reported',
+        },
+      },
+      surveyDeck,
+      { query: nextQuery }
+    )
+
+    setLastSurveyPacket(packet)
+    saveSurveyPacket(packet)
+    setContextSeedQuery('')
+    setContextAnswers({})
+    await runQuery(nextQuery, { mode: 'survey' })
   }
 
   const requestBootstrapImport = async () => {
@@ -654,7 +803,46 @@ export default function Search({ extension }) {
     shouldShowInstallModal,
   ])
 
-  const runQuery = async (value = search.query, { record = true } = {}) => {
+  useEffect(() => {
+    const query = normalize(contextSeedQuery)
+    if (!query) {
+      setContextQuestions(DEFAULT_CONTEXT_QUESTIONS)
+      return undefined
+    }
+
+    let cancelled = false
+    setContextQuestions(DEFAULT_CONTEXT_QUESTIONS)
+    setContextAnswers({})
+
+    requestCloudFollowUpQuestions({
+      query,
+      mode: 'survey',
+      reason: 'weak_evidence',
+    }).then((questions) => {
+      if (!cancelled && questions.length) {
+        setContextQuestions(questions)
+      }
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [contextSeedQuery])
+
+  useEffect(() => {
+    if (
+      hasSubmitted &&
+      lastSurveyPacket &&
+      !search.loading &&
+      !search.results.length &&
+      submittedQuery &&
+      !contextSeedQuery
+    ) {
+      setContextSeedQuery(submittedQuery)
+    }
+  }, [contextSeedQuery, hasSubmitted, lastSurveyPacket, search.loading, search.results.length, submittedQuery])
+
+  const runQuery = async (value = search.query, { record = true, mode = inputMode } = {}) => {
     const query = normalize(value)
     if (!query) return
     setInfoOpen(false)
@@ -676,7 +864,20 @@ export default function Search({ extension }) {
         return { entries, index: entries.length - 1 }
       })
     }
-    await search.runSearch(query)
+    const result = await search.runSearch(query)
+    const resultItems = Array.isArray(result?.results) ? result.results : []
+    const resultAnswer = result?.answerMeta || null
+
+    if (mode === 'prompt' && !resultItems.length && needsMoreContext(resultAnswer)) {
+      setInputMode('survey')
+      setSubmittedQuery('')
+      setLastSurveyPacket(null)
+      setSurveyStep(0)
+      setSurveyAnswers({})
+      setContextSeedQuery(query)
+      setContextAnswers({})
+      search.clearResults()
+    }
   }
 
   const goBack = async () => {
@@ -686,6 +887,8 @@ export default function Search({ extension }) {
 
     if (navigation.index === 0) {
       setSubmittedQuery('')
+      setContextSeedQuery('')
+      setContextAnswers({})
       search.setQuery('')
       search.clearResults()
       setNavigation((current) => ({ ...current, index: -1 }))
@@ -1055,16 +1258,28 @@ export default function Search({ extension }) {
           <p className="thought-prompt">{thoughtPrompt}</p>
         ) : null}
         {inputMode === 'survey' && !hasSubmitted ? (
-          <SurveyPanel
-            deck={surveyDeck}
-            step={surveyStep}
-            answers={surveyAnswers}
-            disabled={isBackgroundProcessing || search.loading}
-            onSelect={selectSurveyAnswer}
-            onBack={() => setSurveyStep((current) => Math.max(0, current - 1))}
-            onNext={() => setSurveyStep((current) => Math.min(surveyDeck.questions.length - 1, current + 1))}
-            onSubmit={submitSurvey}
-          />
+          contextSeedQuery ? (
+            <ContextQuestionsPanel
+              title="Help Memact connect this better."
+              body={`"${contextSeedQuery}" needs a little more context before Memact checks your activity.`}
+              questions={contextQuestions}
+              answers={contextAnswers}
+              disabled={isBackgroundProcessing || search.loading}
+              onSelect={selectContextAnswer}
+              onSubmit={submitContextQuestions}
+            />
+          ) : (
+            <SurveyPanel
+              deck={surveyDeck}
+              step={surveyStep}
+              answers={surveyAnswers}
+              disabled={isBackgroundProcessing || search.loading}
+              onSelect={selectSurveyAnswer}
+              onBack={() => setSurveyStep((current) => Math.max(0, current - 1))}
+              onNext={() => setSurveyStep((current) => Math.min(surveyDeck.questions.length - 1, current + 1))}
+              onSubmit={submitSurvey}
+            />
+          )
         ) : (
           <SearchBar
             value={search.query}
@@ -1119,48 +1334,65 @@ export default function Search({ extension }) {
               </div>
             </article>
 
-            <section className="source-panel source-panel--survey" aria-label="What Memact found">
-              <p className="eyebrow">What Memact found</p>
+            <section className="source-panel source-panel--survey" aria-label={search.results.length ? 'What Memact found' : 'More context'}>
               {search.results.length ? (
+                <>
+                  <p className="eyebrow">What Memact found</p>
                 <div className="source-list">
                   {search.results.slice(0, 4).map((result, index) => (
                     <SourceCard key={result.id} result={result} index={index} />
                   ))}
                 </div>
+                </>
               ) : (
-                <div className="survey-empty-state">
-                  <h3>No strong links yet.</h3>
-                  <p>
-                    This is not a failure. The survey saved what to look for, and future activity can make this map stronger.
-                  </p>
-                </div>
+                <ContextQuestionsPanel
+                  compact
+                  title="Answer a bit more."
+                  body="Memact can sharpen this map with a few more choices."
+                  questions={contextQuestions}
+                  answers={contextAnswers}
+                  disabled={search.loading}
+                  onSelect={selectContextAnswer}
+                  onSubmit={submitContextQuestions}
+                />
               )}
             </section>
           </section>
         ) : (
-          <section className="answer-layout" aria-live="polite">
+          <section className={`answer-layout ${search.results.length ? '' : 'answer-layout--answer-only'}`} aria-live="polite">
             <article className="answer-card">
               <p className="eyebrow">Answer</p>
               <blockquote>{answerHeadline}</blockquote>
               <div className="answer-copy">
                 <MathRichText text={answerText} />
               </div>
+              {!search.results.length ? (
+                <button
+                  className="answer-context-button"
+                  type="button"
+                  onClick={() => {
+                    setInputMode('survey')
+                    setSubmittedQuery('')
+                    setContextSeedQuery(submittedQuery)
+                    setContextAnswers({})
+                    search.clearResults()
+                  }}
+                >
+                  Add more context
+                </button>
+              ) : null}
             </article>
 
-            <section className="source-panel" aria-label="Sources">
-              <p className="eyebrow">Sources</p>
-              {search.results.length ? (
+            {search.results.length ? (
+              <section className="source-panel" aria-label="Sources">
+                <p className="eyebrow">Sources</p>
                 <div className="source-list">
                   {search.results.slice(0, 4).map((result, index) => (
                     <SourceCard key={result.id} result={result} index={index} />
                   ))}
                 </div>
-              ) : (
-                <div className="empty-sources">
-                  No strong source link yet.
-                </div>
-              )}
-            </section>
+              </section>
+            ) : null}
           </section>
         )
       ) : null}

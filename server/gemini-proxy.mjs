@@ -166,6 +166,25 @@ function buildGeminiPrompt(payload) {
   ].join('\n')
 }
 
+function buildFollowUpPrompt(payload = {}) {
+  return [
+    'You are Memact. Write short follow-up survey questions for a thought when local evidence is weak.',
+    'Use only the user thought below. Do not ask for private details, credentials, medical data, or financial data.',
+    'The goal is to clarify where Memact should look next, not to diagnose the user.',
+    'Return strict JSON only with key: questions.',
+    'questions: exactly 3 objects.',
+    'Each object must have: id, title, options.',
+    'title: max 12 words.',
+    'options: exactly 3 short labels, max 5 words each.',
+    '',
+    JSON.stringify({
+      query: normalize(payload.query, MAX_QUERY_LENGTH),
+      mode: normalize(payload.mode, 40),
+      reason: normalize(payload.reason, 80),
+    }),
+  ].join('\n')
+}
+
 async function readRequestBody(request) {
   let size = 0
   const chunks = []
@@ -292,6 +311,101 @@ async function handleGeminiAnswer(request, response, origin) {
   }, origin)
 }
 
+async function handleGeminiFollowUps(request, response, origin) {
+  if (!isTrustedOrigin(origin)) {
+    sendJson(response, 403, { error: 'origin_not_allowed' }, '')
+    return
+  }
+
+  if (!checkRateLimit(request)) {
+    sendJson(response, 429, { error: 'rate_limited' }, origin)
+    return
+  }
+
+  const contentType = normalize(request.headers['content-type']).toLowerCase()
+  if (!contentType.startsWith('application/json')) {
+    sendJson(response, 415, { error: 'content_type_must_be_json' }, origin)
+    return
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey || /replace/i.test(apiKey)) {
+    sendJson(response, 503, { error: 'gemini_api_key_missing' }, origin)
+    return
+  }
+
+  let payload
+  try {
+    payload = JSON.parse(await readRequestBody(request))
+  } catch (error) {
+    sendJson(response, error?.message === 'request_too_large' ? 413 : 400, {
+      error: error?.message || 'invalid_json',
+    }, origin)
+    return
+  }
+
+  if (!normalize(payload.query, MAX_QUERY_LENGTH)) {
+    sendJson(response, 400, { error: 'query_required' }, origin)
+    return
+  }
+
+  const geminiResponse = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`,
+    {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: buildFollowUpPrompt(payload) }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 220,
+          responseMimeType: 'application/json',
+        },
+      }),
+    }
+  )
+
+  const geminiJson = await geminiResponse.json().catch(() => ({}))
+  if (!geminiResponse.ok) {
+    sendJson(response, geminiResponse.status, {
+      error: 'gemini_request_failed',
+      detail: normalize(geminiJson?.error?.message, 240),
+    }, origin)
+    return
+  }
+
+  const parsed = parseJsonText(extractGeminiText(geminiJson))
+  const questions = (Array.isArray(parsed?.questions) ? parsed.questions : [])
+    .slice(0, 3)
+    .map((question, index) => ({
+      id: normalize(question?.id, 48) || `question_${index + 1}`,
+      title: normalize(question?.title, 96),
+      options: (Array.isArray(question?.options) ? question.options : [])
+        .slice(0, 3)
+        .map((option, optionIndex) => ({
+          id: normalize(option?.id, 48) || `option_${optionIndex + 1}`,
+          label: normalize(option?.label || option, 64),
+        }))
+        .filter((option) => option.label),
+    }))
+    .filter((question) => question.title && question.options.length >= 2)
+
+  sendJson(response, 200, {
+    provider: 'gemini',
+    model: GEMINI_MODEL,
+    applied: Boolean(questions.length),
+    questions,
+  }, origin)
+}
+
 async function serveStatic(request, response) {
   const url = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`)
   let pathname = '/'
@@ -357,6 +471,11 @@ const server = http.createServer(async (request, response) => {
   try {
     if (request.url?.startsWith('/api/gemini-answer') && request.method === 'POST') {
       await handleGeminiAnswer(request, response, origin)
+      return
+    }
+
+    if (request.url?.startsWith('/api/gemini-followups') && request.method === 'POST') {
+      await handleGeminiFollowUps(request, response, origin)
       return
     }
 

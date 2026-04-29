@@ -182,7 +182,7 @@ function buildAnswerHeadline(query, cognitiveSchemas, origin, relevantSchemas, r
     }
   }
 
-  return `Memact does not have a strong answer for "${query}" yet.`
+  return 'Memact needs a little more context.'
 }
 
 function buildAnswerSummary(query, cognitiveSchemas, origin, relevantSchemas, relevantChains) {
@@ -194,7 +194,7 @@ function buildAnswerSummary(query, cognitiveSchemas, origin, relevantSchemas, re
   const influenceSummary = buildInfluenceSummary(relevantChains)
 
   if (!primaryCognitiveSchema && !source && !schemaSummary && !influenceSummary) {
-    return 'There is not enough captured evidence yet to explain this thought clearly.'
+    return 'Answer a few guided questions so Memact can connect this thought to the right activity.'
   }
 
   const parts = []
@@ -204,12 +204,12 @@ function buildAnswerSummary(query, cognitiveSchemas, origin, relevantSchemas, re
     if (frame) {
       parts.push(`Memact found a repeated frame: ${frame}`)
     } else {
-      parts.push(`Memact found a repeated virtual schema in memory.`)
+      parts.push(`Memact found a repeated thinking frame in memory.`)
     }
     if (action) {
       parts.push(`It often points toward this kind of action: ${action}.`)
     }
-    parts.push(`${Number(primaryCognitiveSchema.support || 0)} evidence packet${Number(primaryCognitiveSchema.support || 0) === 1 ? '' : 's'} support it.`)
+    parts.push(`${Number(primaryCognitiveSchema.support || 0)} memory item${Number(primaryCognitiveSchema.support || 0) === 1 ? '' : 's'} support it.`)
   }
   if (source) {
     parts.push(`The strongest source behind it is ${source}${matchedTerms ? ` (${matchedTerms} matched term${matchedTerms === 1 ? '' : 's'})` : ''}.`)
@@ -250,7 +250,7 @@ function buildSchemaSummary(relevantSchemas) {
     return ''
   }
 
-  return `${label} is showing up as a ${normalize(primary.state_label || 'schema signal').toLowerCase()}.`
+  return `${label} is showing up as a repeated signal.`
 }
 
 function buildRelatedQueries(origin, relevantSchemas, relevantChains) {
@@ -329,6 +329,16 @@ function relevantInfluenceSignals(query, origin, influenceResult) {
     .slice(0, 2)
 }
 
+function hasThoughtSignals(origin, cognitiveSchemas, relevantSchemas, relevantMemories, relevantInfluence) {
+  return Boolean(
+    origin?.candidates?.length ||
+      cognitiveSchemas?.length ||
+      relevantSchemas?.length ||
+      relevantMemories?.length ||
+      relevantInfluence?.length
+  )
+}
+
 export function analyzeThoughtQuery(query, knowledge) {
   const normalizedQuery = normalize(query)
   if (!normalizedQuery || !knowledge?.inference) {
@@ -358,6 +368,8 @@ export function analyzeThoughtQuery(query, knowledge) {
 
   const answerHeadline = buildAnswerHeadline(normalizedQuery, cognitiveSchemas, origin, relevantSchemas, relevantInfluence)
   const summary = buildAnswerSummary(normalizedQuery, cognitiveSchemas, origin, relevantSchemas, relevantInfluence)
+  const hasSignals = hasThoughtSignals(origin, cognitiveSchemas, relevantSchemas, relevantMemories, relevantInfluence)
+  const hasSourceLinks = Boolean(origin.candidates?.length || ragContext?.sources?.length)
 
   const detailItems = [
     { label: 'Origin matches', value: String(origin.candidates?.length || 0) },
@@ -385,6 +397,9 @@ export function analyzeThoughtQuery(query, knowledge) {
     sessionSummary: summary,
     sessionPrompts: buildRelatedQueries(origin, relevantSchemas, relevantInfluence),
     relatedQueries: buildRelatedQueries(origin, relevantSchemas, relevantInfluence),
+    needsMoreContext: !hasSignals,
+    evidenceState: hasSourceLinks ? 'source_backed' : hasSignals ? 'memory_answer' : 'needs_context',
+    answerMode: hasSourceLinks ? 'sources' : hasSignals ? 'answer_only' : 'context_builder',
     originCandidates: (origin.candidates || []).map((candidate) => ({
       id: candidate.id,
       source_label: candidate.source_label,

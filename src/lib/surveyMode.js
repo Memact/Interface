@@ -202,14 +202,14 @@ export function buildSurveyDeck(knowledge = {}) {
   }
 }
 
-export function createSurveyPacket(answers = {}, deck = buildSurveyDeck()) {
+export function createSurveyPacket(answers = {}, deck = buildSurveyDeck(), options = {}) {
   const byId = new Map((deck.questions || []).map((question) => [question.id, question]))
   const topic = answers.topic || byId.get('topic')?.options?.[0] || DEFAULT_TOPICS[0]
   const intent = answers.intent || INTENT_OPTIONS[1]
   const evidence = answers.evidence || EVIDENCE_OPTIONS[1]
   const topicLabel = normalize(topic.label).toLowerCase()
   const intentBuilder = INTENT_OPTIONS.find((item) => item.id === intent.id)?.question || INTENT_OPTIONS[1].question
-  const query = intentBuilder(topicLabel)
+  const query = normalize(options.query || intentBuilder(topicLabel))
   const timestamp = new Date().toISOString()
   const id = `survey:${Date.now()}:${slug(topic.label)}`
 

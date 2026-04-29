@@ -864,6 +864,112 @@ button {
   color: var(--white);
 }
 
+.context-panel {
+  width: 100%;
+  display: grid;
+  gap: 16px;
+  padding: clamp(18px, 3vw, 24px);
+  border: 1px solid var(--white-16);
+  border-radius: 30px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
+  text-align: left;
+}
+
+.context-panel--compact {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.context-panel__intro {
+  display: grid;
+  gap: 10px;
+}
+
+.context-panel__intro h2,
+.context-panel__intro p,
+.context-question h3 {
+  margin: 0;
+}
+
+.context-panel__intro h2 {
+  color: var(--white);
+  font-size: clamp(24px, 3vw, 32px);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.context-panel__intro p {
+  color: var(--white-76);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.context-question-list {
+  display: grid;
+  gap: 14px;
+}
+
+.context-question {
+  display: grid;
+  gap: 10px;
+}
+
+.context-question h3 {
+  color: var(--white-90);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.context-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.context-options button,
+.context-submit,
+.answer-context-button {
+  min-height: 42px;
+  border: 1px solid var(--white-16);
+  border-radius: 999px;
+  background: var(--white-06);
+  color: var(--white);
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.context-options button:hover,
+.context-options button:focus-visible,
+.context-options button.is-selected,
+.context-submit:hover:not(:disabled),
+.context-submit:focus-visible:not(:disabled),
+.answer-context-button:hover,
+.answer-context-button:focus-visible {
+  outline: none;
+  border-color: var(--white-46);
+  background: var(--white-10);
+}
+
+.context-submit,
+.answer-context-button {
+  justify-self: start;
+  background: var(--white);
+  color: var(--bg);
+}
+
+.context-submit:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
 .search-shell {
   position: relative;
   z-index: 30;
@@ -1455,6 +1561,11 @@ button {
   grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.78fr);
 }
 
+.answer-layout--answer-only {
+  width: min(760px, 100%);
+  grid-template-columns: 1fr;
+}
+
 .answer-card,
 .source-panel,
 .source-card,
@@ -1734,6 +1845,11 @@ blockquote {
 
   .source-panel {
     max-height: none;
+  }
+
+  .context-options {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .source-card__top {

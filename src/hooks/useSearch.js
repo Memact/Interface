@@ -401,6 +401,9 @@ function normalizeAnswerMeta(item) {
     sessionSummary: normalize(item.sessionSummary),
     sessionPrompts,
     relatedQueries,
+    needsMoreContext: Boolean(item.needsMoreContext),
+    evidenceState: normalize(item.evidenceState),
+    answerMode: normalize(item.answerMode),
   }
 }
 
@@ -439,14 +442,22 @@ function resultsFromDeterministicAnalysis(analysis) {
 
 function buildNoSourceAnswerMeta(query) {
   return {
-    overview: `Memact checked captured activity for "${query}".`,
-    answer: 'Memact does not have a strong answer yet.',
-    summary: 'Memact did not find strong enough sources yet.',
-    detailsLabel: 'Evidence around this thought',
-    detailItems: [{ label: 'Matches', value: '0' }],
+    overview: 'Memact needs more context.',
+    answer: 'Memact needs a little more context.',
+    summary: 'Answer a few guided questions so Memact can connect this thought to the right activity.',
+    detailsLabel: 'Next step',
+    detailItems: [{ label: 'Context', value: 'Needed' }],
     signals: [],
-    relatedQueries: [],
-    sessionPrompts: [],
+    relatedQueries: [
+      `What shaped my thinking about ${query}?`,
+      `Where did ${query} start showing up?`,
+    ],
+    sessionPrompts: [
+      `What shaped my thinking about ${query}?`,
+    ],
+    needsMoreContext: true,
+    evidenceState: 'needs_context',
+    answerMode: 'context_builder',
   }
 }
 
@@ -461,6 +472,10 @@ function hasDeterministicEvidence(analysis, results = []) {
 }
 
 function isWeakDeterministicAnswer(answerMeta) {
+  if (answerMeta?.needsMoreContext) {
+    return true
+  }
+
   const answer = normalize(answerMeta?.answer).toLowerCase()
   const summary = normalize(answerMeta?.summary).toLowerCase()
   return (
@@ -702,14 +717,14 @@ export function useSearch(extension, activeTimeFilter = null) {
         setResults([])
         setAnswerMeta(null)
         setError('')
-        return []
+        return { results: [], answerMeta: null }
       }
 
       if (!extension?.detected) {
         setError('Memact extension is not connected.')
         setResults([])
         setAnswerMeta(null)
-        return []
+        return { results: [], answerMeta: null }
       }
 
       setLoading(true)
@@ -810,7 +825,7 @@ export function useSearch(extension, activeTimeFilter = null) {
           })
         }
 
-        return normalizedResults
+        return { results: normalizedResults, answerMeta: finalAnswerMeta }
       } catch (err) {
         const refreshedKnowledge = await withTimeout(
           extension.refreshKnowledge?.(),
@@ -831,13 +846,14 @@ export function useSearch(extension, activeTimeFilter = null) {
             results: fallbackResults,
             answerMeta: deterministicAnswerMeta,
           })
-          return fallbackResults
+          return { results: fallbackResults, answerMeta: deterministicAnswerMeta }
         }
 
+        const contextAnswerMeta = buildNoSourceAnswerMeta(normalized)
         setError('')
         setResults([])
-        setAnswerMeta(buildNoSourceAnswerMeta(normalized))
-        return []
+        setAnswerMeta(contextAnswerMeta)
+        return { results: [], answerMeta: contextAnswerMeta }
       } finally {
         setLoading(false)
       }
