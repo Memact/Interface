@@ -29,12 +29,16 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
 const MAX_OUTPUT_TOKENS = Number(process.env.GEMINI_MAX_OUTPUT_TOKENS || 180)
 const TEMPERATURE = Number(process.env.GEMINI_TEMPERATURE || 0.1)
 const MAX_REQUEST_BYTES = Number(process.env.MEMACT_GEMINI_MAX_REQUEST_BYTES || 14000)
+const MAX_QUERY_LENGTH = Number(process.env.MEMACT_MAX_QUERY_LENGTH || 240)
+const RATE_LIMIT_WINDOW_MS = Number(process.env.MEMACT_RATE_LIMIT_WINDOW_MS || 60000)
+const RATE_LIMIT_MAX_REQUESTS = Number(process.env.MEMACT_RATE_LIMIT_MAX_REQUESTS || 30)
 const ALLOWED_ORIGINS = new Set(
   String(process.env.MEMACT_ALLOWED_ORIGINS || 'http://localhost:5173,https://memact.com,https://www.memact.com')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean)
 )
+const rateLimitBuckets = new Map()
 
 const MIME_TYPES = new Map([
   ['.html', 'text/html; charset=utf-8'],
@@ -54,10 +58,46 @@ const MIME_TYPES = new Map([
 function securityHeaders(extra = {}) {
   return {
     'x-frame-options': 'DENY',
+    'content-security-policy': [
+      "default-src 'self'",
+      "script-src 'self'",
+      "style-src 'self'",
+      "img-src 'self' data:",
+      "font-src 'self'",
+      "connect-src 'self'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "frame-ancestors 'none'",
+      "form-action 'self'",
+      'upgrade-insecure-requests',
+    ].join('; '),
     'x-content-type-options': 'nosniff',
     'referrer-policy': 'strict-origin-when-cross-origin',
+    'permissions-policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()',
+    'cross-origin-opener-policy': 'same-origin',
     ...extra,
   }
+}
+
+function clientKey(request) {
+  const forwarded = String(request.headers['x-forwarded-for'] || '').split(',')[0].trim()
+  return forwarded || request.socket?.remoteAddress || 'unknown'
+}
+
+function checkRateLimit(request) {
+  const key = clientKey(request)
+  const now = Date.now()
+  const current = rateLimitBuckets.get(key)
+  if (!current || now - current.startedAt > RATE_LIMIT_WINDOW_MS) {
+    rateLimitBuckets.set(key, { startedAt: now, count: 1 })
+    return true
+  }
+  current.count += 1
+  if (current.count > RATE_LIMIT_MAX_REQUESTS) {
+    return false
+  }
+  rateLimitBuckets.set(key, current)
+  return true
 }
 
 function sendJson(response, statusCode, body, origin = '') {
@@ -84,10 +124,17 @@ function normalize(value, maxLength = 0) {
 
 function compactForPrompt(payload = {}) {
   return {
-    query: normalize(payload.query, 180),
+    query: normalize(payload.query, MAX_QUERY_LENGTH),
     request: payload.request || {},
     sources: Array.isArray(payload.sources) ? payload.sources.slice(0, 4) : [],
   }
+}
+
+function isTrustedOrigin(origin = '') {
+  if (!origin) {
+    return process.env.NODE_ENV !== 'production'
+  }
+  return ALLOWED_ORIGINS.has(origin)
 }
 
 function hasEvidence(payload = {}) {
@@ -151,6 +198,22 @@ function parseJsonText(text) {
 }
 
 async function handleGeminiAnswer(request, response, origin) {
+  if (!isTrustedOrigin(origin)) {
+    sendJson(response, 403, { error: 'origin_not_allowed' }, '')
+    return
+  }
+
+  if (!checkRateLimit(request)) {
+    sendJson(response, 429, { error: 'rate_limited' }, origin)
+    return
+  }
+
+  const contentType = normalize(request.headers['content-type']).toLowerCase()
+  if (!contentType.startsWith('application/json')) {
+    sendJson(response, 415, { error: 'content_type_must_be_json' }, origin)
+    return
+  }
+
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey || /replace/i.test(apiKey)) {
     sendJson(response, 503, { error: 'gemini_api_key_missing' }, origin)
@@ -164,6 +227,11 @@ async function handleGeminiAnswer(request, response, origin) {
     sendJson(response, error?.message === 'request_too_large' ? 413 : 400, {
       error: error?.message || 'invalid_json',
     }, origin)
+    return
+  }
+
+  if (!normalize(payload.query, MAX_QUERY_LENGTH)) {
+    sendJson(response, 400, { error: 'query_required' }, origin)
     return
   }
 
@@ -226,12 +294,20 @@ async function handleGeminiAnswer(request, response, origin) {
 
 async function serveStatic(request, response) {
   const url = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`)
-  const pathname = decodeURIComponent(url.pathname)
+  let pathname = '/'
+  try {
+    pathname = decodeURIComponent(url.pathname)
+  } catch {
+    response.writeHead(400, securityHeaders({ 'content-type': 'text/plain; charset=utf-8' }))
+    response.end('Bad Request')
+    return
+  }
   const safePath = pathname === '/' ? '/index.html' : pathname
   const filePath = path.resolve(DIST_DIR, `.${safePath}`)
+  const relative = path.relative(DIST_DIR, filePath)
 
-  if (!filePath.startsWith(DIST_DIR)) {
-    response.writeHead(403)
+  if (relative.startsWith('..') || path.isAbsolute(relative) || safePath.includes('\0')) {
+    response.writeHead(403, securityHeaders({ 'content-type': 'text/plain; charset=utf-8' }))
     response.end('Forbidden')
     return
   }
@@ -261,8 +337,15 @@ async function serveStatic(request, response) {
 const server = http.createServer(async (request, response) => {
   const origin = normalize(request.headers.origin)
   if (request.method === 'OPTIONS') {
+    if (!isTrustedOrigin(origin)) {
+      response.writeHead(403, securityHeaders({
+        vary: 'origin',
+      }))
+      response.end()
+      return
+    }
     response.writeHead(204, securityHeaders({
-      'access-control-allow-origin': ALLOWED_ORIGINS.has(origin) ? origin : '',
+      'access-control-allow-origin': origin,
       'access-control-allow-methods': 'POST, OPTIONS',
       'access-control-allow-headers': 'content-type',
       vary: 'origin',

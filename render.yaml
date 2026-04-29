@@ -17,5 +17,11 @@ services:
         value: "0.1"
       - key: MEMACT_ALLOWED_ORIGINS
         value: https://memact.com,https://www.memact.com
+      - key: MEMACT_RATE_LIMIT_WINDOW_MS
+        value: "60000"
+      - key: MEMACT_RATE_LIMIT_MAX_REQUESTS
+        value: "30"
+      - key: MEMACT_MAX_QUERY_LENGTH
+        value: "240"
       - key: VITE_MEMACT_GEMINI_ENDPOINT
         value: /api/gemini-answer

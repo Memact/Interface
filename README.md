@@ -65,7 +65,7 @@ Memory is storage-agnostic. Today Website uses local/extension state. Later, the
 Website listens for Capture's lightweight Memory Pulse before refreshing local knowledge.
 The pulse only says that memory changed; it does not contain captured page content.
 That means Website does not keep downloading captured memory when nothing changed.
-Search still talks to Capture directly, and Capture ranks results with local sentence-transformer embeddings.
+Search still talks to Capture directly, and Capture ranks results with deterministic local embeddings.
 Capture keeps collecting automatically through the extension bridge; it no longer relies on repeated snapshot downloads.
 Gemini is not cut off by a short client/server timer; if it is slow, the deterministic answer remains visible while the cloud answer is optional polish.
 
@@ -163,6 +163,14 @@ If `VITE_MEMACT_GEMINI_ENDPOINT` is not set, Memact still works with determinist
 
 If the extension bridge or Gemini endpoint is slow, Website falls back to Memact's deterministic local pipeline.
 It should show an honest no-source state instead of a generic failed-search message.
+
+Server safety:
+
+- `GEMINI_API_KEY` must stay in Render or local `.env`, never in browser code.
+- `MEMACT_ALLOWED_ORIGINS` controls which sites can call the Gemini endpoint.
+- `MEMACT_RATE_LIMIT_WINDOW_MS` and `MEMACT_RATE_LIMIT_MAX_REQUESTS` control per-client request limits.
+- `MEMACT_MAX_QUERY_LENGTH` caps thought/query size before cloud explanation.
+- The server accepts JSON requests only and sends Gemini only the selected evidence packet, not the full Capture snapshot.
 
 ## Extension Zip
 
