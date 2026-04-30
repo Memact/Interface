@@ -303,6 +303,18 @@ function buildSurveyMapItems(packet, results) {
   ]
 }
 
+function buildSurveyHistoryTitle(packet) {
+  const topic = displayTopic(surveyLabel(packet, 'topic', 'this thought'))
+  const intentId = normalize(surveyAnswer(packet, 'intent').id).toLowerCase()
+  const topicLabel = topic === 'Not selected' ? 'Guided check' : topic
+
+  if (intentId === 'origin') return `${topicLabel}: where it started`
+  if (intentId === 'repetition') return `${topicLabel}: what repeats`
+  if (intentId === 'change') return `${topicLabel}: what changed`
+  if (intentId === 'one_sided') return `${topicLabel}: one-sided check`
+  return `${topicLabel}: what shaped it`
+}
+
 function needsMoreContext(answerMeta) {
   if (answerMeta?.needsMoreContext) return true
   const answer = normalize(answerMeta?.answer).toLowerCase()
@@ -759,6 +771,7 @@ export default function Search({ extension }) {
   const [contextAskedTitles, setContextAskedTitles] = useState([])
   const [navigation, setNavigation] = useState({ entries: [], index: -1 })
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [historyFilter, setHistoryFilter] = useState('prompt')
   const [infoOpen, setInfoOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [voiceState, setVoiceState] = useState('idle')
@@ -803,7 +816,9 @@ export default function Search({ extension }) {
   const canGoBack = navigation.index >= 0
   const canGoForward = navigation.index < navigation.entries.length - 1
   const shouldShowNavigation = hasSubmitted || canGoForward
-  const historyItems = search.recentSearches.filter(Boolean).slice(0, 8)
+  const historyItems = search.recentEntries
+    .filter((entry) => (entry.mode || 'prompt') === historyFilter)
+    .slice(0, 8)
   const captureEventCount = Number(search.stats?.eventCount || extension?.knowledge?.stats?.eventCount || 0)
   const hasBootstrapData =
     bootstrapState.status === 'complete' && Number(bootstrapState.imported_count || 0) > 0
@@ -839,6 +854,7 @@ export default function Search({ extension }) {
     if (nextMode === inputMode) return
 
     setInputMode(nextMode)
+    setHistoryFilter(nextMode)
     setSubmittedQuery('')
     setLastSurveyPacket(null)
     setSurveyStep(0)
@@ -886,7 +902,13 @@ export default function Search({ extension }) {
     setContextAnswers({})
     setContextRound(0)
     setContextAskedTitles([])
-    await runQuery(packet.query, { mode: 'survey' })
+    await runQuery(packet.query, {
+      mode: 'survey',
+      history: {
+        title: buildSurveyHistoryTitle(packet),
+        packet,
+      },
+    })
   }
 
   const submitContextQuestions = async () => {
@@ -935,7 +957,13 @@ export default function Search({ extension }) {
     setContextSeedQuery('')
     setContextAnswers({})
     setContextRound(Math.min(contextRound + 1, MAX_CONTEXT_ROUNDS))
-    await runQuery(nextQuery, { mode: 'survey' })
+    await runQuery(nextQuery, {
+      mode: 'survey',
+      history: {
+        title: buildSurveyHistoryTitle(packet),
+        packet,
+      },
+    })
   }
 
   const requestBootstrapImport = async () => {
@@ -1082,7 +1110,7 @@ export default function Search({ extension }) {
     }
   }, [canAskMoreContext, contextSeedQuery, hasSubmitted, lastSurveyPacket, search.loading, search.results.length, submittedQuery])
 
-  const runQuery = async (value = search.query, { record = true, mode = inputMode } = {}) => {
+  const runQuery = async (value = search.query, { record = true, mode = inputMode, history = null } = {}) => {
     const query = normalize(value)
     if (!query) return
     setInfoOpen(false)
@@ -1104,7 +1132,14 @@ export default function Search({ extension }) {
         return { entries, index: entries.length - 1 }
       })
     }
-    const result = await search.runSearch(query)
+    const result = await search.runSearch(query, {
+      mode,
+      persist: record,
+      history: {
+        ...(history || {}),
+        mode,
+      },
+    })
     const resultItems = Array.isArray(result?.results) ? result.results : []
     const resultAnswer = result?.answerMeta || null
 
@@ -1120,6 +1155,44 @@ export default function Search({ extension }) {
       setContextAnswers({})
       search.clearResults()
     }
+  }
+
+  const openHistoryEntry = async (entry) => {
+    const mode = entry?.mode === 'survey' ? 'survey' : 'prompt'
+    const query = normalize(entry?.query)
+    if (!query) return
+
+    setHistoryOpen(false)
+    setInfoOpen(false)
+    setSettingsOpen(false)
+    setInputMode(mode)
+    setHistoryFilter(mode)
+    setContextSeedQuery('')
+    setContextAnswers({})
+    setContextRound(0)
+    setContextAskedTitles([])
+    setSurveyStep(0)
+    setSurveyAnswers({})
+
+    if (mode === 'survey') {
+      setLastSurveyPacket(entry.packet || null)
+      await runQuery(query, {
+        mode: 'survey',
+        history: {
+          title: entry.title || buildSurveyHistoryTitle(entry.packet),
+          packet: entry.packet || null,
+        },
+      })
+      return
+    }
+
+    setLastSurveyPacket(null)
+    await runQuery(query, {
+      mode: 'prompt',
+      history: {
+        title: entry.title || query,
+      },
+    })
   }
 
   const goBack = async () => {
@@ -1319,7 +1392,13 @@ export default function Search({ extension }) {
           data-tooltip="History"
           aria-expanded={historyOpen}
           onClick={() => {
-            setHistoryOpen((current) => !current)
+            setHistoryOpen((current) => {
+              const next = !current
+              if (next) {
+                setHistoryFilter(inputMode)
+              }
+              return next
+            })
             setInfoOpen(false)
             setSettingsOpen(false)
           }}
@@ -1447,27 +1526,42 @@ export default function Search({ extension }) {
                 type="button"
                 aria-label="Clear all history"
                 data-tooltip="Clear all"
-                onClick={() => search.clearHistory()}
+                onClick={() => search.clearHistory(historyFilter)}
               >
                 <TrashIcon />
               </button>
             ) : null}
           </div>
+          <div className="history-mode-switch" role="tablist" aria-label="History type">
+            {INPUT_MODES.map((mode) => (
+              <button
+                key={mode.id}
+                className={historyFilter === mode.id ? 'is-active' : ''}
+                type="button"
+                role="tab"
+                aria-selected={historyFilter === mode.id}
+                onClick={() => setHistoryFilter(mode.id)}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
           {historyItems.length ? (
             <div className="history-list">
               {historyItems.map((item) => (
-                <div className="history-row" key={item}>
+                <div className="history-row" key={item.id || item.query}>
                   <button
                     className="history-query-button"
                     type="button"
-                    onClick={() => runQuery(item)}
+                    onClick={() => openHistoryEntry(item)}
                   >
-                    {item}
+                    <span>{item.title || item.query}</span>
+                    <small>{item.mode === 'survey' ? 'Survey' : 'Prompt'}</small>
                   </button>
                   <button
                     className="history-delete-button"
                     type="button"
-                    aria-label={`Delete ${item}`}
+                    aria-label={`Delete ${item.title || item.query}`}
                     data-tooltip="Delete"
                     onClick={() => search.removeHistoryQuery(item)}
                   >
@@ -1477,7 +1571,7 @@ export default function Search({ extension }) {
               ))}
             </div>
           ) : (
-            <p className="history-empty">No history yet.</p>
+            <p className="history-empty">No {historyFilter} history yet.</p>
           )}
         </aside>
       ) : null}

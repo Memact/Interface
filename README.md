@@ -53,6 +53,11 @@ Prompt Mode also avoids dead ends. When a typed thought has too little context, 
 The extra questions are progressive. Memact should not keep asking the same set again and again.
 Survey answers are converted into meaning before they are shown back to the user. For example, a choice like `What I read or watched` becomes `content you consumed`, not a copied button label.
 
+History is separated by mode.
+Prompt history keeps the typed thought.
+Survey history keeps a short human title such as `Project thinking: where it started`.
+Memact creates that title locally from the survey choices first; Gemini can only improve weak titles, and the app still works if Gemini is off.
+
 ## Infrastructure Contract
 
 Website is only one Memact client.
@@ -180,7 +185,7 @@ npm run serve
 If `VITE_MEMACT_GEMINI_ENDPOINT` is not set, Memact still works with deterministic answers and sources.
 
 If the extension bridge or Gemini endpoint is slow, Website falls back to Memact's deterministic local pipeline.
-It should show an honest no-source state instead of a generic failed-search message.
+It should move into answer/context mode instead of showing a generic failed-search message.
 
 AI modes:
 
@@ -197,6 +202,12 @@ Follow-up questions:
 - Only the typed thought and the weak-context reason are sent.
 - Raw captured activity is not sent for follow-up question generation.
 - If Gemini is unavailable, deterministic local questions are used.
+
+History titles:
+
+- Survey history names are deterministic first.
+- Gemini can rename only weak Survey titles through `/api/gemini-history-title`.
+- The payload is just the survey topic, intent, focus labels, and compact query.
 
 Server safety:
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { requestCloudExplanation } from '../lib/cloudExplanation'
+import { requestCloudExplanation, requestCloudHistoryTitle } from '../lib/cloudExplanation'
 
 const RECENT_SEARCHES_KEY = 'memact.recent-searches'
 const MAX_RECENTS = 10
@@ -7,10 +7,16 @@ const SUGGESTION_LIMIT = 12
 const SEARCH_TIMEOUT_MS = 2200
 const KNOWLEDGE_REFRESH_TIMEOUT_MS = 650
 
-function normalize(value) {
-  return String(value || '')
+function normalize(value, maxLength = 0) {
+  const text = String(value || '')
     .replace(/\s+/g, ' ')
     .trim()
+
+  if (!text) return ''
+  if (maxLength && text.length > maxLength) {
+    return `${text.slice(0, maxLength - 3).trim()}...`
+  }
+  return text
 }
 
 function normalizeRichText(value) {
@@ -28,10 +34,34 @@ function normalizeRichText(value) {
   return blocks.join('\n\n').trim()
 }
 
+function normalizeHistoryMode(value) {
+  return normalize(value).toLowerCase() === 'survey' ? 'survey' : 'prompt'
+}
+
+function historyFallbackTitle(query, mode) {
+  if (mode === 'survey') {
+    return 'Guided check'
+  }
+  return normalize(query)
+}
+
+function historyEntryId(mode, query) {
+  return `${mode}:${normalize(query).toLowerCase()}`
+}
+
 function toHistoryEntry(entry) {
   if (typeof entry === 'string') {
     const query = normalize(entry)
-    return query ? { query, timestamp: '' } : null
+    return query
+      ? {
+          id: historyEntryId('prompt', query),
+          mode: 'prompt',
+          query,
+          title: query,
+          timestamp: '',
+          packet: null,
+        }
+      : null
   }
 
   if (!entry || typeof entry !== 'object') {
@@ -43,8 +73,15 @@ function toHistoryEntry(entry) {
     return null
   }
 
+  const mode = normalizeHistoryMode(entry.mode)
+  const title = normalize(entry.title || entry.label) || historyFallbackTitle(query, mode)
   const timestamp = normalize(entry.timestamp)
-  return { query, timestamp }
+  const id = normalize(entry.id) || historyEntryId(mode, query)
+  const packet = mode === 'survey' && entry.packet && typeof entry.packet === 'object'
+    ? entry.packet
+    : null
+
+  return { id, mode, query, title, timestamp, packet }
 }
 
 function readRecentSearches() {
@@ -54,21 +91,77 @@ function readRecentSearches() {
     if (!Array.isArray(parsed)) {
       return []
     }
-    return parsed
+    return trimRecentEntries(parsed
       .map(toHistoryEntry)
-      .filter(Boolean)
-      .slice(0, MAX_RECENTS)
+      .filter(Boolean))
   } catch {
     return []
   }
 }
 
+function trimRecentEntries(items) {
+  const counts = new Map()
+  const kept = []
+
+  for (const item of items) {
+    const mode = normalizeHistoryMode(item?.mode)
+    const count = counts.get(mode) || 0
+    if (count >= MAX_RECENTS) {
+      continue
+    }
+    counts.set(mode, count + 1)
+    kept.push(item)
+  }
+
+  return kept
+}
+
 function writeRecentSearches(items) {
   try {
-    window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(items.slice(0, MAX_RECENTS)))
+    window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(trimRecentEntries(items)))
   } catch {
     // Ignore storage failures.
   }
+}
+
+function compactHistoryPacket(packet) {
+  if (!packet || typeof packet !== 'object') return null
+  return {
+    query: normalize(packet.query, 180),
+    answers: Object.fromEntries(
+      Object.entries(packet.answers || {}).map(([key, value]) => [
+        key,
+        {
+          id: normalize(value?.id, 48),
+          label: normalize(value?.label, 80),
+          source: normalize(value?.source, 60),
+        },
+      ])
+    ),
+    context: {
+      focusLabels: (Array.isArray(packet.context?.focusLabels) ? packet.context.focusLabels : [])
+        .map((label) => normalize(label, 50))
+        .filter(Boolean)
+        .slice(0, 5),
+      contextRound: Number(packet.context?.contextRound || 0),
+    },
+  }
+}
+
+function shouldImproveHistoryTitle(entry) {
+  if (entry.mode !== 'survey') return false
+  const title = normalize(entry.title).toLowerCase()
+  const query = normalize(entry.query).toLowerCase()
+  return (
+    !title ||
+    title === query ||
+    title === 'guided check' ||
+    title.length > 56 ||
+    title.includes('?') ||
+    title.includes('focus on') ||
+    title.includes('look especially') ||
+    title.includes('where did my thinking')
+  )
 }
 
 function formatDomain(url, fallback = '') {
@@ -676,39 +769,114 @@ export function useSearch(extension, activeTimeFilter = null) {
     }
   }, [activeTimeFilter, extension, query])
 
-  const persistSearch = useCallback((value) => {
+  const persistSearch = useCallback((value, metadata = {}) => {
     const normalized = normalize(value)
     if (!normalized) return
 
+    const mode = normalizeHistoryMode(metadata.mode)
+    const title = normalize(metadata.title) || historyFallbackTitle(normalized, mode)
+    const packet = mode === 'survey' ? metadata.packet || null : null
+
     setRecentEntries((current) => {
       const timestamp = new Date().toISOString()
+      const entry = toHistoryEntry({
+        id: metadata.id || historyEntryId(mode, normalized),
+        mode,
+        query: normalized,
+        title,
+        timestamp,
+        packet,
+      })
+
+      if (!entry) {
+        return current
+      }
+
       const next = [
-        { query: normalized, timestamp },
-        ...current.filter((entry) => entry.query.toLowerCase() !== normalized.toLowerCase()),
-      ].slice(0, MAX_RECENTS)
+        entry,
+        ...current.filter((item) => item.id !== entry.id),
+      ]
       writeRecentSearches(next)
-      return next
+      return trimRecentEntries(next)
     })
+
+    const entryForTitle = toHistoryEntry({
+      id: metadata.id || historyEntryId(mode, normalized),
+      mode,
+      query: normalized,
+      title,
+      timestamp: new Date().toISOString(),
+      packet,
+    })
+
+    if (entryForTitle && shouldImproveHistoryTitle(entryForTitle)) {
+      void requestCloudHistoryTitle({
+        mode,
+        query: normalized,
+        candidateTitle: entryForTitle.title,
+        packet: compactHistoryPacket(packet),
+      }).then((cloudTitle) => {
+        const improvedTitle = normalize(cloudTitle)
+        if (!improvedTitle) return
+
+        setRecentEntries((current) => {
+          let changed = false
+          const next = current.map((item) => {
+            if (item.id !== entryForTitle.id) {
+              return item
+            }
+            changed = true
+            return { ...item, title: improvedTitle }
+          })
+
+          if (changed) {
+            writeRecentSearches(next)
+          }
+          return next
+        })
+      })
+    }
   }, [])
 
   const removeHistoryQuery = useCallback((value) => {
-    const normalized = normalize(value).toLowerCase()
-    if (!normalized) return
+    const targetId = normalize(value?.id)
+    const normalized = normalize(value?.query || value).toLowerCase()
+    const mode = value?.mode ? normalizeHistoryMode(value.mode) : ''
+    if (!targetId && !normalized) return
 
     setRecentEntries((current) => {
-      const next = current.filter((entry) => entry.query.toLowerCase() !== normalized)
+      const next = current.filter((entry) => {
+        if (targetId) {
+          return entry.id !== targetId
+        }
+        if (mode && entry.mode !== mode) {
+          return true
+        }
+        return entry.query.toLowerCase() !== normalized
+      })
       writeRecentSearches(next)
       return next
     })
   }, [])
 
-  const clearHistory = useCallback(() => {
-    writeRecentSearches([])
-    setRecentEntries([])
+  const clearHistory = useCallback((mode = '') => {
+    const normalizedMode = normalize(mode)
+    if (!normalizedMode) {
+      writeRecentSearches([])
+      setRecentEntries([])
+      return
+    }
+
+    const targetMode = normalizeHistoryMode(normalizedMode)
+    setRecentEntries((current) => {
+      const next = current.filter((entry) => entry.mode !== targetMode)
+      writeRecentSearches(next)
+      return next
+    })
   }, [])
 
   const runSearch = useCallback(
-    async (value) => {
+    async (value, options = {}) => {
       const normalized = normalize(value)
       const cacheKey = `${activeTimeFilter || 'all'}::${normalized.toLowerCase()}`
       const searchId = latestSearchRef.current + 1
@@ -729,7 +897,12 @@ export function useSearch(extension, activeTimeFilter = null) {
 
       setLoading(true)
       setError('')
-      persistSearch(normalized)
+      if (options.persist !== false) {
+        persistSearch(normalized, {
+          ...(options.history || {}),
+          mode: options.mode || options.history?.mode,
+        })
+      }
 
       const cached = resultCacheRef.current.get(cacheKey)
       if (cached) {

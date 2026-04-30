@@ -192,6 +192,31 @@ function buildFollowUpPrompt(payload = {}) {
   ].join('\n')
 }
 
+function buildHistoryTitlePrompt(payload = {}) {
+  const packet = payload.packet && typeof payload.packet === 'object' ? payload.packet : {}
+  return [
+    'You are Memact. Write a short saved-history title for a guided survey result.',
+    'This title appears in a sidebar like a chat history label.',
+    'Use plain user language. No technical words like schema, packet, node, edge, RAG, inference, or source candidates.',
+    'Prefer the topic and user goal. Do not repeat a full question.',
+    'Return strict JSON only with key: title.',
+    'title: 2 to 6 words, max 44 characters, no punctuation at the end.',
+    '',
+    JSON.stringify({
+      mode: normalize(payload.mode, 40),
+      query: normalize(payload.query, MAX_QUERY_LENGTH),
+      candidate_title: normalize(payload.candidate_title, 80),
+      topic: normalize(packet.answers?.topic?.label, 80),
+      intent: normalize(packet.answers?.intent?.label, 80),
+      evidence: normalize(packet.answers?.evidence?.label, 80),
+      focus: (Array.isArray(packet.context?.focusLabels) ? packet.context.focusLabels : [])
+        .slice(0, 5)
+        .map((label) => normalize(label, 50))
+        .filter(Boolean),
+    }),
+  ].join('\n')
+}
+
 async function readRequestBody(request) {
   let size = 0
   const chunks = []
@@ -413,6 +438,90 @@ async function handleGeminiFollowUps(request, response, origin) {
   }, origin)
 }
 
+async function handleGeminiHistoryTitle(request, response, origin) {
+  if (!isTrustedOrigin(origin)) {
+    sendJson(response, 403, { error: 'origin_not_allowed' }, '')
+    return
+  }
+
+  if (!checkRateLimit(request)) {
+    sendJson(response, 429, { error: 'rate_limited' }, origin)
+    return
+  }
+
+  const contentType = normalize(request.headers['content-type']).toLowerCase()
+  if (!contentType.startsWith('application/json')) {
+    sendJson(response, 415, { error: 'content_type_must_be_json' }, origin)
+    return
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey || /replace/i.test(apiKey)) {
+    sendJson(response, 503, { error: 'gemini_api_key_missing' }, origin)
+    return
+  }
+
+  let payload
+  try {
+    payload = JSON.parse(await readRequestBody(request))
+  } catch (error) {
+    sendJson(response, error?.message === 'request_too_large' ? 413 : 400, {
+      error: error?.message || 'invalid_json',
+    }, origin)
+    return
+  }
+
+  if (!normalize(payload.query, MAX_QUERY_LENGTH)) {
+    sendJson(response, 400, { error: 'query_required' }, origin)
+    return
+  }
+
+  const geminiResponse = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`,
+    {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: buildHistoryTitlePrompt(payload) }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 48,
+          responseMimeType: 'application/json',
+        },
+      }),
+    }
+  )
+
+  const geminiJson = await geminiResponse.json().catch(() => ({}))
+  if (!geminiResponse.ok) {
+    sendJson(response, geminiResponse.status, {
+      error: 'gemini_request_failed',
+      detail: normalize(geminiJson?.error?.message, 240),
+    }, origin)
+    return
+  }
+
+  const parsed = parseJsonText(extractGeminiText(geminiJson))
+  const title = normalize(parsed?.title, 56)
+    .replace(/^["'`]+|["'`]+$/g, '')
+    .replace(/[?.!]+$/g, '')
+
+  sendJson(response, 200, {
+    provider: 'gemini',
+    model: GEMINI_MODEL,
+    applied: Boolean(title),
+    title,
+  }, origin)
+}
+
 async function serveStatic(request, response) {
   const url = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`)
   let pathname = '/'
@@ -483,6 +592,11 @@ const server = http.createServer(async (request, response) => {
 
     if (request.url?.startsWith('/api/gemini-followups') && request.method === 'POST') {
       await handleGeminiFollowUps(request, response, origin)
+      return
+    }
+
+    if (request.url?.startsWith('/api/gemini-history-title') && request.method === 'POST') {
+      await handleGeminiHistoryTitle(request, response, origin)
       return
     }
 

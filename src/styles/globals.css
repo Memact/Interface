@@ -552,6 +552,31 @@ button {
   text-transform: uppercase;
 }
 
+.history-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.history-mode-switch button {
+  min-height: 38px;
+  border: 1px solid var(--white-16);
+  border-radius: 999px;
+  background: var(--white-06);
+  color: var(--white-62);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.history-mode-switch button:hover,
+.history-mode-switch button:focus-visible,
+.history-mode-switch button.is-active {
+  outline: none;
+  background: var(--white);
+  color: var(--bg);
+}
+
 .history-list {
   display: grid;
   gap: 6px;
@@ -575,13 +600,34 @@ button {
 }
 
 .history-query-button {
-  padding: 0 14px;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  padding: 8px 14px;
   overflow: hidden;
   text-align: left;
+}
+
+.history-query-button span,
+.history-query-button small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.history-query-button span {
   font-size: 13px;
   font-weight: 900;
+}
+
+.history-query-button small {
+  color: var(--white-46);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .history-delete-button,
@@ -608,6 +654,11 @@ button {
 .history-clear-button:focus-visible {
   outline: none;
   background: var(--white-10);
+}
+
+.history-query-button:hover small,
+.history-query-button:focus-visible small {
+  color: var(--white-76);
 }
 
 .search-home {

@@ -268,6 +268,20 @@ function followUpEndpoint() {
   return ''
 }
 
+function historyTitleEndpoint() {
+  const explicit = normalize(import.meta.env.VITE_MEMACT_GEMINI_HISTORY_TITLE_ENDPOINT)
+  if (explicit) return explicit
+
+  const answerEndpoint = normalize(import.meta.env.VITE_MEMACT_GEMINI_ENDPOINT)
+  if (!answerEndpoint) return ''
+
+  if (answerEndpoint.includes('/api/gemini-answer')) {
+    return answerEndpoint.replace('/api/gemini-answer', '/api/gemini-history-title')
+  }
+
+  return ''
+}
+
 function normalizeFollowUpQuestions(value) {
   const questions = Array.isArray(value?.questions) ? value.questions : []
   return questions
@@ -283,6 +297,13 @@ function normalizeFollowUpQuestions(value) {
     }))
     .filter((question) => question.title && question.options.length >= 2)
     .slice(0, 3)
+}
+
+function normalizeHistoryTitle(value) {
+  const raw = typeof value === 'string' ? value : value?.title
+  return normalize(raw, 56)
+    .replace(/^["'`]+|["'`]+$/g, '')
+    .replace(/[?.!]+$/g, '')
 }
 
 export async function requestCloudFollowUpQuestions({
@@ -321,5 +342,40 @@ export async function requestCloudFollowUpQuestions({
     return normalizeFollowUpQuestions(await response.json())
   } catch {
     return []
+  }
+}
+
+export async function requestCloudHistoryTitle({
+  mode = 'prompt',
+  query,
+  candidateTitle = '',
+  packet = null,
+}) {
+  const endpoint = historyTitleEndpoint()
+  if (!endpoint || normalize(mode).toLowerCase() !== 'survey') {
+    return ''
+  }
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        mode: normalize(mode, 40),
+        query: normalize(query, 180),
+        candidate_title: normalize(candidateTitle, 80),
+        packet,
+      }),
+    })
+
+    if (!response.ok) {
+      return ''
+    }
+
+    return normalizeHistoryTitle(await response.json())
+  } catch {
+    return ''
   }
 }
