@@ -2,125 +2,69 @@
 
 Version: `v0.0`
 
-Memact is a mirror for the virtual cognitive schemas forming from your digital life.
+Website is the Memact user interface.
 
-You type a thought.
-Memact looks at what you read, watch, search, and revisit.
-Then it shows the links, first clues, and repeated activity that may be shaping it.
-
-Why this matters:
-
-- it can help you catch one-sided thinking
-- it can help you make better decisions
-- it can help you understand why some thoughts or feelings keep showing up
-- it can help you explain your ideas more clearly
-
-## How Memact Works
+It owns one job:
 
 ```text
-Capture -> Inference -> Schema -> Memory -> Website / Query -> Influence / Origin
+let a user ask about a thought and inspect the evidence Memact has for it
 ```
 
-- `Capture`
-  Saves useful activity from your device.
-- `Inference`
-  Finds the main meaning in that activity.
-- `Schema`
-  Forms virtual cognitive schemas from repeated meaningful activity.
-- `Memory`
-  Stores the schema packets that should survive, exposes CRUD, and builds RAG context for answers.
-- `Website`
-  Lets you type a thought and see the result.
-- `Influence`
-  Shows what may have shaped the thought over time.
-- `Origin`
-  Shows what may have first introduced the thought.
+Website does not own capture, schema formation, memory storage, origin scoring, or influence scoring. It calls those layers through public contracts.
 
-## Prompt And Survey Modes
+## What This Repo Owns
 
-Website has two input modes:
+- Minimal search-style UI.
+- Prompt mode for typing a thought directly.
+- Survey mode for guided questions when the thought is vague or evidence is thin.
+- History, settings, info panel, and local setup flow.
+- Capture extension bridge integration.
+- Local answer rendering with sources when available.
+- Optional Gemini proxy for short answer wording from a small evidence packet.
+- Render-ready web deployment.
+
+## Product Modes
 
 - `Prompt`
-  Type a thought directly when the thought is already clear.
+  User types a thought.
+
 - `Survey`
-  Answer a short guided flow when the thought is still vague.
+  User answers a short flow. Website turns answers into a clearer query and can add useful local context.
 
-Survey Mode builds its questions from what Memact already knows about the user's activity. If there is no activity yet, it says so and uses broad starter areas such as research, decisions, ideas, projects, and feelings. A completed survey creates a private local memory note, then turns that note into a deterministic query.
+Prompt and Survey have separate history entries.
 
-Survey results do not pretend every answer has source links. If Memact has links, it shows them. If not, it gives an answer or asks a few more questions.
+## Capture Integration
 
-Prompt Mode also avoids dead ends. When a typed thought has too little context, Memact moves into Survey Mode instead of showing a failed result.
-The extra questions are progressive. Memact should not keep asking the same set again and again.
-Survey answers are converted into meaning before they are shown back to the user. For example, a choice like `What I read or watched` becomes `content you consumed`, not a copied button label.
+Website talks to the Capture extension through `window.capture`.
 
-History is separated by mode.
-Prompt history keeps the typed thought.
-Survey history keeps a short human title such as `Project thinking: where it started`.
-Memact creates that title locally from the survey choices first; Gemini can only improve weak titles, and the app still works if Gemini is off.
+It uses:
 
-## Infrastructure Contract
-
-Website is only one Memact client.
-The same backend shape should also work for Android and later API explanations.
-
-The shared contract lives here:
-
-```text
-docs/platform-contract.md
+```js
+window.capture.getSnapshot()
+window.capture.getGraphPackets()
+window.capture.getContentUnits()
+window.capture.getMediaJobs()
 ```
 
-The important rule is simple:
-Memact first filters captured activity into meaningful packets through Inference.
-Memory stores potential cognitive schemas as virtual schema memories.
-Query retrieval starts from those virtual cognitive schemas, then uses activity/source packets as evidence.
-Website receives a `memact.rag_context` from Memory before any optional Gemini answer.
-That RAG context is small by design: cognitive-schema memories first, supporting memories second, relation trails third, sources attached only as evidence.
-Dynamic memory actions reinforce, weaken, link, or forget those schema memories over time, closer to how mental frames change with repeated experience.
-Schema, Origin, and Influence work from retained memory instead of raw browsing noise.
-Gemini can answer from a small evidence packet, but the evidence must already come from deterministic Memact engines.
-Memact sends only the query, selected schema/origin/influence signals, and a few source summaries, not the full Capture snapshot.
+The site should not read Capture internals or expect downloaded JSON files.
 
-The Website contract carries Memory's `memory_lanes` and `relation_trails` to the server. That means cloud explanation can say why a schema is relevant without receiving the user's full activity history.
+## Optional Gemini
 
-Memory is storage-agnostic. Today Website uses local/extension state. Later, the same Memory repository interface can load/save through Google Drive, Supabase, S3, or encrypted user-owned storage without changing the Website query contract.
+Gemini is optional. The app should still function without it.
 
-Website listens for Capture's lightweight Memory Pulse before refreshing local knowledge.
-The pulse only says that memory changed; it does not contain captured page content.
-That means Website does not keep downloading captured memory when nothing changed.
-Search still talks to Capture directly, and Capture ranks results with deterministic local embeddings.
-Capture keeps collecting automatically through the extension bridge; it no longer relies on repeated snapshot downloads.
-Gemini is not cut off by a short client/server timer; if it is slow, the deterministic answer remains visible while the cloud answer is optional polish.
+If enabled, Website sends only a compact evidence packet, not the full captured activity store.
 
-## First-Time Setup
+Create a local `.env` file:
 
-Memact does not interrupt the user right away.
-Setup starts when the user first tries to use search.
+```text
+GEMINI_API_KEY=replace_with_your_key
+```
 
-If Capture is not installed yet:
-
-1. Download the extension zip.
-2. Unzip it into a folder.
-3. Open `chrome://extensions` or `edge://extensions`.
-4. Turn on Developer Mode.
-5. Click `Load unpacked`.
-6. Pick the unzipped folder.
-
-After that, Memact can ask to import some recent activity from this device so it does not start empty.
-
-- If the user allows it, Memact starts building first suggestions.
-- If the user skips it, Memact waits for new activity from then on.
-- Settings shows whether Capture is installed.
-- Settings shows whether browser activity was imported.
-- Settings can clear only browser-imported memories without clearing future captured activity.
-- If the user changes their mind later, Settings lets them turn browser import on.
-
-Website does not keep its own extension source code.
-Capture is the only extension codebase.
-Website only serves the packaged zip that comes from Capture.
+Do not commit real API keys.
 
 ## Run Locally
 
-You need:
+Prerequisites:
 
 - Node.js `20+`
 - npm `10+`
@@ -131,10 +75,16 @@ Install:
 npm install
 ```
 
-Run:
+Run dev server:
 
 ```powershell
 npm run dev
+```
+
+Open:
+
+```text
+http://localhost:5173/
 ```
 
 Build:
@@ -143,132 +93,28 @@ Build:
 npm run build
 ```
 
-Preview:
+Preview production build:
 
 ```powershell
 npm run preview
 ```
 
-## Gemini Answer Layer
-
-Memact can use Gemini 2.5 Flash for short answers after local evidence selection.
-The default mode is `fallback`, which keeps Memact's deterministic answer as the main path and only asks Gemini when there is real evidence but the local wording is weak.
-The browser does not receive the Gemini API key.
-The browser sends a minimal evidence packet to the Memact server endpoint, and that server calls Gemini.
-
-Create `.env` from `.env.example` and replace the placeholder:
-
-```powershell
-Copy-Item .env.example .env
-notepad .env
-```
-
-Run the Vite UI:
-
-```powershell
-npm run dev
-```
-
-Run the API/server in another terminal:
+Run Gemini proxy locally:
 
 ```powershell
 npm run api
 ```
 
-For a single production-style local server:
+## Deploy
 
-```powershell
-npm run build
-npm run serve
-```
+This repo is suitable for Render as a web service/static frontend depending on the chosen deployment path.
 
-If `VITE_MEMACT_GEMINI_ENDPOINT` is not set, Memact still works with deterministic answers and sources.
+Keep these out of Git:
 
-If the extension bridge or Gemini endpoint is slow, Website falls back to Memact's deterministic local pipeline.
-It should move into answer/context mode instead of showing a generic failed-search message.
-
-AI modes:
-
-- `VITE_MEMACT_AI_MODE=fallback`
-  Default. Use Gemini only when deterministic evidence exists but local wording is weak.
-- `VITE_MEMACT_AI_MODE=assistive`
-  Allow Gemini to polish short answers from selected evidence more often.
-- `VITE_MEMACT_AI_MODE=off`
-  Never call Gemini. Memact still works from Capture, Inference, Schema, Memory, Origin, and Influence.
-
-Follow-up questions:
-
-- Memact can ask Gemini for short Survey follow-up questions when local context is weak.
-- Only the typed thought and the weak-context reason are sent.
-- Raw captured activity is not sent for follow-up question generation.
-- If Gemini is unavailable, deterministic local questions are used.
-
-History titles:
-
-- Survey history names are deterministic first.
-- Gemini can rename only weak Survey titles through `/api/gemini-history-title`.
-- The payload is just the survey topic, intent, focus labels, and compact query.
-
-Server safety:
-
-- `GEMINI_API_KEY` must stay in Render or local `.env`, never in browser code.
-- `MEMACT_ALLOWED_ORIGINS` controls which sites can call the Gemini endpoint.
-- `MEMACT_RATE_LIMIT_WINDOW_MS` and `MEMACT_RATE_LIMIT_MAX_REQUESTS` control per-client request limits.
-- `MEMACT_MAX_QUERY_LENGTH` caps thought/query size before cloud explanation.
-- The server accepts JSON requests only and sends Gemini only the selected evidence packet, not the full Capture snapshot.
-
-## Extension Zip
-
-Build the extension in Capture first:
-
-```powershell
-cd ..\capture
-npm install
-npm run package-extension
-```
-
-Then sync that packaged zip into Website:
-
-```powershell
-cd ..\interface
-npm run sync-capture-zip
-```
-
-The website then serves that same packaged zip here:
-
-```text
-public/memact-extension.zip
-```
-
-## Search Setup
-
-The website already includes the main Google search basics:
-
-- canonical URL
-- `robots.txt`
-- `sitemap.xml`
-- search metadata
-- structured data
-- favicon and web manifest
-
-One thing still has to be done by the real site owner:
-Google Search Console verification.
-
-After verification, the normal next steps are:
-
-1. Submit `https://www.memact.com/sitemap.xml`
-2. Inspect `https://www.memact.com/`
-3. Request indexing if needed
-
-## Repositories
-
-- [Capture](https://github.com/Memact/Capture)
-- [Inference](https://github.com/Memact/Inference)
-- [Memory](https://github.com/Memact/Memory)
-- [Schema](https://github.com/Memact/Schema)
-- [Origin](https://github.com/Memact/Origin)
-- [Influence](https://github.com/Memact/Influence)
-- [Website](https://github.com/Memact/Website)
+- `.env`
+- real API keys
+- local capture exports
+- temporary screenshots or pitch output
 
 ## License
 
