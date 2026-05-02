@@ -266,3 +266,88 @@ export function saveSurveyPacket(packet) {
     return []
   }
 }
+
+export function surveyPacketToMemoryStore(packet = {}) {
+  if (!packet?.id) {
+    return { memories: [], relations: [], graph: { nodes: [], edges: [] } }
+  }
+  const createdAt = packet.created_at || new Date().toISOString()
+  const topic = normalize(packet.answers?.topic?.label || packet.query || 'Survey answer')
+  const intent = normalize(packet.answers?.intent?.label || 'Understand this thought')
+  const evidence = normalize(packet.answers?.evidence?.label || 'Self-report')
+  const memoryId = `memory:self_report:${slug(packet.id)}`
+  const schemaId = `memory:self_report_schema:${slug(topic)}`
+  const source = {
+    title: 'Survey self-report',
+    domain: 'memact.local',
+    url: '',
+    occurred_at: createdAt,
+    evidence_type: 'self_report',
+  }
+  const memories = [
+    {
+      id: memoryId,
+      type: 'self_report_memory',
+      label: topic,
+      summary: `The user asked Memact to inspect ${topic} through ${intent}.`,
+      strength: 0.62,
+      created_at: createdAt,
+      updated_at: createdAt,
+      themes: [topic, intent, evidence].filter(Boolean),
+      sources: [source],
+      provenance: {
+        system: 'survey',
+        claim_type: 'self_report',
+      },
+      evidence_packet_ids: [packet.id],
+    },
+    {
+      id: schemaId,
+      type: 'cognitive_schema_memory',
+      label: topic,
+      summary: `Self-report schema candidate around ${topic}.`,
+      strength: 0.54,
+      created_at: createdAt,
+      updated_at: createdAt,
+      themes: [topic],
+      sources: [source],
+      cognitive_schema: true,
+      schema_state: 'emerging',
+      provenance: {
+        system: 'survey',
+        claim_type: 'self_report_schema_candidate',
+      },
+      evidence_packet_ids: [packet.id],
+    },
+  ]
+  const relations = [
+    {
+      id: `relation:${slug(packet.id)}:asks_about`,
+      from: memoryId,
+      to: schemaId,
+      type: packet.answers?.intent?.relation || 'self_reported_origin',
+      weight: 0.62,
+      confidence: 0.62,
+      evidence_ids: [packet.id],
+      evidence: {
+        evidence_type: 'self_report',
+        packet_id: packet.id,
+        reason: `Survey selected ${intent} and ${evidence}.`,
+      },
+    },
+  ]
+  return {
+    schema_version: 'memact.survey_memory.v1',
+    generated_at: createdAt,
+    memories,
+    relations,
+    graph: {
+      nodes: [...(packet.nodes || []), ...memories],
+      edges: [...(packet.edges || []), ...relations],
+    },
+    stats: {
+      memoryCount: memories.length,
+      relationCount: relations.length,
+    },
+  }
+}

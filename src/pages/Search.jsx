@@ -4,7 +4,8 @@ import SearchBar from '../components/SearchBar'
 import { useSearch } from '../hooks/useSearch'
 import { requestCloudFollowUpQuestions } from '../lib/cloudExplanation'
 import { applyFeedbackToAnswerMeta, upsertInfluenceFeedback } from '../lib/feedbackStore'
-import { buildSurveyDeck, createSurveyPacket, saveSurveyPacket } from '../lib/surveyMode'
+import { buildSurveyDeck, createSurveyPacket, saveSurveyPacket, surveyPacketToMemoryStore } from '../lib/surveyMode'
+import { saveDurableMemoryGraph } from '../lib/webMemoryStore'
 
 const INSTALL_PROMPT_DISMISSED_KEY = 'memact.install-prompt-dismissed'
 const IMPORT_DECISION_KEY = 'memact.import-decision'
@@ -958,6 +959,8 @@ export default function Search({ extension }) {
     })
     setLastSurveyPacket(packet)
     saveSurveyPacket(packet)
+    await saveDurableMemoryGraph(surveyPacketToMemoryStore(packet)).catch(() => null)
+    await extension?.refreshKnowledge?.().catch(() => null)
     setContextSeedQuery('')
     setContextAnswers({})
     setContextRound(0)
@@ -1010,6 +1013,8 @@ export default function Search({ extension }) {
 
     setLastSurveyPacket(packet)
     saveSurveyPacket(packet)
+    await saveDurableMemoryGraph(surveyPacketToMemoryStore(packet)).catch(() => null)
+    await extension?.refreshKnowledge?.().catch(() => null)
     setContextAskedTitles((current) => [
       ...current,
       ...contextQuestions.map((question) => normalize(question.title).toLowerCase()).filter(Boolean),
