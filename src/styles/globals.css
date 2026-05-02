@@ -1820,6 +1820,55 @@ blockquote {
   line-height: 1.6;
 }
 
+.source-card__debug {
+  margin-top: 8px;
+  border-top: 1px solid var(--white-10);
+  color: var(--white-62);
+}
+
+.source-card__debug summary {
+  cursor: pointer;
+  list-style: none;
+  padding-top: 12px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.source-card__debug summary::-webkit-details-marker {
+  display: none;
+}
+
+.source-card__debug dl {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.source-card__debug div {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.35fr) 1fr;
+  gap: 10px;
+}
+
+.source-card__debug dt {
+  color: var(--white-48);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.source-card__debug dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
 .empty-sources {
   padding: 20px;
 }

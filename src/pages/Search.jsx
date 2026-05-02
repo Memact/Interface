@@ -118,6 +118,56 @@ function compactText(value, maxLength = 190) {
   return `${text.slice(0, maxLength - 3).trim()}...`
 }
 
+function debugTokens(value) {
+  return normalize(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((token) => token.length > 2)
+}
+
+function matchedWordsForResult(query, result) {
+  const queryTokens = [...new Set(debugTokens(query))]
+  if (!queryTokens.length) return []
+  const haystack = new Set(debugTokens([
+    result?.title,
+    result?.domain,
+    result?.structuredSummary,
+    result?.displayExcerpt,
+    result?.snippet,
+    result?.fullText,
+    ...(result?.contextTopics || []),
+    ...(result?.keyphrases || []),
+  ].filter(Boolean).join(' ')))
+  return queryTokens.filter((token) => haystack.has(token)).slice(0, 8)
+}
+
+function whyRowsForResult(result, query) {
+  const matchedWords = matchedWordsForResult(query, result)
+  const topics = [
+    ...(result?.contextTopics || []),
+    ...(result?.keyphrases || []),
+  ].map(normalize).filter(Boolean).slice(0, 6)
+  const connection = result?.connectedEvents?.[0]
+  return [
+    { label: 'Matched words', value: matchedWords.join(', ') },
+    { label: 'Matched topics', value: topics.join(', ') },
+    { label: 'Connecting edge', value: connection?.relationshipLabel || result?.source || '' },
+    {
+      label: 'Score',
+      value: result?.similarity ? `${Number(result.similarity).toFixed(3)} relevance` : '',
+    },
+    { label: 'Time', value: result?.occurred_at ? new Date(result.occurred_at).toLocaleString() : '' },
+    { label: 'Source type', value: result?.pageTypeLabel || result?.pageType || result?.source || '' },
+    {
+      label: 'Confidence penalties',
+      value: result?.raw?.negative_evidence?.length
+        ? result.raw.negative_evidence.map((item) => item.reason || item.type).filter(Boolean).join(', ')
+        : '',
+    },
+  ].filter((row) => normalize(row.value))
+}
+
 function readStoredValue(key, fallback = '') {
   if (typeof window === 'undefined') return fallback
   try {
@@ -599,7 +649,7 @@ function TrashIcon() {
   )
 }
 
-function SourceCard({ result, index }) {
+function SourceCard({ result, index, query = '' }) {
   const domain = domainFromResult(result)
   const text = compactText(
     result?.structuredSummary ||
@@ -608,6 +658,7 @@ function SourceCard({ result, index }) {
       result?.fullText,
     220
   )
+  const whyRows = whyRowsForResult(result, query)
 
   return (
     <article className="source-card">
@@ -625,6 +676,19 @@ function SourceCard({ result, index }) {
         <div className="source-card__text">
           <MathRichText text={text} />
         </div>
+      ) : null}
+      {whyRows.length ? (
+        <details className="source-card__debug">
+          <summary>Why this result?</summary>
+          <dl>
+            {whyRows.map((row) => (
+              <div key={row.label}>
+                <dt>{row.label}</dt>
+                <dd>{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
       ) : null}
     </article>
   )
@@ -1745,7 +1809,7 @@ export default function Search({ extension }) {
                   <p className="eyebrow">What Memact found</p>
                 <div className="source-list">
                   {search.results.slice(0, 4).map((result, index) => (
-                    <SourceCard key={result.id} result={result} index={index} />
+                    <SourceCard key={result.id} result={result} index={index} query={submittedQuery} />
                   ))}
                 </div>
                 </>
@@ -1806,7 +1870,7 @@ export default function Search({ extension }) {
                 <p className="eyebrow">Sources</p>
                 <div className="source-list">
                   {search.results.slice(0, 4).map((result, index) => (
-                    <SourceCard key={result.id} result={result} index={index} />
+                    <SourceCard key={result.id} result={result} index={index} query={submittedQuery} />
                   ))}
                 </div>
               </section>
