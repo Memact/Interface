@@ -110,6 +110,29 @@ Access service URL above. The site includes:
 - Scopes and saved permissions are required before apps can use Memact.
 - Graph read access is separate from capture/schema write access.
 
+## App Embed Shape
+
+After creating an API key, Website shows a ready-to-copy embed snippet and a
+`Test key` button. The code shape is:
+
+```js
+import { createMemactCaptureClient } from "./memact-capture-client.mjs";
+
+const memact = createMemactCaptureClient({
+  accessUrl: "https://memact-access.onrender.com",
+  apiKey: "mka_key_shown_once"
+});
+
+const { snapshot } = await memact.getLocalSnapshot({
+  scopes: ["capture:webpage", "schema:write", "graph:write", "memory:write", "memory:read_summary"]
+});
+
+console.log(snapshot.counts);
+```
+
+The API key is verified by Access before the app can read from the local
+Capture bridge.
+
 ## License
 
 See `LICENSE`.
