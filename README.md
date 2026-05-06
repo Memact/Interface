@@ -7,7 +7,7 @@ Website is now the Memact Access portal.
 It owns one job:
 
 ```text
-let a developer or user sign in, register an app, grant consent, and create API keys
+let a developer or user sign in, register an app, grant permissions, and create API keys
 ```
 
 Website does not capture activity and does not read memory graphs. It talks to
@@ -49,7 +49,7 @@ npm run dev
 Open:
 
 ```text
-http://localhost:5173/
+http://localhost:3000/
 ```
 
 Build:
@@ -60,18 +60,33 @@ npm run build
 
 ## Configuration
 
-Create `.env` if Access is not running on the default URL:
+Create `.env`:
 
 ```text
 VITE_MEMACT_ACCESS_URL=http://127.0.0.1:8787
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-public-anon-key
 ```
 
-Do not commit real secrets.
+Only use the Supabase anon key in the Website. Never put a service role key or
+GitHub OAuth client secret in frontend code.
+
+In Supabase Auth URL settings, allow:
+
+```text
+http://localhost:3000/dashboard
+https://memact.com/dashboard
+```
+
+In Supabase GitHub provider settings, connect the GitHub OAuth App there. The
+GitHub OAuth client secret belongs in Supabase, not this repo.
 
 For Render, set:
 
 ```text
 VITE_MEMACT_ACCESS_URL=https://memact-access.onrender.com
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-public-anon-key
 ```
 
 Change the URL if the Access service uses a custom domain.
@@ -92,7 +107,7 @@ Access service URL above. The site includes:
 
 - Free unlimited access for now.
 - API keys are shown once.
-- Scope and consent are required before apps can use Memact.
+- Scopes and saved permissions are required before apps can use Memact.
 - Graph read access is separate from capture/schema write access.
 
 ## License
