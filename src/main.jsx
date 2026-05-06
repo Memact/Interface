@@ -91,6 +91,26 @@ function App() {
     }
   }
 
+  async function handleGithubLogin() {
+    setError("")
+    setAuthNotice("")
+    setAuthLoading("github")
+    setStatus("Opening GitHub login.")
+    try {
+      const { error: oauthError } = await requireSupabase().auth.signInWithOAuth({
+        provider: "github",
+        options: {
+          redirectTo: getAuthRedirectUrl()
+        }
+      })
+      if (oauthError) throw oauthError
+    } catch (authError) {
+      setError(authError.message)
+      setStatus(authStatusMessage(authError))
+      setAuthLoading("")
+    }
+  }
+
   async function handleCreateApp(event) {
     event.preventDefault()
     setError("")
@@ -223,13 +243,14 @@ function App() {
           authNotice={authNotice}
           setEmail={setEmail}
           onEmailLogin={handleEmailLogin}
+          onGithubLogin={handleGithubLogin}
         />
       )}
     </main>
   )
 }
 
-function Landing({ showAuth, email, authLoading, authNotice, setEmail, onEmailLogin }) {
+function Landing({ showAuth, email, authLoading, authNotice, setEmail, onEmailLogin, onGithubLogin }) {
   return (
     <section className={showAuth ? "landing landing-with-auth" : "landing"}>
       <div className="hero-copy">
@@ -256,6 +277,9 @@ function Landing({ showAuth, email, authLoading, authNotice, setEmail, onEmailLo
             </label>
             <button type="submit" disabled={authLoading === "email"}>
               {authLoading === "email" ? "Sending link..." : "Continue with Email"}
+            </button>
+            <button type="button" className="ghost" disabled={authLoading === "github"} onClick={onGithubLogin}>
+              {authLoading === "github" ? "Opening GitHub..." : "Continue with GitHub"}
             </button>
           </form>
         </section>
