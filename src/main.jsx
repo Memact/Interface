@@ -7,6 +7,7 @@ import {
   getSessionToken,
   setSessionToken
 } from "./memact-access-client.js"
+import { getAuthRedirectUrl, requireSupabase } from "./supabase-client.js"
 
 const DEFAULT_SCOPES = [
   "capture:webpage",
@@ -18,12 +19,12 @@ const DEFAULT_SCOPES = [
 
 function App() {
   const client = useMemo(() => new AccessClient(ACCESS_URL), [])
-  const [authMode, setAuthMode] = useState("signin")
   const [session, setSession] = useState(getSessionToken())
   const [activeTab, setActiveTab] = useState(getSessionToken() ? "access" : "login")
   const [user, setUser] = useState(null)
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [authLoading, setAuthLoading] = useState("")
+  const [authNotice, setAuthNotice] = useState("")
   const [status, setStatus] = useState("Checking Access.")
   const [error, setError] = useState("")
   const [policy, setPolicy] = useState(null)
@@ -66,23 +67,27 @@ function App() {
     setSelectedScopes(appConsent?.scopes?.length ? appConsent.scopes : DEFAULT_SCOPES)
   }, [consents, selectedAppId])
 
-  async function handleAuth(event) {
+  async function handleEmailLogin(event) {
     event.preventDefault()
     setError("")
-    setStatus(authMode === "signup" ? "Creating account." : "Signing in.")
+    setAuthNotice("")
+    setAuthLoading("email")
+    setStatus("Sending login link.")
     try {
-      const result = authMode === "signup"
-        ? await client.signup({ email, password })
-        : await client.signin({ email, password })
-      setSessionToken(result.session.token)
-      setSession(result.session.token)
-      setUser(result.user)
-      setPassword("")
-      setActiveTab("access")
-      setStatus(authMode === "signup" ? "Account created." : "Signed in.")
+      const { error: otpError } = await requireSupabase().auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: getAuthRedirectUrl()
+        }
+      })
+      if (otpError) throw otpError
+      setAuthNotice("Check your email for the login link.")
+      setStatus("Login link sent.")
     } catch (authError) {
       setError(authError.message)
-      setStatus(authStatusMessage(authError, authMode))
+      setStatus(authStatusMessage(authError))
+    } finally {
+      setAuthLoading("")
     }
   }
 
@@ -213,20 +218,18 @@ function App() {
       ) : (
         <Landing
           showAuth={showAuth}
-          authMode={authMode}
           email={email}
-          password={password}
-          setAuthMode={setAuthMode}
+          authLoading={authLoading}
+          authNotice={authNotice}
           setEmail={setEmail}
-          setPassword={setPassword}
-          onAuth={handleAuth}
+          onEmailLogin={handleEmailLogin}
         />
       )}
     </main>
   )
 }
 
-function Landing({ showAuth, authMode, email, password, setAuthMode, setEmail, setPassword, onAuth }) {
+function Landing({ showAuth, email, authLoading, authNotice, setEmail, onEmailLogin }) {
   return (
     <section className={showAuth ? "landing landing-with-auth" : "landing"}>
       <div className="hero-copy">
@@ -240,24 +243,19 @@ function Landing({ showAuth, authMode, email, password, setAuthMode, setEmail, s
 
       {showAuth ? (
         <section className="panel auth-panel" aria-label="Memact login">
-          <p className="eyebrow">{authMode === "signup" ? "Create account" : "Login"}</p>
-          <h2>{authMode === "signup" ? "Create account." : "Login."}</h2>
+          <p className="eyebrow">Login</p>
+          <h2>Login.</h2>
           <p className="muted">
-            Passwords are sent to Memact only and stored as hashes. Raw passwords
-            are never written to the database.
+            Enter your email and Memact will send a secure login link.
           </p>
-          <form className="form" onSubmit={onAuth}>
+          {authNotice ? <p className="success" role="status">{authNotice}</p> : null}
+          <form className="form" onSubmit={onEmailLogin}>
             <label>
               Email
               <input value={email} type="email" inputMode="email" autoComplete="email" onChange={(event) => setEmail(event.target.value)} required />
             </label>
-            <label>
-              Password
-              <input value={password} type="password" autoComplete={authMode === "signup" ? "new-password" : "current-password"} minLength={10} onChange={(event) => setPassword(event.target.value)} required />
-            </label>
-            <button type="submit">{authMode === "signup" ? "Create account" : "Login"}</button>
-            <button type="button" className="ghost" onClick={() => setAuthMode(authMode === "signup" ? "signin" : "signup")}>
-              {authMode === "signup" ? "I already have an account" : "Create a new account"}
+            <button type="submit" disabled={authLoading === "email"}>
+              {authLoading === "email" ? "Sending link..." : "Continue with Email"}
             </button>
           </form>
         </section>
@@ -467,21 +465,15 @@ async function refreshDashboard(client, session, setUser, setApps, setApiKeys, s
   }
 }
 
-function authStatusMessage(error, authMode) {
+function authStatusMessage(error) {
   const message = String(error?.message || "").toLowerCase()
   if (message.includes("failed to fetch") || message.includes("networkerror")) {
-    return "Start Memact locally to login."
+    return "Login did not connect."
   }
-  if (message.includes("email or password")) {
-    return "Check email or password."
+  if (message.includes("supabase is not configured")) {
+    return "Supabase env vars are missing."
   }
-  if (message.includes("account already exists")) {
-    return "Account already exists."
-  }
-  if (message.includes("at least 10")) {
-    return "Use a longer password."
-  }
-  return authMode === "signup" ? "Account was not created." : "Login did not finish."
+  return "Login did not finish."
 }
 
 function sameScopes(first = [], second = []) {
