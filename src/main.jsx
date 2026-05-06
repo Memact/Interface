@@ -222,8 +222,8 @@ function Landing({ showAuth, authMode, email, password, setAuthMode, setEmail, s
         <h1>Manage access to Memact.</h1>
         <p>
           Sign in, register apps, grant consent, and create scoped API keys.
-          Apps can use Memact through clear permissions without receiving a raw
-          memory graph by default.
+          Apps can use Memact through clear permissions while your memory data
+          stays protected by default.
         </p>
       </div>
 
