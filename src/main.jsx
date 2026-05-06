@@ -100,6 +100,14 @@ function App() {
   }, [authChecking, client, session])
 
   useEffect(() => {
+    if (apps.length === 1 && selectedAppId !== apps[0].id) {
+      setSelectedAppId(apps[0].id)
+      return
+    }
+    if (selectedAppId && !apps.some((app) => app.id === selectedAppId)) {
+      setSelectedAppId(apps[0]?.id || "")
+      return
+    }
     if (!selectedAppId && apps[0]?.id) {
       setSelectedAppId(apps[0].id)
     }
@@ -450,8 +458,8 @@ function Dashboard({
                 <h2>{selectedApp ? selectedApp.name : "Create an app first."}</h2>
                 <p className="muted">{selectedApp ? selectedApp.description || "No description added." : "Each app gets its own permissions and API keys."}</p>
               </div>
-              <button type="button" className="new-app-button" aria-label="Create app" onClick={() => setShowAppForm((current) => !current)}>
-                <span aria-hidden="true">{showAppForm ? "-" : "+"}</span>
+              <button type="button" className="new-app-button" aria-label={showAppForm ? "Close app form" : "Create app"} onClick={() => setShowAppForm((current) => !current)}>
+                <span aria-hidden="true">{showAppForm ? "Close" : "Create"}</span>
                 {showAppForm ? "Close" : "New app"}
               </button>
             </div>

@@ -211,18 +211,21 @@ button:disabled {
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
-  min-width: 128px;
+  min-width: 136px;
+  padding-inline: 1.25rem;
   color: var(--text);
   background: rgba(255, 255, 255, 0.08);
 }
 
 .new-app-button span {
-  display: inline-grid;
-  place-items: center;
-  width: 1.15rem;
-  height: 1.15rem;
-  font-size: 1.25rem;
+  width: auto;
+  height: auto;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.16em;
   line-height: 1;
+  text-transform: uppercase;
 }
 
 .eyebrow {
