@@ -13,7 +13,7 @@ let a developer or user sign in, register an app, grant consent, and create API 
 Website does not capture activity and does not read memory graphs. It talks to
 Access, which protects the permission boundary.
 
-The old thought-query website has been archived outside this repo at:
+The old demo/query website has been archived outside this repo at:
 
 ```text
 ../oldwebsite
