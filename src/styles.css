@@ -189,12 +189,26 @@ button:disabled {
 }
 
 .section-actions {
-  align-items: stretch;
-  margin-top: 1rem;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 0;
 }
 
 .section-actions button {
-  min-width: 194px;
+  min-width: 176px;
+}
+
+.icon-button {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 1.8rem;
+  line-height: 1;
 }
 
 .eyebrow {
@@ -236,6 +250,12 @@ button:disabled {
   display: grid;
   gap: 1rem;
   padding-top: 34px;
+}
+
+.access-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 1rem;
 }
 
 .grid {
@@ -296,6 +316,7 @@ textarea:focus {
 
 .scope-card,
 .app-card,
+.app-chip,
 .list-card {
   border: 1px solid var(--line);
   border-radius: 24px;
@@ -335,8 +356,72 @@ textarea:focus {
   background: rgba(255, 255, 255, 0.12);
 }
 
+.app-workspace {
+  display: grid;
+  gap: 1rem;
+}
+
+.app-create-form {
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: 1rem;
+  background: rgba(0, 1, 27, 0.25);
+}
+
+.app-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.app-chip {
+  width: auto;
+  min-width: 0;
+  padding: 0.78rem 1rem;
+  color: var(--muted);
+  background: rgba(0, 1, 27, 0.28);
+}
+
+.app-chip.is-active {
+  border-color: #ffffff;
+  color: #00011b;
+  background: #ffffff;
+}
+
 .list-card {
   justify-content: space-between;
+}
+
+.account-panel {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.metric-card {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 1rem;
+  background: rgba(0, 1, 27, 0.34);
+}
+
+.metric-card span {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.metric-card strong {
+  font-size: clamp(1.15rem, 2vw, 1.65rem);
 }
 
 .key-panel {
@@ -386,6 +471,8 @@ textarea:focus {
   }
 
   .landing-with-auth,
+  .access-layout,
+  .account-grid,
   .grid {
     grid-template-columns: 1fr;
   }
@@ -424,6 +511,11 @@ textarea:focus {
   .hero-copy p {
     margin-inline: auto;
   }
+
+  .section-actions {
+    justify-content: stretch;
+    margin-top: 0.75rem;
+  }
 }
 
 @media (max-width: 540px) {
@@ -449,6 +541,11 @@ textarea:focus {
   .tab {
     min-width: 0;
     padding-inline: 0.6rem;
+  }
+
+  .app-switcher {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .hero-copy h1 {

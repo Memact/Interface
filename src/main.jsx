@@ -20,7 +20,7 @@ function App() {
   const client = useMemo(() => new AccessClient(ACCESS_URL), [])
   const [authMode, setAuthMode] = useState("signin")
   const [session, setSession] = useState(getSessionToken())
-  const [activeTab, setActiveTab] = useState(getSessionToken() ? "api-keys" : "login")
+  const [activeTab, setActiveTab] = useState(getSessionToken() ? "access" : "login")
   const [user, setUser] = useState(null)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -35,6 +35,7 @@ function App() {
   const [selectedAppId, setSelectedAppId] = useState("")
   const [selectedScopes, setSelectedScopes] = useState(DEFAULT_SCOPES)
   const [oneTimeKey, setOneTimeKey] = useState("")
+  const [showAppForm, setShowAppForm] = useState(false)
 
   useEffect(() => {
     client.health()
@@ -44,7 +45,7 @@ function App() {
   }, [client])
 
   useEffect(() => {
-    const tabName = activeTab === "apps" ? "Apps" : activeTab === "api-keys" ? "API Keys" : "Login"
+    const tabName = activeTab === "account" ? "Account" : activeTab === "access" ? "API Keys" : "Login"
     document.title = `Memact | ${tabName}`
   }, [activeTab])
 
@@ -59,6 +60,12 @@ function App() {
     }
   }, [apps, selectedAppId])
 
+  useEffect(() => {
+    if (!selectedAppId) return
+    const appConsent = consents.find((consent) => consent.app_id === selectedAppId && !consent.revoked_at)
+    setSelectedScopes(appConsent?.scopes?.length ? appConsent.scopes : DEFAULT_SCOPES)
+  }, [consents, selectedAppId])
+
   async function handleAuth(event) {
     event.preventDefault()
     setError("")
@@ -71,7 +78,7 @@ function App() {
       setSession(result.session.token)
       setUser(result.user)
       setPassword("")
-      setActiveTab("api-keys")
+      setActiveTab("access")
       setStatus(authMode === "signup" ? "Account created." : "Signed in.")
     } catch (authError) {
       setError(authError.message)
@@ -83,11 +90,13 @@ function App() {
     event.preventDefault()
     setError("")
     try {
-      await client.createApp(session, {
+      const result = await client.createApp(session, {
         name: newAppName,
         description: newAppDescription
       })
       await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError)
+      setSelectedAppId(result.app.id)
+      setShowAppForm(false)
       setStatus("App registered.")
     } catch (appError) {
       setError(appError.message)
@@ -166,8 +175,8 @@ function App() {
         </a>
         {session ? (
           <nav className="tabs" aria-label="Memact portal tabs">
-            <button type="button" className={activeTab === "api-keys" ? "tab is-active" : "tab"} onClick={() => setActiveTab("api-keys")}>API Keys</button>
-            <button type="button" className={activeTab === "apps" ? "tab is-active" : "tab"} onClick={() => setActiveTab("apps")}>Apps</button>
+            <button type="button" className={activeTab === "access" ? "tab is-active" : "tab"} onClick={() => setActiveTab("access")}>API Keys</button>
+            <button type="button" className={activeTab === "account" ? "tab is-active" : "tab"} onClick={() => setActiveTab("account")}>Account</button>
           </nav>
         ) : null}
         <span className="status-pill">{status}</span>
@@ -188,10 +197,12 @@ function App() {
           newAppName={newAppName}
           newAppDescription={newAppDescription}
           oneTimeKey={oneTimeKey}
+          showAppForm={showAppForm}
           setSelectedAppId={setSelectedAppId}
           setSelectedScopes={setSelectedScopes}
           setNewAppName={setNewAppName}
           setNewAppDescription={setNewAppDescription}
+          setShowAppForm={setShowAppForm}
           onCreateApp={handleCreateApp}
           onGrantConsent={handleGrantConsent}
           onCreateKey={handleCreateKey}
@@ -267,10 +278,12 @@ function Dashboard({
   newAppName,
   newAppDescription,
   oneTimeKey,
+  showAppForm,
   setSelectedAppId,
   setSelectedScopes,
   setNewAppName,
   setNewAppDescription,
+  setShowAppForm,
   onCreateApp,
   onGrantConsent,
   onCreateKey,
@@ -278,72 +291,143 @@ function Dashboard({
   onCopyKey,
   onSignOut
 }) {
+  const selectedApp = apps.find((app) => app.id === selectedAppId)
+  const selectedKeys = apiKeys.filter((key) => key.app_id === selectedAppId)
+  const selectedConsent = consents.find((consent) => consent.app_id === selectedAppId && !consent.revoked_at)
+  const consentChanged = selectedConsent ? !sameScopes(selectedScopes, selectedConsent.scopes) : true
+  const canCreateKey = Boolean(selectedAppId && selectedConsent && !consentChanged)
+
   return (
     <section className="dashboard">
       <div className="dashboard-head panel slim-panel">
         <div>
-          <p className="eyebrow">{activeTab === "apps" ? "Apps" : "API keys"}</p>
+          <p className="eyebrow">{activeTab === "account" ? "Account" : "API keys"}</p>
           <h2>{user?.email}</h2>
-          <p className="muted">Free unlimited while Memact is early.</p>
+          <p className="muted">{activeTab === "account" ? "Manage your local portal session." : "Create app-specific keys with clear permission scopes."}</p>
         </div>
         <button type="button" className="ghost" onClick={onSignOut}>Sign out</button>
       </div>
 
-      {activeTab === "apps" ? (
-        <div className="grid">
-          <section className="panel">
-            <p className="eyebrow">Register app</p>
-            <form className="form" onSubmit={onCreateApp}>
-              <label>
-                App name
-                <input value={newAppName} onChange={(event) => setNewAppName(event.target.value)} required />
-              </label>
-              <label>
-                Purpose
-                <textarea value={newAppDescription} onChange={(event) => setNewAppDescription(event.target.value)} />
-              </label>
-              <button type="submit">Register app</button>
-            </form>
-          </section>
-
-          <AppList apps={apps} selectedAppId={selectedAppId} setSelectedAppId={setSelectedAppId} />
-        </div>
+      {activeTab === "account" ? (
+        <section className="panel account-panel">
+          <p className="eyebrow">Account</p>
+          <h2>{user?.email}</h2>
+          <div className="account-grid">
+            <div className="metric-card">
+              <span>Plan</span>
+              <strong>Free unlimited</strong>
+            </div>
+            <div className="metric-card">
+              <span>Registered apps</span>
+              <strong>{apps.length}</strong>
+            </div>
+            <div className="metric-card">
+              <span>Active API keys</span>
+              <strong>{apiKeys.filter((key) => !key.revoked_at).length}</strong>
+            </div>
+          </div>
+          <p className="muted">
+            Consent means you choose exactly which actions a registered app can ask Memact to perform. If a scope is not saved for that app, its API key cannot use that permission.
+          </p>
+        </section>
       ) : (
-        <div className="grid">
-          <section className="panel">
+        <>
+          <section className="panel app-workspace">
             <div className="section-head">
-              <div className="section-copy">
-                <p className="eyebrow">Scopes</p>
-                <h2>Choose what this app can ask Memact to do.</h2>
+              <div>
+                <p className="eyebrow">App</p>
+                <h2>{selectedApp ? selectedApp.name : "Create an app first."}</h2>
+                <p className="muted">{selectedApp ? selectedApp.description || "No description added." : "Each app gets its own consent and API keys."}</p>
               </div>
+              <button type="button" className="icon-button" aria-label="Create app" onClick={() => setShowAppForm((current) => !current)}>
+                {showAppForm ? "-" : "+"}
+              </button>
             </div>
-            <div className="scope-grid">
-              {Object.entries(scopes).map(([scope, definition]) => (
-                <label key={scope} className="scope-card">
-                  <input
-                    type="checkbox"
-                    checked={selectedScopes.includes(scope)}
-                    onChange={() => {
-                      setSelectedScopes((current) => current.includes(scope)
-                        ? current.filter((item) => item !== scope)
-                        : [...current, scope])
-                    }}
-                  />
-                  <span>
-                    <strong>{scope}</strong>
-                    <small>{definition.description}</small>
-                  </span>
+
+            {showAppForm || !apps.length ? (
+              <form className="form app-create-form" onSubmit={onCreateApp}>
+                <label>
+                  App name
+                  <input value={newAppName} onChange={(event) => setNewAppName(event.target.value)} required />
                 </label>
-              ))}
-            </div>
-            <div className="actions section-actions">
-              <button type="button" className="ghost" disabled={!selectedAppId} onClick={onGrantConsent}>Save consent</button>
-              <button type="button" disabled={!selectedAppId} onClick={onCreateKey}>Create API key</button>
-            </div>
+                <label>
+                  Purpose
+                  <textarea value={newAppDescription} onChange={(event) => setNewAppDescription(event.target.value)} />
+                </label>
+                <button type="submit">Create app</button>
+              </form>
+            ) : null}
+
+            {apps.length ? (
+              <div className="app-switcher" aria-label="Select app">
+                {apps.map((app) => (
+                  <button
+                    key={app.id}
+                    type="button"
+                    className={`app-chip ${selectedAppId === app.id ? "is-active" : ""}`}
+                    onClick={() => setSelectedAppId(app.id)}
+                  >
+                    {app.name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </section>
 
-          <AppList apps={apps} selectedAppId={selectedAppId} setSelectedAppId={setSelectedAppId} />
-        </div>
+          <div className="access-layout">
+            <section className="panel">
+              <div className="section-head">
+                <div className="section-copy">
+                  <p className="eyebrow">Consent</p>
+                  <h2>Choose what this app can ask Memact to do.</h2>
+                  <p className="muted">
+                    {selectedConsent
+                      ? consentChanged ? "Scopes changed. Save consent before creating the next key." : "Consent is saved for this app. Change scopes any time."
+                      : "Save consent before creating a usable API key."}
+                  </p>
+                </div>
+                <div className="actions section-actions">
+                  <button type="button" className="ghost" disabled={!selectedAppId || !selectedScopes.length} onClick={onGrantConsent}>Save consent</button>
+                  <button type="button" disabled={!canCreateKey} onClick={onCreateKey}>Create API key</button>
+                </div>
+              </div>
+              <div className="scope-grid">
+                {Object.entries(scopes).map(([scope, definition]) => (
+                  <label key={scope} className="scope-card">
+                    <input
+                      type="checkbox"
+                      checked={selectedScopes.includes(scope)}
+                      onChange={() => {
+                        setSelectedScopes((current) => current.includes(scope)
+                          ? current.filter((item) => item !== scope)
+                          : [...current, scope])
+                      }}
+                    />
+                    <span>
+                      <strong>{scope}</strong>
+                      <small>{definition.description}</small>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </section>
+
+            <section className="panel">
+              <p className="eyebrow">API keys</p>
+              <div className="stack">
+                {selectedKeys.length ? selectedKeys.map((key) => (
+                  <div className="list-card" key={key.id}>
+                    <span>
+                      <strong>{key.name}</strong>
+                      <small>{key.key_prefix}... | {key.revoked_at ? "revoked" : "active"}</small>
+                    </span>
+                    {!key.revoked_at ? <button type="button" className="ghost" onClick={() => onRevokeKey(key.id)}>Revoke</button> : null}
+                  </div>
+                )) : <p className="muted">{selectedAppId ? "No API keys for this app yet." : "Create an app first."}</p>}
+              </div>
+            </section>
+          </div>
+        </>
       )}
 
       {oneTimeKey ? (
@@ -360,61 +444,6 @@ function Dashboard({
         </section>
       ) : null}
 
-      {activeTab === "api-keys" ? <div className="grid">
-        <section className="panel">
-          <p className="eyebrow">API keys</p>
-          <div className="stack">
-            {apiKeys.length ? apiKeys.map((key) => (
-              <div className="list-card" key={key.id}>
-                <span>
-                  <strong>{key.name}</strong>
-                  <small>{key.key_prefix}... | {key.revoked_at ? "revoked" : "active"}</small>
-                </span>
-                {!key.revoked_at ? <button type="button" className="ghost" onClick={() => onRevokeKey(key.id)}>Revoke</button> : null}
-              </div>
-            )) : <p className="muted">No API keys yet.</p>}
-          </div>
-        </section>
-
-        <section className="panel">
-          <p className="eyebrow">Consent</p>
-          <div className="stack">
-            {consents.length ? consents.map((consent) => (
-              <div className="list-card" key={consent.id}>
-                <span>
-                  <strong>{apps.find((app) => app.id === consent.app_id)?.name || consent.app_id}</strong>
-                  <small>{consent.scopes.join(", ")}</small>
-                </span>
-              </div>
-            )) : <p className="muted">No consent saved yet.</p>}
-          </div>
-        </section>
-      </div> : null}
-    </section>
-  )
-}
-
-function AppList({ apps, selectedAppId, setSelectedAppId }) {
-  return (
-    <section className="panel">
-      <p className="eyebrow">Apps</p>
-      {apps.length ? (
-        <div className="stack">
-          {apps.map((app) => (
-            <button
-              key={app.id}
-              type="button"
-              className={`app-card ${selectedAppId === app.id ? "is-active" : ""}`}
-              onClick={() => setSelectedAppId(app.id)}
-            >
-              <strong>{app.name}</strong>
-              <span>{app.description || "No description"}</span>
-            </button>
-          ))}
-        </div>
-      ) : (
-        <p className="muted">Register an app first.</p>
-      )}
     </section>
   )
 }
@@ -453,6 +482,12 @@ function authStatusMessage(error, authMode) {
     return "Use a longer password."
   }
   return authMode === "signup" ? "Account was not created." : "Login did not finish."
+}
+
+function sameScopes(first = [], second = []) {
+  const firstList = [...first].sort()
+  const secondList = [...second].sort()
+  return firstList.length === secondList.length && firstList.every((scope, index) => scope === secondList[index])
 }
 
 createRoot(document.getElementById("root")).render(<App />)

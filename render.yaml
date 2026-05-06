@@ -3,7 +3,7 @@ services:
     name: memact-website
     runtime: static
     branch: main
-    autoDeploy: true
+    autoDeployTrigger: commit
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     domains:
