@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 import "./styles.css"
 import {
   AccessClient,
+  AccessApiError,
   ACCESS_URL
 } from "./memact-access-client.js"
 import { getAuthRedirectUrl, isSupabaseConfigured, requireSupabase, supabase } from "./supabase-client.js"
@@ -27,12 +28,13 @@ function App() {
   const [authNotice, setAuthNotice] = useState("")
   const [status, setStatus] = useState("Checking Access.")
   const [error, setError] = useState("")
+  const [canRetryDashboard, setCanRetryDashboard] = useState(false)
   const [policy, setPolicy] = useState(null)
   const [apps, setApps] = useState([])
   const [apiKeys, setApiKeys] = useState([])
   const [consents, setConsents] = useState([])
-  const [newAppName, setNewAppName] = useState("My Memact App")
-  const [newAppDescription, setNewAppDescription] = useState("Uses Memact to form useful schema memory.")
+  const [newAppName, setNewAppName] = useState("")
+  const [newAppDescription, setNewAppDescription] = useState("")
   const [selectedAppId, setSelectedAppId] = useState("")
   const [selectedScopes, setSelectedScopes] = useState(DEFAULT_SCOPES)
   const [oneTimeKey, setOneTimeKey] = useState("")
@@ -95,8 +97,8 @@ function App() {
   }, [activeTab])
 
   useEffect(() => {
-    if (!session || authChecking) return
-    refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError)
+    if (authChecking || !session) return
+    refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError, setCanRetryDashboard)
   }, [authChecking, client, session])
 
   useEffect(() => {
@@ -166,25 +168,43 @@ function App() {
   async function handleCreateApp(event) {
     event.preventDefault()
     setError("")
+    const cleanName = newAppName.trim()
+    if (!cleanName) {
+      setError("App name is required.")
+      return
+    }
+    const nextSlug = normalizeAppName(cleanName)
+    if (apps.some((app) => normalizeAppName(app.name) === nextSlug)) {
+      setError("You already have an app with this name.")
+      return
+    }
     try {
       const result = await client.createApp(session, {
-        name: newAppName,
-        description: newAppDescription
+        name: cleanName,
+        description: newAppDescription.trim()
       })
-      await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError)
+      await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError, setCanRetryDashboard)
       setSelectedAppId(result.app.id)
       setShowAppForm(false)
-      setStatus("App registered.")
+      setNewAppName("")
+      setNewAppDescription("")
+      setStatus("App created.")
     } catch (appError) {
       setError(appError.message)
+      setStatus(statusForAccessError(appError).status)
     }
+  }
+
+  async function handleRetryDashboard() {
+    if (authChecking || !session) return
+    await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError, setCanRetryDashboard)
   }
 
   async function handleGrantConsent() {
     setError("")
     try {
       await client.grantConsent(session, { app_id: selectedAppId, scopes: selectedScopes })
-      await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError)
+      await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError, setCanRetryDashboard)
       setStatus("Permissions saved.")
     } catch (consentError) {
       setError(consentError.message)
@@ -202,7 +222,7 @@ function App() {
       })
       setOneTimeKey(result.key)
       setApiTestResult("")
-      await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError)
+      await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError, setCanRetryDashboard)
       setStatus("API key created. Copy it now.")
     } catch (keyError) {
       setError(keyError.message)
@@ -213,7 +233,7 @@ function App() {
     setError("")
     try {
       await client.revokeApiKey(session, keyId)
-      await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError)
+      await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError, setCanRetryDashboard)
       setStatus("API key revoked.")
     } catch (keyError) {
       setError(keyError.message)
@@ -287,7 +307,7 @@ function App() {
         <span className="status-pill">{status}</span>
       </header>
 
-      {error ? <p className="error" role="alert">{error}</p> : null}
+      {error ? <p className="error" role="alert">{error} {canRetryDashboard ? <button type="button" className="inline-retry" onClick={handleRetryDashboard}>Retry</button> : null}</p> : null}
       {authChecking ? <p className="status-line">Checking login.</p> : null}
 
       {session ? (
@@ -400,11 +420,19 @@ function Dashboard({
   onTestKey,
   onSignOut
 }) {
-  const selectedApp = apps.find((app) => app.id === selectedAppId)
+  const hasApps = apps.length > 0
+  const isCreatingApp = showAppForm || !hasApps
+  const selectedApp = hasApps ? apps.find((app) => app.id === selectedAppId) : null
   const selectedKeys = apiKeys.filter((key) => key.app_id === selectedAppId)
   const selectedConsent = consents.find((consent) => consent.app_id === selectedAppId && !consent.revoked_at)
   const consentChanged = selectedConsent ? !sameScopes(selectedScopes, selectedConsent.scopes) : true
   const canCreateKey = Boolean(selectedAppId && selectedConsent && !consentChanged)
+  const appHeading = isCreatingApp
+    ? hasApps ? "Create a new app." : "Create your first app."
+    : selectedApp?.name || "Select an app."
+  const appDescription = !isCreatingApp && selectedApp
+    ? selectedApp.description || "No description added."
+    : "Each app gets its own permissions and API keys."
 
   const provider = user?.provider || authUser?.app_metadata?.provider || authUser?.identities?.[0]?.provider || "email"
   const avatar = user?.avatar_url || authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || ""
@@ -455,30 +483,31 @@ function Dashboard({
             <div className="section-head">
               <div>
                 <p className="eyebrow">App</p>
-                <h2>{selectedApp ? selectedApp.name : "Create an app first."}</h2>
-                <p className="muted">{selectedApp ? selectedApp.description || "No description added." : "Each app gets its own permissions and API keys."}</p>
+                <h2>{appHeading}</h2>
+                <p className="muted">{appDescription}</p>
               </div>
-              <button type="button" className="new-app-button" aria-label={showAppForm ? "Close app form" : "Create app"} onClick={() => setShowAppForm((current) => !current)}>
-                <span aria-hidden="true">{showAppForm ? "Close" : "Create"}</span>
-                {showAppForm ? "Close" : "New app"}
-              </button>
+              {hasApps ? (
+                <button type="button" className="new-app-button" aria-label={isCreatingApp ? "Cancel app creation" : "Create app"} onClick={() => setShowAppForm((current) => !current)}>
+                  {isCreatingApp ? "Cancel" : "New app"}
+                </button>
+              ) : null}
             </div>
 
-            {showAppForm || !apps.length ? (
+            {isCreatingApp ? (
               <form className="form app-create-form" onSubmit={onCreateApp}>
                 <label>
                   App name
-                  <input value={newAppName} onChange={(event) => setNewAppName(event.target.value)} required />
+                  <input value={newAppName} placeholder="Example: Personal capture layer" onChange={(event) => setNewAppName(event.target.value)} required />
                 </label>
                 <label>
                   Purpose
-                  <textarea value={newAppDescription} onChange={(event) => setNewAppDescription(event.target.value)} />
+                  <textarea value={newAppDescription} placeholder="Optional: What will this app use Memact for?" onChange={(event) => setNewAppDescription(event.target.value)} />
                 </label>
                 <button type="submit">Create app</button>
               </form>
             ) : null}
 
-            {apps.length ? (
+            {hasApps ? (
               <div className="app-switcher" aria-label="Select app">
                 {apps.map((app) => (
                   <button
@@ -576,7 +605,8 @@ function Dashboard({
   )
 }
 
-async function refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError) {
+async function refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError, setCanRetryDashboard) {
+  setCanRetryDashboard(false)
   try {
     const [me, appResult, keyResult, consentResult] = await Promise.all([
       client.me(session),
@@ -588,17 +618,44 @@ async function refreshDashboard(client, session, setUser, setApps, setApiKeys, s
     setApps(appResult.apps)
     setApiKeys(keyResult.api_keys)
     setConsents(consentResult.consents)
+    setError("")
     setStatus("Dashboard synced.")
   } catch (error) {
-    const message = String(error?.message || "")
-    if (/session is missing|session.*expired|invalid session/i.test(message)) {
-      setError("Access could not verify this login yet. Restart Access after saving .env, then refresh.")
-      setStatus("Access verification failed.")
-      return
-    }
-    setError(message)
-    setStatus("Could not sync dashboard.")
+    const next = statusForAccessError(error)
+    setError(next.message)
+    setStatus(next.status)
+    setCanRetryDashboard(true)
   }
+}
+
+function statusForAccessError(error) {
+  if (error instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(String(error?.message || ""))) {
+    return {
+      message: "Could not reach Access. Make sure it is running.",
+      status: "Access offline."
+    }
+  }
+  if (error instanceof AccessApiError) {
+    if (error.status === 401) return { message: "Please sign in again.", status: "Login expired." }
+    if (error.status === 403) return { message: "Access denied for this dashboard.", status: "Access denied." }
+    if (error.status === 409) return { message: "This app already exists.", status: "Dashboard sync failed." }
+    if (error.status >= 500) return { message: "Access service had a server error. Check Access logs.", status: "Dashboard sync failed." }
+  }
+  return {
+    message: error?.message || "Dashboard sync failed.",
+    status: "Dashboard sync failed."
+  }
+}
+
+function normalizeAppName(name) {
+  return String(name || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/ /g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
 }
 
 function authStatusMessage(error) {
