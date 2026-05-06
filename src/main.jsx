@@ -36,6 +36,7 @@ function App() {
   const [selectedAppId, setSelectedAppId] = useState("")
   const [selectedScopes, setSelectedScopes] = useState(DEFAULT_SCOPES)
   const [oneTimeKey, setOneTimeKey] = useState("")
+  const [apiTestResult, setApiTestResult] = useState("")
   const [showAppForm, setShowAppForm] = useState(false)
   const session = authSession?.access_token || ""
 
@@ -176,7 +177,7 @@ function App() {
     try {
       await client.grantConsent(session, { app_id: selectedAppId, scopes: selectedScopes })
       await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError)
-      setStatus("Consent saved.")
+      setStatus("Permissions saved.")
     } catch (consentError) {
       setError(consentError.message)
     }
@@ -192,6 +193,7 @@ function App() {
         scopes: selectedScopes
       })
       setOneTimeKey(result.key)
+      setApiTestResult("")
       await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError)
       setStatus("API key created. Copy it now.")
     } catch (keyError) {
@@ -220,6 +222,21 @@ function App() {
     }
   }
 
+  async function testOneTimeKey() {
+    if (!oneTimeKey) return
+    setError("")
+    setApiTestResult("")
+    setStatus("Testing API key.")
+    try {
+      const result = await client.verifyApiKey(oneTimeKey, selectedScopes)
+      setApiTestResult(`Verified for ${result.scopes.length} scope${result.scopes.length === 1 ? "" : "s"}.`)
+      setStatus("API key works.")
+    } catch (testError) {
+      setError(testError.message)
+      setStatus("API key test failed.")
+    }
+  }
+
   async function signOut() {
     setError("")
     setStatus("Signing out.")
@@ -238,6 +255,7 @@ function App() {
     setApiKeys([])
     setConsents([])
     setOneTimeKey("")
+    setApiTestResult("")
     setActiveTab("login")
     setStatus("Signed out.")
     window.history.replaceState({}, "", "/login")
@@ -278,6 +296,7 @@ function App() {
           newAppName={newAppName}
           newAppDescription={newAppDescription}
           oneTimeKey={oneTimeKey}
+          apiTestResult={apiTestResult}
           showAppForm={showAppForm}
           setSelectedAppId={setSelectedAppId}
           setSelectedScopes={setSelectedScopes}
@@ -289,6 +308,7 @@ function App() {
           onCreateKey={handleCreateKey}
           onRevokeKey={handleRevokeKey}
           onCopyKey={copyOneTimeKey}
+          onTestKey={testOneTimeKey}
           onSignOut={signOut}
         />
       ) : (
@@ -357,6 +377,7 @@ function Dashboard({
   newAppName,
   newAppDescription,
   oneTimeKey,
+  apiTestResult,
   showAppForm,
   setSelectedAppId,
   setSelectedScopes,
@@ -368,6 +389,7 @@ function Dashboard({
   onCreateKey,
   onRevokeKey,
   onCopyKey,
+  onTestKey,
   onSignOut
 }) {
   const selectedApp = apps.find((app) => app.id === selectedAppId)
@@ -386,7 +408,7 @@ function Dashboard({
         <div>
           <p className="eyebrow">{activeTab === "account" ? "Account" : "API keys"}</p>
           <h2>{displayEmail}</h2>
-          <p className="muted">{activeTab === "account" ? "Manage your local portal session." : "Create app-specific keys with clear permission scopes."}</p>
+          <p className="muted">{activeTab === "account" ? "Manage your account and session." : "Create app-specific keys with clear permission scopes."}</p>
         </div>
         <button type="button" className="ghost" onClick={onSignOut}>Sign out</button>
       </div>
@@ -416,7 +438,7 @@ function Dashboard({
             </div>
           </div>
           <p className="muted">
-            Consent means you choose exactly which actions a registered app can ask Memact to perform. If a scope is not saved for that app, its API key cannot use that permission.
+            Permissions mean you choose exactly which actions a registered app can ask Memact to perform. If a scope is not saved for that app, its API key cannot use that permission.
           </p>
         </section>
       ) : (
@@ -428,8 +450,9 @@ function Dashboard({
                 <h2>{selectedApp ? selectedApp.name : "Create an app first."}</h2>
                 <p className="muted">{selectedApp ? selectedApp.description || "No description added." : "Each app gets its own consent and API keys."}</p>
               </div>
-              <button type="button" className="icon-button" aria-label="Create app" onClick={() => setShowAppForm((current) => !current)}>
-                {showAppForm ? "-" : "+"}
+              <button type="button" className="new-app-button" aria-label="Create app" onClick={() => setShowAppForm((current) => !current)}>
+                <span aria-hidden="true">{showAppForm ? "-" : "+"}</span>
+                {showAppForm ? "Close" : "New app"}
               </button>
             </div>
 
@@ -467,16 +490,16 @@ function Dashboard({
             <section className="panel">
               <div className="section-head">
                 <div className="section-copy">
-                  <p className="eyebrow">Consent</p>
+                  <p className="eyebrow">Permissions</p>
                   <h2>Choose what this app can ask Memact to do.</h2>
                   <p className="muted">
                     {selectedConsent
-                      ? consentChanged ? "Scopes changed. Save consent before creating the next key." : "Consent is saved for this app. Change scopes any time."
-                      : "Save consent before creating a usable API key."}
+                      ? consentChanged ? "Scopes changed. Save permissions before creating the next key." : "Permissions are saved for this app. Change scopes any time."
+                      : "Save permissions before creating a usable API key."}
                   </p>
                 </div>
                 <div className="actions section-actions">
-                  <button type="button" className="ghost" disabled={!selectedAppId || !selectedScopes.length} onClick={onGrantConsent}>Save consent</button>
+                  <button type="button" className="ghost" disabled={!selectedAppId || !selectedScopes.length} onClick={onGrantConsent}>Save permissions</button>
                   <button type="button" disabled={!canCreateKey} onClick={onCreateKey}>Create API key</button>
                 </div>
               </div>
@@ -527,7 +550,15 @@ function Dashboard({
           </div>
           <div className="key-box">
             <code>{oneTimeKey}</code>
-            <button type="button" onClick={onCopyKey}>Copy key</button>
+            <div className="key-actions">
+              <button type="button" onClick={onCopyKey}>Copy key</button>
+              <button type="button" className="ghost" onClick={onTestKey}>Test key</button>
+            </div>
+          </div>
+          {apiTestResult ? <p className="success" role="status">{apiTestResult}</p> : null}
+          <div className="embed-code">
+            <p className="eyebrow">Embed</p>
+            <pre><code>{buildEmbedCode(oneTimeKey, selectedScopes)}</code></pre>
           </div>
           <p className="muted">Memact stores only a hash. This raw key cannot be shown again.</p>
         </section>
@@ -571,6 +602,21 @@ function sameScopes(first = [], second = []) {
   const firstList = [...first].sort()
   const secondList = [...second].sort()
   return firstList.length === secondList.length && firstList.every((scope, index) => scope === secondList[index])
+}
+
+function buildEmbedCode(apiKey, scopes = []) {
+  return `import { createMemactCaptureClient } from "./memact-capture-client.mjs";
+
+const memact = createMemactCaptureClient({
+  accessUrl: "${ACCESS_URL}",
+  apiKey: "${apiKey || "mka_key_shown_once"}"
+});
+
+const { snapshot } = await memact.getLocalSnapshot({
+  scopes: ${JSON.stringify(scopes, null, 2)}
+});
+
+console.log(snapshot.counts);`
 }
 
 createRoot(document.getElementById("root")).render(<App />)

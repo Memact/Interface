@@ -66,6 +66,14 @@ export class AccessClient {
     return this.post("/v1/consents", body, session)
   }
 
+  verifyApiKey(apiKey, requiredScopes = []) {
+    return this.request("/v1/access/verify", {
+      method: "POST",
+      apiKey,
+      body: { required_scopes: requiredScopes }
+    })
+  }
+
   async get(path, session = "") {
     return this.request(path, { method: "GET", session })
   }
@@ -74,9 +82,10 @@ export class AccessClient {
     return this.request(path, { method: "POST", session, body })
   }
 
-  async request(path, { method, session = "", body } = {}) {
+  async request(path, { method, session = "", apiKey = "", body } = {}) {
     const headers = { "Content-Type": "application/json" }
     if (session) headers.Authorization = `Bearer ${session}`
+    if (apiKey) headers["X-Memact-API-Key"] = apiKey
     const response = await fetch(`${this.baseUrl}${path}`, {
       method,
       headers,
