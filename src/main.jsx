@@ -219,12 +219,11 @@ function Landing({ showAuth, authMode, email, password, setAuthMode, setEmail, s
   return (
     <section className={showAuth ? "landing landing-with-auth" : "landing"}>
       <div className="hero-copy">
-        <p className="eyebrow">Memact</p>
-        <h1>API access for private schema infrastructure.</h1>
+        <h1>Manage access to Memact.</h1>
         <p>
-          Register apps, grant consent, and let Memact capture allowed activity
-          to form nodes, edges, and schema packets. Apps never receive a raw
-          memory dump by default.
+          Sign in, register apps, grant consent, and create scoped API keys.
+          Apps can use Memact through clear permissions without receiving a raw
+          memory graph by default.
         </p>
       </div>
 
