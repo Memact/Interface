@@ -68,6 +68,26 @@ VITE_MEMACT_ACCESS_URL=http://127.0.0.1:8787
 
 Do not commit real secrets.
 
+For Render, set:
+
+```text
+VITE_MEMACT_ACCESS_URL=https://memact-access.onrender.com
+```
+
+Change the URL if the Access service uses a custom domain.
+
+## Render and SEO
+
+`render.yaml` deploys Website as a Render static site and points it at the
+Access service URL above. The site includes:
+
+- canonical URL for `https://www.memact.com/`
+- `robots.txt`
+- `sitemap.xml`
+- Open Graph and Twitter preview tags
+- JSON-LD for the web app
+- mobile viewport and PWA manifest basics
+
 ## Current Policy
 
 - Free unlimited access for now.

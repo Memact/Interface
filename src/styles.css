@@ -13,6 +13,11 @@
   background: var(--bg);
 }
 
+html {
+  min-height: 100%;
+  background: var(--bg);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -21,6 +26,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.12), transparent 28rem),
     radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.08), transparent 30rem),
@@ -58,7 +64,7 @@ button:disabled {
 .page {
   width: min(1280px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 26px 0 56px;
+  padding: max(18px, env(safe-area-inset-top)) 0 max(56px, env(safe-area-inset-bottom));
 }
 
 .topbar,
@@ -244,6 +250,15 @@ textarea {
   outline: none;
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+  box-shadow: 0 0 0 1000px rgba(0, 1, 27, 0.9) inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 textarea {
   min-height: 110px;
   resize: vertical;
@@ -328,13 +343,20 @@ textarea:focus {
 }
 
 @media (max-width: 900px) {
-  .topbar,
   .dashboard-head,
   .section-head,
   .list-card,
   .key-box {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 0.9rem;
+    padding-bottom: 12px;
   }
 
   .landing-with-auth,
@@ -357,7 +379,7 @@ textarea:focus {
   }
 
   .status-pill {
-    width: 100%;
+    width: min(100%, 420px);
     max-width: none;
     text-align: center;
   }
@@ -365,13 +387,32 @@ textarea:focus {
   .logo-link {
     justify-content: center;
     width: 100%;
+    min-width: 0;
+  }
+
+  .hero-copy {
+    justify-self: center;
+    text-align: center;
+  }
+
+  .hero-copy p {
+    margin-inline: auto;
   }
 }
 
 @media (max-width: 540px) {
   .page {
-    width: min(100% - 20px, 1280px);
-    padding-top: 12px;
+    width: min(100% - 18px, 1280px);
+    padding-top: max(10px, env(safe-area-inset-top));
+  }
+
+  .logo-img {
+    width: clamp(104px, 36vw, 140px);
+  }
+
+  .landing {
+    gap: 1.25rem;
+    padding-top: 18px;
   }
 
   .tabs {
@@ -385,6 +426,27 @@ textarea:focus {
   }
 
   .hero-copy h1 {
-    font-size: clamp(2.55rem, 15vw, 4.2rem);
+    font-size: clamp(2.55rem, 14vw, 3.95rem);
+    letter-spacing: -0.06em;
+  }
+
+  .hero-copy p {
+    font-size: 1rem;
+  }
+
+  .panel {
+    border-radius: 28px;
+  }
+
+  button,
+  input,
+  textarea {
+    min-height: 48px;
+  }
+
+  input,
+  textarea {
+    border-radius: 20px;
+    padding: 0.95rem 1rem;
   }
 }
