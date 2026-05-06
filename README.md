@@ -106,6 +106,9 @@ Access service URL above. The site includes:
 - JSON-LD for the web app
 - mobile viewport and PWA manifest basics
 
+If Blueprint setup fails, use the direct Dashboard path in
+[`RENDER_DIRECT_DEPLOY.md`](./RENDER_DIRECT_DEPLOY.md).
+
 ## Current Policy
 
 - Free unlimited access for now.
