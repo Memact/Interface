@@ -22,6 +22,7 @@ function App() {
   const [password, setPassword] = useState("")
   const [authLoading, setAuthLoading] = useState("")
   const [authNotice, setAuthNotice] = useState("")
+  const [authFlow, setAuthFlow] = useState(() => detectAuthFlowFromUrl())
   const [status, setStatus] = useState("Checking Access.")
   const [error, setError] = useState("")
   const [canRetryDashboard, setCanRetryDashboard] = useState(false)
@@ -39,6 +40,8 @@ function App() {
   const [setupPassword, setSetupPassword] = useState("")
   const [setupPasswordConfirm, setSetupPasswordConfirm] = useState("")
   const [passwordSuccess, setPasswordSuccess] = useState("")
+  const [newEmailAddress, setNewEmailAddress] = useState("")
+  const [emailChangeSuccess, setEmailChangeSuccess] = useState("")
   const session = authSession?.access_token || ""
   const passwordState = useMemo(() => getPasswordState(setupPassword, setupPasswordConfirm), [setupPassword, setupPasswordConfirm])
   const needsPasswordSetup = Boolean(authUser && shouldOfferPasswordSetup(authUser))
@@ -64,8 +67,10 @@ function App() {
         setError(error.message)
       }
       const nextSession = data?.session || null
+      const detectedFlow = detectAuthFlowFromUrl()
       setAuthSession(nextSession)
       setAuthUser(nextSession?.user || null)
+      setAuthFlow(detectedFlow)
       setAuthChecking(false)
       if (nextSession && window.location.pathname !== "/dashboard") {
         window.history.replaceState({}, "", "/dashboard")
@@ -76,12 +81,19 @@ function App() {
       }
     })
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return
       setAuthSession(nextSession)
       setAuthUser(nextSession?.user || null)
+      if (event === "PASSWORD_RECOVERY") {
+        setAuthFlow("recovery")
+      } else if (event === "SIGNED_IN") {
+        setAuthFlow(detectAuthFlowFromUrl())
+      } else if (event === "SIGNED_OUT") {
+        setAuthFlow("default")
+      }
       if (nextSession) {
-        setActiveTab(shouldOfferPasswordSetup(nextSession.user) ? "account" : "access")
+        setActiveTab(shouldOpenAccountTab(nextSession.user, event === "PASSWORD_RECOVERY" || detectAuthFlowFromUrl() === "recovery") ? "account" : "access")
         window.history.replaceState({}, "", "/dashboard")
       }
     })
@@ -93,10 +105,18 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!session || !needsPasswordSetup) return
-    setActiveTab("account")
-    setStatus("Set a password to make your next login faster.")
-  }, [needsPasswordSetup, session])
+    if (!session) return
+    if (authFlow === "recovery") {
+      setActiveTab("account")
+      setStatus("Reset your password.")
+      setAuthNotice("Choose a new password for your Memact account.")
+      return
+    }
+    if (needsPasswordSetup) {
+      setActiveTab("account")
+      setStatus("Set a password to make your next login faster.")
+    }
+  }, [authFlow, needsPasswordSetup, session])
 
   useEffect(() => {
     const tabName = activeTab === "account" ? "Account" : activeTab === "access" ? "API Keys" : "Login"
@@ -191,6 +211,31 @@ function App() {
     }
   }
 
+  async function handleForgotPassword() {
+    setError("")
+    setPasswordSuccess("")
+    setEmailChangeSuccess("")
+    if (!email.trim()) {
+      setError("Enter your email first so Memact knows where to send the reset link.")
+      return
+    }
+    setAuthLoading("forgot-password")
+    setStatus("Sending password reset link.")
+    try {
+      const { error: resetError } = await requireSupabase().auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: getAuthRedirectUrl()
+      })
+      if (resetError) throw resetError
+      setAuthNotice("Check your email for the password reset link.")
+      setStatus("Password reset link sent.")
+    } catch (resetError) {
+      setError(String(resetError?.message || "Could not send the password reset link."))
+      setStatus(authStatusMessage(resetError))
+    } finally {
+      setAuthLoading("")
+    }
+  }
+
   async function handleGithubLogin() {
     setError("")
     setAuthNotice("")
@@ -237,11 +282,47 @@ function App() {
       }
       setSetupPassword("")
       setSetupPasswordConfirm("")
+      setAuthFlow("default")
+      setAuthNotice("")
       setPasswordSuccess("Password saved. Next time you can sign in with email and password.")
       setStatus("Password ready.")
     } catch (passwordError) {
       setError(passwordSetupErrorMessage(passwordError))
       setStatus(authStatusMessage(passwordError))
+    } finally {
+      setAuthLoading("")
+    }
+  }
+
+  async function handleChangeEmail(event) {
+    event.preventDefault()
+    setError("")
+    setEmailChangeSuccess("")
+    const nextEmail = newEmailAddress.trim().toLowerCase()
+    if (!nextEmail) {
+      setError("Enter the new email address first.")
+      return
+    }
+    if (nextEmail === (authUser?.email || "").toLowerCase()) {
+      setError("Use a different email address.")
+      return
+    }
+    setAuthLoading("change-email")
+    setStatus("Sending email change confirmation.")
+    try {
+      const { data, error: updateError } = await requireSupabase().auth.updateUser({
+        email: nextEmail
+      })
+      if (updateError) throw updateError
+      if (data?.user) {
+        setAuthUser(data.user)
+      }
+      setNewEmailAddress("")
+      setEmailChangeSuccess("Check both email inboxes to confirm the change, based on your Supabase email settings.")
+      setStatus("Email change started.")
+    } catch (emailError) {
+      setError(String(emailError?.message || "Email change did not finish."))
+      setStatus(authStatusMessage(emailError))
     } finally {
       setAuthLoading("")
     }
@@ -453,6 +534,11 @@ function App() {
           setSetupPassword={setSetupPassword}
           setSetupPasswordConfirm={setSetupPasswordConfirm}
           onSetPassword={handleSetPassword}
+          newEmailAddress={newEmailAddress}
+          setNewEmailAddress={setNewEmailAddress}
+          emailChangeSuccess={emailChangeSuccess}
+          authFlow={authFlow}
+          onChangeEmail={handleChangeEmail}
         />
       ) : (
         <Landing
@@ -465,6 +551,7 @@ function App() {
           setPassword={setPassword}
           onEmailLogin={handleEmailLogin}
           onPasswordLogin={handlePasswordLogin}
+          onForgotPassword={handleForgotPassword}
           onGithubLogin={handleGithubLogin}
         />
       )}
@@ -472,7 +559,7 @@ function App() {
   )
 }
 
-function Landing({ showAuth, email, password, authLoading, authNotice, setEmail, setPassword, onEmailLogin, onPasswordLogin, onGithubLogin }) {
+function Landing({ showAuth, email, password, authLoading, authNotice, setEmail, setPassword, onEmailLogin, onPasswordLogin, onForgotPassword, onGithubLogin }) {
   return (
     <section className={showAuth ? "landing landing-with-auth" : "landing"}>
       <div className="hero-copy">
@@ -503,6 +590,9 @@ function Landing({ showAuth, email, password, authLoading, authNotice, setEmail,
             </label>
             <button type="submit" disabled={authLoading === "password"}>
               {authLoading === "password" ? "Signing in..." : "Continue with Password"}
+            </button>
+            <button type="button" className="text-button" disabled={authLoading === "forgot-password"} onClick={onForgotPassword}>
+              {authLoading === "forgot-password" ? "Sending reset link..." : "Forgot password?"}
             </button>
             <button type="button" className="ghost" disabled={authLoading === "email"} onClick={onEmailLogin}>
               {authLoading === "email" ? "Sending link..." : "Email me a login link"}
@@ -554,7 +644,12 @@ function Dashboard({
   passwordSuccess,
   setSetupPassword,
   setSetupPasswordConfirm,
-  onSetPassword
+  onSetPassword,
+  newEmailAddress,
+  setNewEmailAddress,
+  emailChangeSuccess,
+  authFlow,
+  onChangeEmail
 }) {
   const hasApps = apps.length > 0
   const isCreatingApp = showAppForm || !hasApps
@@ -616,9 +711,11 @@ function Dashboard({
             <section className="password-panel">
               <div>
                 <p className="eyebrow">Password</p>
-                <h2>{needsPasswordSetup ? "Set a password." : "Update your password."}</h2>
+                <h2>{authFlow === "recovery" ? "Reset your password." : needsPasswordSetup ? "Set a password." : "Update your password."}</h2>
                 <p className="muted">
-                  {needsPasswordSetup
+                  {authFlow === "recovery"
+                    ? "Your recovery link worked. Choose a new password to finish getting back into Memact."
+                    : needsPasswordSetup
                     ? "You are signed in through the email link. Set a strong password now so the next login is faster."
                     : "Keep a strong password on this account so you can sign in without requesting a new link."}
                 </p>
@@ -659,7 +756,36 @@ function Dashboard({
                   ))}
                 </ul>
                 <button type="submit" disabled={!passwordState.canSubmit || authLoading === "set-password"}>
-                  {authLoading === "set-password" ? "Saving password..." : needsPasswordSetup ? "Save password" : "Update password"}
+                  {authLoading === "set-password" ? "Saving password..." : authFlow === "recovery" ? "Reset password" : needsPasswordSetup ? "Save password" : "Update password"}
+                </button>
+              </form>
+            </section>
+          ) : null}
+          {provider === "email" ? (
+            <section className="password-panel">
+              <div>
+                <p className="eyebrow">Email</p>
+                <h2>Change your email.</h2>
+                <p className="muted">
+                  Start an email change here. Supabase will send verification based on your project email settings.
+                </p>
+              </div>
+              {emailChangeSuccess ? <p className="success" role="status">{emailChangeSuccess}</p> : null}
+              <form className="form" onSubmit={onChangeEmail}>
+                <label>
+                  New email address
+                  <input
+                    value={newEmailAddress}
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="Enter the new email address"
+                    onChange={(event) => setNewEmailAddress(event.target.value)}
+                    required
+                  />
+                </label>
+                <button type="submit" disabled={authLoading === "change-email"}>
+                  {authLoading === "change-email" ? "Sending confirmation..." : "Change email"}
                 </button>
               </form>
             </section>
@@ -874,6 +1000,17 @@ function shouldOfferPasswordSetup(user) {
   const provider = user.app_metadata?.provider || user.identities?.[0]?.provider || "email"
   if (provider !== "email") return false
   return !Boolean(user.user_metadata?.memact_password_ready)
+}
+
+function shouldOpenAccountTab(user, isRecoveryFlow) {
+  return isRecoveryFlow || shouldOfferPasswordSetup(user)
+}
+
+function detectAuthFlowFromUrl() {
+  if (typeof window === "undefined") return "default"
+  const query = `${window.location.search || ""}${window.location.hash || ""}`.toLowerCase()
+  if (query.includes("type=recovery")) return "recovery"
+  return "default"
 }
 
 function getPasswordState(password, confirmPassword) {
