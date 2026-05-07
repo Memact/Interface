@@ -256,6 +256,9 @@ function mapSupabaseRpcError(error) {
   if (/API key not found/i.test(message)) {
     return new AccessApiError(404, "API key not found.", "api_key_not_found", error)
   }
+  if (/could not find the function|schema cache|developer_url.*does not exist|categories.*does not exist/i.test(message)) {
+    return new AccessApiError(500, "Access needs the latest Supabase SQL applied once, then refresh this page.", "access_migration_required", error)
+  }
   if (/gen_random_bytes\(integer\) does not exist|digest\(text,\s*unknown\) does not exist/i.test(message)) {
     return new AccessApiError(500, "Memact is using an older Access crypto function. A browser-safe fallback will be used.", "legacy_access_crypto", error)
   }
