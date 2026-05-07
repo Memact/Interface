@@ -2,6 +2,8 @@
   --bg: #00011b;
   --panel: rgba(255, 255, 255, 0.07);
   --panel-strong: rgba(255, 255, 255, 0.12);
+  --surface: rgba(10, 12, 42, 0.78);
+  --surface-strong: rgba(14, 16, 52, 0.88);
   --line: rgba(255, 255, 255, 0.19);
   --line-strong: rgba(255, 255, 255, 0.36);
   --text: #ffffff;
@@ -37,8 +39,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.12), transparent 28rem),
-    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.08), transparent 30rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 18rem),
     var(--bg);
 }
 
@@ -115,6 +116,9 @@ button:disabled {
   isolation: isolate;
   justify-content: space-between;
   padding: 14px 0 18px;
+  background: rgba(4, 6, 32, 0.18);
+  backdrop-filter: blur(24px) saturate(135%);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
 }
 
 .topbar::before {
@@ -124,8 +128,8 @@ button:disabled {
   z-index: -1;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.095), rgba(255, 255, 255, 0.065)),
-    rgba(0, 1, 27, 0.68);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04)),
+    rgba(6, 8, 36, 0.72);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
@@ -374,7 +378,7 @@ button:disabled {
   border: 1px solid var(--line);
   border-radius: 34px;
   padding: clamp(1.15rem, 2.8vw, 2rem);
-  background: linear-gradient(135deg, var(--panel-strong), var(--panel));
+  background: linear-gradient(135deg, var(--surface-strong), var(--surface));
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.24);
 }
 
