@@ -494,19 +494,18 @@ function App() {
     setOneTimeKeyScopes([])
     setOneTimeKeyCategories([])
     const keyScopes = normalizeSelectedScopes(selectedScopes, policy)
-    const keyCategories = normalizeSelectedCategories(selectedCategories, policy)
+    const permissionCategories = normalizeSelectedCategories(selectedCategories, policy)
     try {
       const result = await client.createApiKey(session, {
         app_id: selectedAppId,
         name: "Default app key",
-        scopes: keyScopes,
-        categories: keyCategories
+        scopes: keyScopes
       })
       await refreshDashboard(client, session, setUser, setApps, setApiKeys, setConsents, setStatus, setError, setCanRetryDashboard)
       setOneTimeKey(result.key)
       setOneTimeKeyId(result.api_key?.id || "")
       setOneTimeKeyScopes(keyScopes)
-      setOneTimeKeyCategories(keyCategories)
+      setOneTimeKeyCategories(permissionCategories)
       setApiTestResult("")
       setStatus("API key created. Copy it now.")
       scrollElementIntoView("one-time-key-panel")
@@ -1132,7 +1131,6 @@ function Dashboard({
                     <span>
                       <strong>{key.name}</strong>
                       <small>{key.key_prefix}... | {key.revoked_at ? "revoked" : "active"}</small>
-                      <small>{formatListLabels(categories, key.categories || [])}</small>
                     </span>
                     {!key.revoked_at ? <button type="button" className="ghost" onClick={() => onRevokeKey(key.id)}>Revoke</button> : null}
                   </div>

@@ -63,8 +63,7 @@ export class SupabaseAccessClient {
       return await this.rpc("memact_create_api_key", {
         app_id_input: body?.app_id,
         key_name_input: body?.name || "Default app key",
-        scopes_input: body?.scopes || [],
-        categories_input: body?.categories || []
+        scopes_input: body?.scopes || []
       })
     } catch (error) {
       if (!isLegacyApiKeyEntropyError(error)) throw error
@@ -155,14 +154,13 @@ export class SupabaseAccessClient {
       name: (body?.name || "Default app key").trim().slice(0, 80) || "Default app key",
       key_hash: keyHash,
       key_prefix: rawKey.slice(0, 12),
-      scopes: Array.isArray(body?.scopes) ? body.scopes : [],
-      categories: Array.isArray(body?.categories) ? body.categories : []
+      scopes: Array.isArray(body?.scopes) ? body.scopes : []
     }
 
     const { data: createdKey, error: createError } = await this.supabase
       .from("memact_api_keys")
       .insert(payload)
-      .select("id, app_id, owner_user_id, name, key_prefix, scopes, categories, created_at, last_used_at, revoked_at")
+      .select("id, app_id, owner_user_id, name, key_prefix, scopes, created_at, last_used_at, revoked_at")
       .single()
 
     if (createError) throw new AccessApiError(500, createError.message || "Could not create the API key.", "api_key_insert_failed", createError)
@@ -173,7 +171,7 @@ export class SupabaseAccessClient {
     const keyHash = await sha256Hex(apiKey || "")
     const { data: key, error: keyError } = await this.supabase
       .from("memact_api_keys")
-      .select("id, app_id, owner_user_id, name, key_prefix, scopes, categories, created_at, last_used_at, revoked_at")
+      .select("id, app_id, owner_user_id, name, key_prefix, scopes, created_at, last_used_at, revoked_at")
       .eq("key_hash", keyHash)
       .is("revoked_at", null)
       .maybeSingle()
@@ -206,9 +204,8 @@ export class SupabaseAccessClient {
     const keyScopes = Array.isArray(key.scopes) ? key.scopes : []
     const consentScopes = Array.isArray(consent.scopes) ? consent.scopes : []
     const effectiveScopes = keyScopes.filter((scope) => consentScopes.includes(scope))
-    const keyCategories = Array.isArray(key.categories) ? key.categories : []
     const consentCategories = Array.isArray(consent.categories) ? consent.categories : []
-    const effectiveCategories = keyCategories.filter((category) => consentCategories.includes(category))
+    const effectiveCategories = consentCategories
     const missingScopes = requiredScopes.filter((scope) => !effectiveScopes.includes(scope))
     const missingCategories = requiredCategories.filter((category) => !effectiveCategories.includes(category))
 
@@ -216,7 +213,7 @@ export class SupabaseAccessClient {
       return {
         allowed: false,
         app,
-        key: { id: key.id, key_prefix: key.key_prefix, scopes: keyScopes, categories: keyCategories },
+        key: { id: key.id, key_prefix: key.key_prefix, scopes: keyScopes },
         scopes: effectiveScopes,
         categories: effectiveCategories,
         missing_scopes: missingScopes,
@@ -233,7 +230,7 @@ export class SupabaseAccessClient {
       app,
       user_id: consent.user_id,
       connection_id: consent.id,
-      key: { id: key.id, key_prefix: key.key_prefix, scopes: keyScopes, categories: keyCategories },
+      key: { id: key.id, key_prefix: key.key_prefix, scopes: keyScopes },
       scopes: effectiveScopes,
       categories: effectiveCategories,
       missing_scopes: [],
