@@ -7,7 +7,7 @@ Website is now the Memact Access portal.
 It owns one job:
 
 ```text
-let a developer or user sign in, register an app, grant permissions, and create API keys
+let a developer or user sign in, register an app, grant permissions, create API keys, and send users through a Connect App consent page
 ```
 
 Website does not capture activity and does not read memory graphs. It talks to
@@ -26,7 +26,9 @@ Website -> Supabase Access layer -> scoped API key -> Capture / Inference / Sche
 ```
 
 Apps use Memact to capture allowed activity and form schemas. Apps do not get a
-blanket dump of a user's private graph.
+blanket dump of a user's private graph. Each app can also be restricted to
+activity categories such as news, research pages, video captions, AI
+conversations, or developer work.
 
 ## Run Locally
 
@@ -74,7 +76,9 @@ In Supabase Auth URL settings, allow:
 
 ```text
 http://localhost:3000/dashboard
+http://localhost:3000/connect
 https://memact.com/dashboard
+https://memact.com/connect
 ```
 
 In Supabase GitHub provider settings, connect the GitHub OAuth App there. The
@@ -109,6 +113,8 @@ If Blueprint setup fails, use the direct Dashboard path in
 - App names are unique per account.
 - Deleting an app revokes its active API keys and permissions.
 - Scopes and saved permissions are required before apps can use Memact.
+- Activity categories are required before apps can use Memact.
+- Connect App creates user-specific consent, like a Discord authorization page.
 - Graph read access is separate from capture/schema write access.
 - Supabase is the primary Access backend. The old HTTP Access service is only a fallback for local development.
 
@@ -119,23 +125,42 @@ After creating an API key, Website shows a ready-to-copy embed snippet and a
 Memact access; the snippet uses Memact's public Access endpoint and the scoped
 API key created in this portal.
 
+The normal product flow is:
+
+```text
+developer creates app -> chooses scopes and categories -> copies Connect URL
+-> user clicks "Connect Memact" inside the third-party app
+-> Memact shows the app, permissions, and activity categories
+-> user approves or cancels
+-> approved apps receive a connection_id for future API checks
+```
+
+API keys identify the app. `connection_id` identifies the specific user consent.
+Verification must pass both.
+
 The code shape is:
 
 ```js
+const memactConnectUrl = "shown-in-the-memact-portal";
+const memactConnectionId = "connection_id_from_connect_redirect";
 const MEMACT_ACCESS_URL = "shown-in-the-memact-portal";
-const MEMACT_PUBLIC_KEY = "shown-in-the-memact-portal";
+const MEMACT_PUBLIC_ACCESS_KEY = "shown-in-the-memact-portal";
 const memactApiKey = "mka_key_shown_once";
+const requiredScopes = ["capture:webpage", "schema:write"];
+const activityCategories = ["web:news", "web:research"];
 
 const response = await fetch(`${MEMACT_ACCESS_URL}/rest/v1/rpc/memact_verify_api_key`, {
   method: "POST",
   headers: {
-    apikey: MEMACT_PUBLIC_KEY,
-    Authorization: `Bearer ${MEMACT_PUBLIC_KEY}`,
+    apikey: MEMACT_PUBLIC_ACCESS_KEY,
+    Authorization: `Bearer ${MEMACT_PUBLIC_ACCESS_KEY}`,
     "Content-Type": "application/json"
   },
   body: JSON.stringify({
     api_key_input: memactApiKey,
-    required_scopes_input: ["capture:webpage", "schema:write"]
+    required_scopes_input: requiredScopes,
+    activity_categories_input: activityCategories,
+    consent_id_input: memactConnectionId
   })
 });
 
@@ -143,12 +168,23 @@ const access = await response.json();
 
 if (!access?.allowed) throw new Error(access?.error?.message || "Memact access denied.");
 
-console.log("Memact access granted", access.scopes);
+console.log("Memact access granted", access.scopes, access.categories);
 ```
 
 The API key is verified by Memact before an app can use allowed capture,
 schema, graph, or memory permissions. The app receives only the scopes the user
-saved for that app.
+approved for that app, inside the activity categories the user approved.
+
+## Help Tab
+
+Website includes a Help tab for non-technical users. It explains:
+
+- what Memact is
+- what permissions mean
+- why activity categories exist
+- what Connect App does
+- what schema packets are
+- what apps are not allowed to do
 
 ## License
 

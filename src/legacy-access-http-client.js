@@ -82,11 +82,28 @@ export class HttpAccessClient {
     return this.post("/v1/consents", body, session)
   }
 
-  async verifyApiKey(apiKey, requiredScopes = []) {
+  getConnectApp(session, request = {}) {
+    const query = new URLSearchParams({
+      app_id: request?.app_id || "",
+      scopes: (request?.scopes || []).join(","),
+      categories: (request?.categories || []).join(",")
+    })
+    return this.get(`/v1/connect/app?${query.toString()}`, session)
+  }
+
+  connectApp(session, body) {
+    return this.post("/v1/connect/approve", body, session)
+  }
+
+  async verifyApiKey(apiKey, requiredScopes = [], requiredCategories = [], connectionId = "") {
     const result = await this.request("/v1/access/verify", {
       method: "POST",
       apiKey,
-      body: { required_scopes: requiredScopes }
+      body: {
+        required_scopes: requiredScopes,
+        activity_categories: requiredCategories,
+        connection_id: connectionId || null
+      }
     })
     if (!result?.allowed) {
       throw new AccessApiError(403, result?.error?.message || "Access denied.", result?.error?.code || "scope_denied", result)

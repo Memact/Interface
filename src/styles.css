@@ -16,6 +16,7 @@
 html {
   min-height: 100%;
   background: var(--bg);
+  overflow-x: hidden;
 }
 
 * {
@@ -45,6 +46,11 @@ button,
 input,
 textarea {
   font: inherit;
+}
+
+a {
+  color: var(--text);
+  text-underline-offset: 0.18em;
 }
 
 button {
@@ -308,6 +314,12 @@ button:disabled {
   font-weight: 800;
 }
 
+.inline-retry {
+  margin-left: 0.65rem;
+  padding: 0.38rem 0.7rem;
+  font-size: 0.82rem;
+}
+
 .auth-divider {
   display: grid;
   place-items: center;
@@ -366,6 +378,74 @@ button:disabled {
   gap: 1rem;
   padding-top: 34px;
   overflow-x: hidden;
+}
+
+.connect-shell {
+  display: grid;
+  place-items: center;
+  min-height: calc(100vh - 132px);
+  padding: clamp(18px, 5vw, 48px) 0;
+}
+
+.connect-card {
+  display: grid;
+  gap: 1rem;
+  width: min(920px, 100%);
+}
+
+.connect-card h1 {
+  margin: 0;
+  font-size: clamp(2.35rem, 5vw, 4.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  overflow-wrap: anywhere;
+}
+
+.connect-grid,
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.permission-list,
+.mini-row {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 1rem;
+  background: rgba(0, 1, 27, 0.32);
+}
+
+.permission-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mini-row strong,
+.mini-row small {
+  display: block;
+}
+
+.mini-row small {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.connect-actions,
+.embed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.help-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.help-panel > h2 {
+  margin: 0;
 }
 
 .access-layout {
@@ -430,6 +510,17 @@ textarea:focus {
   margin-top: 1.2rem;
 }
 
+.category-section {
+  margin-top: 1.25rem;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
+
 .scope-card,
 .app-card,
 .app-chip,
@@ -445,6 +536,10 @@ textarea:focus {
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: start;
+}
+
+.category-card {
+  background: rgba(255, 255, 255, 0.045);
 }
 
 .scope-card input {
@@ -588,7 +683,8 @@ textarea:focus {
 }
 
 .dashboard-head h2,
-.identity-card h2 {
+.identity-card h2,
+.panel h2 {
   max-width: 100%;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -725,6 +821,8 @@ textarea:focus {
 
   .landing-with-auth,
   .access-layout,
+  .connect-grid,
+  .faq-grid,
   .account-grid,
   .grid {
     grid-template-columns: 1fr;
@@ -871,6 +969,16 @@ textarea:focus {
   .section-toolbar button {
     padding-inline: 0.7rem;
     font-size: 0.95rem;
+  }
+
+  .connect-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .connect-actions button {
+    width: 100%;
+    min-width: 0;
   }
 
   button,

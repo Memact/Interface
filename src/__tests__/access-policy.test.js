@@ -1,6 +1,13 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { DEFAULT_SCOPES, defaultScopesForPolicy, normalizeSelectedScopes } from "../access-policy.js"
+import {
+  DEFAULT_CATEGORIES,
+  DEFAULT_SCOPES,
+  defaultCategoriesForPolicy,
+  defaultScopesForPolicy,
+  normalizeSelectedCategories,
+  normalizeSelectedScopes
+} from "../access-policy.js"
 
 test("defaultScopesForPolicy keeps existing defaults when policy is unavailable", () => {
   assert.deepEqual(defaultScopesForPolicy(null), DEFAULT_SCOPES)
@@ -40,5 +47,36 @@ test("normalizeSelectedScopes removes duplicates and unknown policy scopes", () 
   assert.deepEqual(
     normalizeSelectedScopes(["capture:webpage", "unknown:scope", "memory:write", "capture:webpage"], policy),
     ["capture:webpage", "memory:write"]
+  )
+})
+
+test("defaultCategoriesForPolicy keeps category defaults when policy is unavailable", () => {
+  assert.deepEqual(defaultCategoriesForPolicy(null), DEFAULT_CATEGORIES)
+})
+
+test("defaultCategoriesForPolicy respects Access category defaults", () => {
+  const policy = {
+    activity_categories: {
+      "web:news": {},
+      "ai:assistant": {},
+      "work:docs": {}
+    },
+    default_app_categories: ["ai:assistant", "work:docs"]
+  }
+
+  assert.deepEqual(defaultCategoriesForPolicy(policy), ["ai:assistant", "work:docs"])
+})
+
+test("normalizeSelectedCategories removes duplicates and unknown categories", () => {
+  const policy = {
+    activity_categories: {
+      "web:news": {},
+      "ai:assistant": {}
+    }
+  }
+
+  assert.deepEqual(
+    normalizeSelectedCategories(["web:news", "unknown", "ai:assistant", "web:news"], policy),
+    ["web:news", "ai:assistant"]
   )
 })

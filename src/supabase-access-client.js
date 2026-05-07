@@ -16,12 +16,8 @@ export class SupabaseAccessClient {
 
   async me() {
     const { data, error } = await this.supabase.auth.getUser()
-    if (error) {
-      throw new AccessApiError(401, error.message, "invalid_session", error)
-    }
-    if (!data?.user) {
-      throw new AccessApiError(401, "Session is missing or expired.", "invalid_session")
-    }
+    if (error) throw new AccessApiError(401, error.message, "invalid_session", error)
+    if (!data?.user) throw new AccessApiError(401, "Session is missing or expired.", "invalid_session")
     return {
       user: {
         id: data.user.id,
@@ -47,7 +43,9 @@ export class SupabaseAccessClient {
     return this.rpc("memact_create_app", {
       app_name: body?.name || "",
       app_description: body?.description || "",
-      app_redirect_urls: body?.redirect_urls || []
+      app_redirect_urls: body?.redirect_urls || [],
+      app_developer_url: body?.developer_url || "",
+      app_categories: body?.categories || []
     })
   }
 
@@ -65,12 +63,11 @@ export class SupabaseAccessClient {
       return await this.rpc("memact_create_api_key", {
         app_id_input: body?.app_id,
         key_name_input: body?.name || "Default app key",
-        scopes_input: body?.scopes || []
+        scopes_input: body?.scopes || [],
+        categories_input: body?.categories || []
       })
     } catch (error) {
-      if (!isLegacyApiKeyEntropyError(error)) {
-        throw error
-      }
+      if (!isLegacyApiKeyEntropyError(error)) throw error
       return this.createApiKeyFallback(body)
     }
   }
@@ -87,22 +84,39 @@ export class SupabaseAccessClient {
   async grantConsent(_session, body) {
     return this.rpc("memact_grant_consent", {
       app_id_input: body?.app_id,
-      scopes_input: body?.scopes || []
+      scopes_input: body?.scopes || [],
+      categories_input: body?.categories || []
     })
   }
 
-  async verifyApiKey(apiKey, requiredScopes = []) {
+  async getConnectApp(_session, request = {}) {
+    return this.rpc("memact_get_connect_app", {
+      app_id_input: request?.app_id,
+      scopes_input: request?.scopes || [],
+      categories_input: request?.categories || []
+    })
+  }
+
+  async connectApp(_session, request = {}) {
+    return this.rpc("memact_connect_app", {
+      app_id_input: request?.app_id,
+      scopes_input: request?.scopes || [],
+      categories_input: request?.categories || []
+    })
+  }
+
+  async verifyApiKey(apiKey, requiredScopes = [], requiredCategories = [], connectionId = null) {
     let result
     try {
       result = await this.rpc("memact_verify_api_key", {
         api_key_input: apiKey,
-        required_scopes_input: requiredScopes
+        required_scopes_input: requiredScopes,
+        activity_categories_input: requiredCategories,
+        consent_id_input: connectionId || null
       })
     } catch (error) {
-      if (!isLegacyAccessCryptoError(error)) {
-        throw error
-      }
-      result = await this.verifyApiKeyFallback(apiKey, requiredScopes)
+      if (!isLegacyAccessCryptoError(error)) throw error
+      result = await this.verifyApiKeyFallback(apiKey, requiredScopes, requiredCategories, connectionId)
     }
     if (!result?.allowed) {
       throw new AccessApiError(403, result?.error?.message || "Access denied.", result?.error?.code || "scope_denied", result)
@@ -112,21 +126,15 @@ export class SupabaseAccessClient {
 
   async rpc(name, params = {}) {
     const { data, error } = await this.supabase.rpc(name, params)
-    if (error) {
-      throw mapSupabaseRpcError(error)
-    }
+    if (error) throw mapSupabaseRpcError(error)
     return data && typeof data === "object" ? data : {}
   }
 
   async createApiKeyFallback(body) {
     const { data: userData, error: userError } = await this.supabase.auth.getUser()
-    if (userError) {
-      throw mapSupabaseRpcError(userError)
-    }
+    if (userError) throw mapSupabaseRpcError(userError)
     const user = userData?.user
-    if (!user?.id) {
-      throw new AccessApiError(401, "Please sign in again.", "invalid_session")
-    }
+    if (!user?.id) throw new AccessApiError(401, "Please sign in again.", "invalid_session")
 
     const { data: app, error: appError } = await this.supabase
       .from("memact_apps")
@@ -136,12 +144,8 @@ export class SupabaseAccessClient {
       .is("revoked_at", null)
       .maybeSingle()
 
-    if (appError) {
-      throw new AccessApiError(500, appError.message || "Could not check the selected app.", "app_lookup_failed", appError)
-    }
-    if (!app?.id) {
-      throw new AccessApiError(404, "App not found.", "app_not_found")
-    }
+    if (appError) throw new AccessApiError(500, appError.message || "Could not check the selected app.", "app_lookup_failed", appError)
+    if (!app?.id) throw new AccessApiError(404, "App not found.", "app_not_found")
 
     const rawKey = createBrowserApiKey()
     const keyHash = await sha256Hex(rawKey)
@@ -151,85 +155,75 @@ export class SupabaseAccessClient {
       name: (body?.name || "Default app key").trim().slice(0, 80) || "Default app key",
       key_hash: keyHash,
       key_prefix: rawKey.slice(0, 12),
-      scopes: Array.isArray(body?.scopes) ? body.scopes : []
+      scopes: Array.isArray(body?.scopes) ? body.scopes : [],
+      categories: Array.isArray(body?.categories) ? body.categories : []
     }
 
     const { data: createdKey, error: createError } = await this.supabase
       .from("memact_api_keys")
       .insert(payload)
-      .select("id, app_id, owner_user_id, name, key_prefix, scopes, created_at, last_used_at, revoked_at")
+      .select("id, app_id, owner_user_id, name, key_prefix, scopes, categories, created_at, last_used_at, revoked_at")
       .single()
 
-    if (createError) {
-      throw new AccessApiError(500, createError.message || "Could not create the API key.", "api_key_insert_failed", createError)
-    }
-
-    return {
-      api_key: createdKey,
-      key: rawKey
-    }
+    if (createError) throw new AccessApiError(500, createError.message || "Could not create the API key.", "api_key_insert_failed", createError)
+    return { api_key: createdKey, key: rawKey }
   }
 
-  async verifyApiKeyFallback(apiKey, requiredScopes = []) {
+  async verifyApiKeyFallback(apiKey, requiredScopes = [], requiredCategories = [], connectionId = null) {
     const keyHash = await sha256Hex(apiKey || "")
     const { data: key, error: keyError } = await this.supabase
       .from("memact_api_keys")
-      .select("id, app_id, owner_user_id, name, key_prefix, scopes, created_at, last_used_at, revoked_at")
+      .select("id, app_id, owner_user_id, name, key_prefix, scopes, categories, created_at, last_used_at, revoked_at")
       .eq("key_hash", keyHash)
       .is("revoked_at", null)
       .maybeSingle()
 
-    if (keyError) {
-      throw new AccessApiError(500, keyError.message || "Could not verify the API key.", "api_key_lookup_failed", keyError)
-    }
-    if (!key?.id) {
-      return denied("invalid_api_key", "API key is invalid or revoked.")
-    }
+    if (keyError) throw new AccessApiError(500, keyError.message || "Could not verify the API key.", "api_key_lookup_failed", keyError)
+    if (!key?.id) return denied("invalid_api_key", "API key is invalid or revoked.")
 
     const { data: app, error: appError } = await this.supabase
       .from("memact_apps")
-      .select("id, name, slug, description, owner_user_id, revoked_at")
+      .select("id, name, slug, description, developer_url, owner_user_id, revoked_at")
       .eq("id", key.app_id)
       .is("revoked_at", null)
       .maybeSingle()
 
-    if (appError) {
-      throw new AccessApiError(500, appError.message || "Could not verify the app.", "app_lookup_failed", appError)
-    }
-    if (!app?.id) {
-      return denied("app_revoked", "App is missing or revoked.")
-    }
+    if (appError) throw new AccessApiError(500, appError.message || "Could not verify the app.", "app_lookup_failed", appError)
+    if (!app?.id) return denied("app_revoked", "App is missing or revoked.")
 
-    const { data: consent, error: consentError } = await this.supabase
+    let consentQuery = this.supabase
       .from("memact_consents")
-      .select("id, scopes, revoked_at")
+      .select("id, user_id, scopes, categories, revoked_at")
       .eq("app_id", key.app_id)
-      .eq("user_id", key.owner_user_id)
       .is("revoked_at", null)
-      .maybeSingle()
 
-    if (consentError) {
-      throw new AccessApiError(500, consentError.message || "Could not verify permissions.", "consent_lookup_failed", consentError)
-    }
-    if (!consent?.id) {
-      return denied("consent_missing", "User permissions are missing for this app.")
-    }
+    consentQuery = connectionId ? consentQuery.eq("id", connectionId) : consentQuery.eq("user_id", key.owner_user_id)
+    const { data: consent, error: consentError } = await consentQuery.maybeSingle()
+
+    if (consentError) throw new AccessApiError(500, consentError.message || "Could not verify permissions.", "consent_lookup_failed", consentError)
+    if (!consent?.id) return denied("consent_missing", "User permissions are missing for this app.")
 
     const keyScopes = Array.isArray(key.scopes) ? key.scopes : []
     const consentScopes = Array.isArray(consent.scopes) ? consent.scopes : []
     const effectiveScopes = keyScopes.filter((scope) => consentScopes.includes(scope))
+    const keyCategories = Array.isArray(key.categories) ? key.categories : []
+    const consentCategories = Array.isArray(consent.categories) ? consent.categories : []
+    const effectiveCategories = keyCategories.filter((category) => consentCategories.includes(category))
     const missingScopes = requiredScopes.filter((scope) => !effectiveScopes.includes(scope))
+    const missingCategories = requiredCategories.filter((category) => !effectiveCategories.includes(category))
 
-    if (missingScopes.length) {
+    if (missingScopes.length || missingCategories.length) {
       return {
         allowed: false,
         app,
-        key: { id: key.id, key_prefix: key.key_prefix, scopes: keyScopes },
+        key: { id: key.id, key_prefix: key.key_prefix, scopes: keyScopes, categories: keyCategories },
         scopes: effectiveScopes,
+        categories: effectiveCategories,
         missing_scopes: missingScopes,
+        missing_categories: missingCategories,
         error: {
-          code: "scope_denied",
-          message: "API key or user permissions do not include the requested scopes."
+          code: "scope_or_category_denied",
+          message: "API key or user permissions do not include the requested scopes or categories."
         }
       }
     }
@@ -237,9 +231,13 @@ export class SupabaseAccessClient {
     return {
       allowed: true,
       app,
-      key: { id: key.id, key_prefix: key.key_prefix, scopes: keyScopes },
+      user_id: consent.user_id,
+      connection_id: consent.id,
+      key: { id: key.id, key_prefix: key.key_prefix, scopes: keyScopes, categories: keyCategories },
       scopes: effectiveScopes,
-      missing_scopes: []
+      categories: effectiveCategories,
+      missing_scopes: [],
+      missing_categories: []
     }
   }
 }
@@ -276,7 +274,9 @@ function denied(code, message) {
   return {
     allowed: false,
     scopes: [],
+    categories: [],
     missing_scopes: [],
+    missing_categories: [],
     error: { code, message }
   }
 }

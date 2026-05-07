@@ -6,8 +6,20 @@ export const DEFAULT_SCOPES = [
   "memory:read_summary"
 ]
 
+export const DEFAULT_CATEGORIES = [
+  "web:news",
+  "web:research",
+  "media:video",
+  "ai:assistant",
+  "dev:code"
+]
+
 export function availablePolicyScopes(policy) {
   return Object.keys(policy?.scopes || {})
+}
+
+export function availablePolicyCategories(policy) {
+  return Object.keys(policy?.activity_categories || {})
 }
 
 export function defaultScopesForPolicy(policy) {
@@ -18,6 +30,15 @@ export function defaultScopesForPolicy(policy) {
   return policyDefaults.length ? policyDefaults : availableScopes
 }
 
+export function defaultCategoriesForPolicy(policy) {
+  const availableCategories = availablePolicyCategories(policy)
+  if (!availableCategories.length) return DEFAULT_CATEGORIES
+
+  const policyDefaults = (policy?.default_app_categories || DEFAULT_CATEGORIES)
+    .filter((category) => availableCategories.includes(category))
+  return policyDefaults.length ? policyDefaults : availableCategories
+}
+
 export function normalizeSelectedScopes(scopes, policy) {
   const selectedScopes = Array.isArray(scopes) ? scopes : []
   const dedupedScopes = [...new Set(selectedScopes)]
@@ -25,4 +46,13 @@ export function normalizeSelectedScopes(scopes, policy) {
   if (!availableScopes.length) return dedupedScopes
 
   return dedupedScopes.filter((scope) => availableScopes.includes(scope))
+}
+
+export function normalizeSelectedCategories(categories, policy) {
+  const selectedCategories = Array.isArray(categories) ? categories : []
+  const dedupedCategories = [...new Set(selectedCategories)]
+  const availableCategories = availablePolicyCategories(policy)
+  if (!availableCategories.length) return dedupedCategories
+
+  return dedupedCategories.filter((category) => availableCategories.includes(category))
 }

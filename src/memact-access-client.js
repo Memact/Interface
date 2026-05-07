@@ -70,6 +70,14 @@ export class AccessClient {
     return this.impl.grantConsent(...args)
   }
 
+  getConnectApp(...args) {
+    return this.impl.getConnectApp(...args)
+  }
+
+  connectApp(...args) {
+    return this.impl.connectApp(...args)
+  }
+
   verifyApiKey(...args) {
     return this.impl.verifyApiKey(...args)
   }
