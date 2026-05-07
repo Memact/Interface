@@ -382,8 +382,8 @@ button:disabled {
   border-radius: 34px;
   padding: clamp(1.15rem, 2.8vw, 2rem);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.105), rgba(255, 255, 255, 0.065)),
-    rgba(0, 1, 27, 0.58);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.052)),
+    rgba(0, 1, 27, 0.38);
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.24);
   backdrop-filter: blur(18px) saturate(126%);
   -webkit-backdrop-filter: blur(18px) saturate(126%);
@@ -394,9 +394,7 @@ button:disabled {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background:
-    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.06), transparent 22rem),
-    rgba(0, 1, 27, 0.16);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 44%);
   pointer-events: none;
 }
 
