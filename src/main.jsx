@@ -658,6 +658,20 @@ function Dashboard({
   const selectedConsent = consents.find((consent) => consent.app_id === selectedAppId && !consent.revoked_at)
   const consentChanged = selectedConsent ? !sameScopes(selectedScopes, selectedConsent.scopes) : true
   const canCreateKey = Boolean(selectedAppId && selectedConsent && !consentChanged)
+  const permissionsHint = !selectedAppId
+    ? "Create app first."
+    : selectedConsent
+      ? consentChanged
+        ? "Save permissions first."
+        : ""
+      : "Save permissions first."
+  const createKeyHint = !selectedAppId
+    ? "Create app first."
+    : !selectedConsent
+      ? "Save permissions first."
+      : consentChanged
+        ? "Save permissions first."
+        : ""
   const appHeading = isCreatingApp
     ? hasApps ? "Create a new app." : "Create your first app."
     : selectedApp?.name || "Select an app."
@@ -855,8 +869,12 @@ function Dashboard({
                   </p>
                 </div>
                 <div className="actions section-actions">
-                  <button type="button" className="ghost" disabled={!selectedAppId || !selectedScopes.length} onClick={onGrantConsent}>Save permissions</button>
-                  <button type="button" disabled={!canCreateKey} onClick={onCreateKey}>Create API key</button>
+                  <span className="tooltip-wrap" title={permissionsHint || undefined}>
+                    <button type="button" className="ghost" disabled={!selectedAppId || !selectedScopes.length} onClick={onGrantConsent}>Save permissions</button>
+                  </span>
+                  <span className="tooltip-wrap" title={createKeyHint || undefined}>
+                    <button type="button" disabled={!canCreateKey} onClick={onCreateKey}>Create API key</button>
+                  </span>
                 </div>
               </div>
               <div className="scope-grid">

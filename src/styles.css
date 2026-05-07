@@ -221,6 +221,10 @@ button:disabled {
   min-width: 176px;
 }
 
+.tooltip-wrap {
+  display: inline-flex;
+}
+
 .section-toolbar {
   display: flex;
   flex: 0 0 auto;
