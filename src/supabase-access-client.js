@@ -1,5 +1,7 @@
 import { AccessApiError } from "./legacy-access-http-client.js"
 
+import { normalizeAppName } from "./app-name.js"
+
 export class SupabaseAccessClient {
   constructor(supabase) {
     this.supabase = supabase
@@ -40,13 +42,18 @@ export class SupabaseAccessClient {
   }
 
   async createApp(_session, body) {
-    return this.rpc("memact_create_app", {
-      app_name: body?.name || "",
-      app_description: body?.description || "",
-      app_redirect_urls: body?.redirect_urls || [],
-      app_developer_url: body?.developer_url || "",
-      app_categories: body?.categories || []
-    })
+    try {
+      return await this.rpc("memact_create_app", {
+        app_name: body?.name || "",
+        app_description: body?.description || "",
+        app_redirect_urls: body?.redirect_urls || [],
+        app_developer_url: body?.developer_url || "",
+        app_categories: body?.categories || []
+      })
+    } catch (error) {
+      if (!isLegacyCreateAppRpcError(error)) throw error
+      return this.createAppFallback(body)
+    }
   }
 
   async deleteApp(_session, appId) {
@@ -167,6 +174,48 @@ export class SupabaseAccessClient {
     return { api_key: createdKey, key: rawKey }
   }
 
+  async createAppFallback(body) {
+    const { data: userData, error: userError } = await this.supabase.auth.getUser()
+    if (userError) throw mapSupabaseRpcError(userError)
+    const user = userData?.user
+    if (!user?.id) throw new AccessApiError(401, "Please sign in again.", "invalid_session")
+
+    const cleanedName = String(body?.name || "").trim().slice(0, 80)
+    const slug = normalizeAppName(cleanedName)
+    if (cleanedName.length < 2) throw new AccessApiError(400, "App name must be at least 2 characters.", "invalid_app_name")
+    if (!slug) throw new AccessApiError(400, "App name needs letters or numbers.", "invalid_app_name")
+
+    const { data: existingApp, error: duplicateError } = await this.supabase
+      .from("memact_apps")
+      .select("id")
+      .eq("owner_user_id", user.id)
+      .eq("slug", slug)
+      .is("revoked_at", null)
+      .maybeSingle()
+
+    if (duplicateError) throw new AccessApiError(500, duplicateError.message || "Could not check existing apps.", "app_lookup_failed", duplicateError)
+    if (existingApp?.id) throw new AccessApiError(409, "You already have an app with this name.", "duplicate_app_name")
+
+    const payload = {
+      owner_user_id: user.id,
+      name: cleanedName,
+      slug,
+      description: String(body?.description || "").trim().slice(0, 240),
+      developer_url: String(body?.developer_url || "").trim().slice(0, 300),
+      redirect_urls: Array.isArray(body?.redirect_urls) ? body.redirect_urls : [],
+      default_categories: Array.isArray(body?.categories) ? body.categories : []
+    }
+
+    const { data: createdApp, error: createError } = await this.supabase
+      .from("memact_apps")
+      .insert(payload)
+      .select("id, owner_user_id, name, slug, description, developer_url, redirect_urls, default_scopes, default_categories, created_at, revoked_at")
+      .single()
+
+    if (createError) throw new AccessApiError(500, createError.message || "Could not create the app.", "app_insert_failed", createError)
+    return { app: createdApp }
+  }
+
   async verifyApiKeyFallback(apiKey, requiredScopes = [], requiredCategories = [], connectionId = null) {
     const keyHash = await sha256Hex(apiKey || "")
     const { data: key, error: keyError } = await this.supabase
@@ -253,6 +302,9 @@ function mapSupabaseRpcError(error) {
   if (/API key not found/i.test(message)) {
     return new AccessApiError(404, "API key not found.", "api_key_not_found", error)
   }
+  if (/could not choose the best candidate function.*memact_create_app|memact_create_app.*app_redirect_urls.*text\[\]/i.test(message)) {
+    return new AccessApiError(500, "Memact found an older Access app function. Using the browser-safe app creation path.", "legacy_create_app_rpc", error)
+  }
   if (/could not find the function|schema cache|developer_url.*does not exist|categories.*does not exist/i.test(message)) {
     return new AccessApiError(500, "Access needs the latest Supabase SQL applied once, then refresh this page.", "access_migration_required", error)
   }
@@ -264,6 +316,10 @@ function mapSupabaseRpcError(error) {
 
 function isLegacyApiKeyEntropyError(error) {
   return isLegacyAccessCryptoError(error)
+}
+
+function isLegacyCreateAppRpcError(error) {
+  return error instanceof AccessApiError && error.code === "legacy_create_app_rpc"
 }
 
 function isLegacyAccessCryptoError(error) {
