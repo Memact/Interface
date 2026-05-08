@@ -2,6 +2,10 @@
   --bg: #00011b;
   --panel: rgba(255, 255, 255, 0.07);
   --panel-strong: rgba(255, 255, 255, 0.12);
+  --glass-floor: rgba(255, 255, 255, 0.032);
+  --glass-surface: rgba(255, 255, 255, 0.064);
+  --glass-surface-strong: rgba(255, 255, 255, 0.082);
+  --glass-inner: rgba(255, 255, 255, 0.045);
   --line: rgba(255, 255, 255, 0.19);
   --line-strong: rgba(255, 255, 255, 0.36);
   --text: #ffffff;
@@ -39,6 +43,7 @@ body {
   background:
     radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.12), transparent 28rem),
     radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.08), transparent 30rem),
+    linear-gradient(180deg, var(--glass-floor), rgba(255, 255, 255, 0.018) 46rem, rgba(255, 255, 255, 0.026)),
     var(--bg);
   background-attachment: fixed;
 }
@@ -129,8 +134,8 @@ button:disabled {
   background:
     radial-gradient(circle at 14% -70%, rgba(255, 255, 255, 0.14), transparent 24rem),
     radial-gradient(circle at 82% -70%, rgba(255, 255, 255, 0.08), transparent 26rem),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.055)),
-    rgba(0, 1, 27, 0.7);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.044), rgba(255, 255, 255, 0.026)),
+    rgba(0, 1, 27, 0.36);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
@@ -383,8 +388,7 @@ button:disabled {
   border-radius: 34px;
   padding: clamp(1.15rem, 2.8vw, 2rem);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.095), rgba(255, 255, 255, 0.052)),
-    var(--panel);
+    linear-gradient(135deg, var(--glass-surface-strong), var(--glass-surface));
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.24);
   backdrop-filter: blur(18px) saturate(126%);
   -webkit-backdrop-filter: blur(18px) saturate(126%);
@@ -478,21 +482,26 @@ button:disabled {
   display: grid;
   place-items: center;
   min-height: calc(100vh - 132px);
-  padding: clamp(18px, 5vw, 48px) 0;
+  padding: clamp(18px, 4vw, 42px) 0;
 }
 
 .connect-card {
   display: grid;
-  gap: 1rem;
-  width: min(920px, 100%);
+  gap: clamp(0.9rem, 2vw, 1.35rem);
+  width: min(1040px, 100%);
 }
 
 .connect-card h1 {
   margin: 0;
-  font-size: clamp(2.35rem, 5vw, 4.5rem);
-  line-height: 0.98;
+  font-size: clamp(2rem, 4vw, 3.85rem);
+  line-height: 1;
   letter-spacing: -0.055em;
   overflow-wrap: anywhere;
+}
+
+.connect-card > .muted {
+  max-width: 72ch;
+  line-height: 1.48;
 }
 
 .connect-grid,
@@ -507,12 +516,13 @@ button:disabled {
   border: 1px solid var(--line);
   border-radius: 24px;
   padding: 1rem;
-  background: rgba(0, 1, 27, 0.4);
+  background: var(--glass-inner);
 }
 
 .permission-list {
   display: grid;
   gap: 0.75rem;
+  align-content: start;
 }
 
 .mini-row strong,
@@ -531,6 +541,25 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.connect-actions {
+  justify-content: flex-end;
+}
+
+@media (min-width: 901px) and (min-height: 720px) {
+  .page-auth {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  .page-auth .landing {
+    align-content: center;
+    min-height: 0;
+    padding-bottom: 10px;
+  }
 }
 
 .help-panel {
@@ -574,7 +603,7 @@ textarea {
   border-radius: 24px;
   padding: 1rem 1.1rem;
   color: var(--text);
-  background: rgba(0, 1, 27, 0.52);
+  background: var(--glass-inner);
   outline: none;
 }
 
@@ -623,7 +652,7 @@ textarea:focus {
   border-radius: 24px;
   padding: 1rem;
   color: var(--text);
-  background: rgba(0, 1, 27, 0.44);
+  background: var(--glass-inner);
 }
 
 .scope-card {
@@ -633,7 +662,7 @@ textarea:focus {
 }
 
 .category-card {
-  background: rgba(0, 1, 27, 0.36);
+  background: var(--glass-inner);
 }
 
 .scope-card input {
@@ -670,7 +699,7 @@ textarea:focus {
   border: 1px solid var(--line);
   border-radius: 28px;
   padding: 1rem;
-  background: rgba(0, 1, 27, 0.42);
+  background: var(--glass-inner);
 }
 
 .app-switcher {
@@ -684,7 +713,7 @@ textarea:focus {
   min-width: 0;
   padding: 0.78rem 1rem;
   color: var(--muted);
-  background: rgba(0, 1, 27, 0.44);
+  background: var(--glass-inner);
 }
 
 .app-chip.is-active {
@@ -708,7 +737,7 @@ textarea:focus {
   border: 1px solid var(--line);
   border-radius: 28px;
   padding: 1rem;
-  background: rgba(0, 1, 27, 0.4);
+  background: var(--glass-inner);
 }
 
 .password-strength {
@@ -816,7 +845,7 @@ textarea:focus {
   border: 1px solid var(--line);
   border-radius: 24px;
   padding: 1rem;
-  background: rgba(0, 1, 27, 0.42);
+  background: var(--glass-inner);
 }
 
 .metric-card span {
@@ -844,7 +873,7 @@ textarea:focus {
   border: 1px solid var(--line);
   border-radius: 24px;
   padding: 0.7rem;
-  background: rgba(0, 1, 27, 0.48);
+  background: var(--glass-inner);
 }
 
 .key-actions {
@@ -858,7 +887,7 @@ textarea:focus {
   border: 1px solid var(--line);
   border-radius: 24px;
   padding: 1rem;
-  background: rgba(0, 1, 27, 0.48);
+  background: var(--glass-inner);
 }
 
 .embed-code pre {
@@ -924,6 +953,15 @@ textarea:focus {
 
   .landing {
     min-height: auto;
+  }
+
+  .connect-shell {
+    min-height: auto;
+    padding-top: 18px;
+  }
+
+  .connect-card {
+    width: 100%;
   }
 
   .page-auth .landing {
@@ -1069,6 +1107,25 @@ textarea:focus {
 
   .panel {
     border-radius: 28px;
+  }
+
+  .connect-card {
+    gap: 0.78rem;
+  }
+
+  .connect-card h1 {
+    font-size: clamp(1.82rem, 8.8vw, 2.72rem);
+    letter-spacing: -0.052em;
+  }
+
+  .connect-card > .muted {
+    font-size: 0.95rem;
+  }
+
+  .permission-list,
+  .mini-row {
+    border-radius: 20px;
+    padding: 0.85rem;
   }
 
   .page-auth .auth-panel {
