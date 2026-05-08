@@ -209,7 +209,7 @@ function App() {
     const selectedApp = apps.find((app) => app.id === selectedAppId)
     const appConsent = consents.find((consent) => consent.app_id === selectedAppId && !consent.revoked_at)
     const nextScopes = appConsent?.scopes?.length ? appConsent.scopes : defaultScopesForPolicy(policy)
-    const nextCategories = appConsent?.categories?.length ? appConsent.categories : selectedApp?.default_categories?.length ? selectedApp.default_categories : defaultCategoriesForPolicy(policy)
+    const nextCategories = selectedApp?.default_categories?.length ? selectedApp.default_categories : defaultCategoriesForPolicy(policy)
     setSelectedScopes(normalizeSelectedScopes(nextScopes, policy))
     setSelectedCategories(normalizeSelectedCategories(nextCategories, policy))
   }, [apps, consents, policy, selectedAppId])
@@ -686,7 +686,6 @@ function App() {
           showAppForm={showAppForm}
           setSelectedAppId={handleSelectApp}
           setSelectedScopes={setSelectedScopes}
-          setSelectedCategories={setSelectedCategories}
           setNewAppName={setNewAppName}
           setNewAppDescription={setNewAppDescription}
           setNewAppDeveloperUrl={setNewAppDeveloperUrl}
@@ -810,7 +809,6 @@ function Dashboard({
   showAppForm,
   setSelectedAppId,
   setSelectedScopes,
-  setSelectedCategories,
   setNewAppName,
   setNewAppDescription,
   setNewAppDeveloperUrl,
@@ -1080,7 +1078,7 @@ function Dashboard({
                   <h2>Choose what this app can ask Memact to do.</h2>
                   <p className="muted">
                     {selectedConsent
-                      ? consentChanged ? "Permissions changed. Save them before creating the next key." : "Permissions are saved for this app. Change scopes or categories any time."
+                      ? consentChanged ? "Permissions changed. Save them before creating the next key." : "Permissions are saved for this app. Change scopes any time."
                       : "Save permissions before creating a usable API key."}
                   </p>
                 </div>
@@ -1111,15 +1109,6 @@ function Dashboard({
                     </span>
                   </label>
                 ))}
-              </div>
-              <div className="category-section">
-                <p className="eyebrow">Activity categories</p>
-                <p className="muted">An app can only work inside the selected categories. A news app can stay on news; an AI-conversation app can stay on AI tools.</p>
-                <CategoryGrid
-                  categories={categories}
-                  selected={selectedCategories}
-                  onToggle={(category) => toggleValue(setSelectedCategories, category)}
-                />
               </div>
             </section>
 
@@ -1500,7 +1489,7 @@ function scrollElementIntoView(id) {
 function buildEmbedCode(apiKey, scopes = [], categories = [], app = null) {
   const appId = app?.id || "app_id_from_memact_portal"
   const redirectUrl = app?.redirect_urls?.[0] || app?.developer_url || "https://your-app.example.com/memact/callback"
-  const connectUrl = buildPortalConnectUrl(appId, scopes, categories, redirectUrl)
+  const connectUrl = buildPortalConnectUrl(appId, scopes, [], redirectUrl)
   if (ACCESS_MODE === "supabase") {
     const accessUrl = SUPABASE_URL || "https://memact.supabase.co"
     const publicKey = SUPABASE_ANON_KEY || "MEMACT_PUBLIC_ACCESS_KEY"
@@ -1510,12 +1499,11 @@ const memactConnectUrl = "${connectUrl}";
 // 2. After the user approves, Memact redirects back with ?connected=1&connection_id=...
 const memactConnectionId = "connection_id_from_connect_redirect";
 
-// 3. Verify the API key, user connection, scopes, and activity categories before doing work.
+// 3. Verify the API key, user connection, and scopes before doing work.
 const MEMACT_ACCESS_URL = "${accessUrl}";
 const MEMACT_PUBLIC_ACCESS_KEY = "${publicKey}";
 const memactApiKey = "${apiKey || "mka_key_shown_once"}";
 const requiredScopes = ${JSON.stringify(scopes, null, 2)};
-const activityCategories = ${JSON.stringify(categories, null, 2)};
 
 const response = await fetch(\`\${MEMACT_ACCESS_URL}/rest/v1/rpc/memact_verify_api_key\`, {
   method: "POST",
@@ -1527,7 +1515,6 @@ const response = await fetch(\`\${MEMACT_ACCESS_URL}/rest/v1/rpc/memact_verify_a
   body: JSON.stringify({
     api_key_input: memactApiKey,
     required_scopes_input: requiredScopes,
-    activity_categories_input: activityCategories,
     consent_id_input: memactConnectionId
   })
 });
@@ -1544,7 +1531,7 @@ console.log("Memact access granted", {
 });
 
 // 4. Topic-wise integration examples.
-// Capture: pass only allowed activity from these categories into your Capture adapter.
+// Capture: use access.categories to keep captured activity inside this app's categories.
 // Schema: write schema packets with evidence, nodes, and edges, not raw private dumps.
 // Memory: request summaries/evidence/graph objects only if the approved scopes include them.`
   }
@@ -1558,7 +1545,6 @@ const memact = createMemactCaptureClient({
 
 const { snapshot } = await memact.getLocalSnapshot({
   scopes: ${JSON.stringify(scopes, null, 2)},
-  categories: ${JSON.stringify(categories, null, 2)},
   connectionId: "connection_id_from_connect_redirect"
 });
 
