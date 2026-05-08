@@ -88,11 +88,16 @@ export class SupabaseAccessClient {
   }
 
   async grantConsent(_session, body) {
-    return this.rpc("memact_grant_consent", {
-      app_id_input: body?.app_id,
-      scopes_input: body?.scopes || [],
-      categories_input: body?.categories || []
-    })
+    try {
+      return await this.rpc("memact_grant_consent", {
+        app_id_input: body?.app_id,
+        scopes_input: body?.scopes || [],
+        categories_input: body?.categories || []
+      })
+    } catch (error) {
+      if (!isLegacyGrantConsentRpcError(error)) throw error
+      return this.grantConsentFallback(body)
+    }
   }
 
   async getConnectApp(_session, request = {}) {
@@ -104,11 +109,21 @@ export class SupabaseAccessClient {
   }
 
   async connectApp(_session, request = {}) {
-    return this.rpc("memact_connect_app", {
-      app_id_input: request?.app_id,
-      scopes_input: request?.scopes || [],
-      categories_input: request?.categories || []
-    })
+    try {
+      return await this.rpc("memact_connect_app", {
+        app_id_input: request?.app_id,
+        scopes_input: request?.scopes || [],
+        categories_input: request?.categories || []
+      })
+    } catch (error) {
+      if (!isLegacyConnectAppRpcError(error)) throw error
+      const granted = await this.grantConsentFallback({
+        app_id: request?.app_id,
+        scopes: request?.scopes || [],
+        categories: request?.categories || []
+      })
+      return { ...granted, connected: true }
+    }
   }
 
   async verifyApiKey(apiKey, requiredScopes = [], requiredCategories = [], connectionId = null) {
@@ -216,6 +231,58 @@ export class SupabaseAccessClient {
     return { app: createdApp }
   }
 
+  async grantConsentFallback(body) {
+    const { data: userData, error: userError } = await this.supabase.auth.getUser()
+    if (userError) throw mapSupabaseRpcError(userError)
+    const user = userData?.user
+    if (!user?.id) throw new AccessApiError(401, "Please sign in again.", "invalid_session")
+
+    const { data: app, error: appError } = await this.supabase
+      .from("memact_apps")
+      .select("id, owner_user_id, default_scopes, default_categories, revoked_at")
+      .eq("id", body?.app_id)
+      .eq("owner_user_id", user.id)
+      .is("revoked_at", null)
+      .maybeSingle()
+
+    if (appError) throw new AccessApiError(500, appError.message || "Could not check the selected app.", "app_lookup_failed", appError)
+    if (!app?.id) throw new AccessApiError(404, "App not found.", "app_not_found")
+
+    const scopes = filterKnownValues(body?.scopes, app.default_scopes)
+    const categories = filterKnownValues(body?.categories, app.default_categories)
+    if (!scopes.length) throw new AccessApiError(400, "Select at least one permission.", "missing_scopes")
+    if (!categories.length) throw new AccessApiError(400, "Select at least one activity category.", "missing_categories")
+
+    const { data: existingConsent, error: consentLookupError } = await this.supabase
+      .from("memact_consents")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("app_id", app.id)
+      .is("revoked_at", null)
+      .maybeSingle()
+
+    if (consentLookupError) throw new AccessApiError(500, consentLookupError.message || "Could not check existing permissions.", "consent_lookup_failed", consentLookupError)
+
+    const payload = {
+      user_id: user.id,
+      app_id: app.id,
+      scopes,
+      categories,
+      updated_at: new Date().toISOString()
+    }
+
+    const query = existingConsent?.id
+      ? this.supabase.from("memact_consents").update(payload).eq("id", existingConsent.id)
+      : this.supabase.from("memact_consents").insert(payload)
+
+    const { data: consent, error: writeError } = await query
+      .select("id, user_id, app_id, scopes, categories, created_at, updated_at, revoked_at")
+      .single()
+
+    if (writeError) throw new AccessApiError(500, writeError.message || "Could not save permissions.", "consent_write_failed", writeError)
+    return { consent }
+  }
+
   async verifyApiKeyFallback(apiKey, requiredScopes = [], requiredCategories = [], connectionId = null) {
     const keyHash = await sha256Hex(apiKey || "")
     const { data: key, error: keyError } = await this.supabase
@@ -305,6 +372,12 @@ function mapSupabaseRpcError(error) {
   if (/could not choose the best candidate function.*memact_create_app|memact_create_app.*app_redirect_urls.*text\[\]/i.test(message)) {
     return new AccessApiError(500, "Memact found an older Access app function. Using the browser-safe app creation path.", "legacy_create_app_rpc", error)
   }
+  if (/could not find the function.*memact_grant_consent|memact_grant_consent.*schema cache/i.test(message)) {
+    return new AccessApiError(500, "Memact found an older Access permission function. Using the browser-safe permission save path.", "legacy_grant_consent_rpc", error)
+  }
+  if (/could not find the function.*memact_connect_app|memact_connect_app.*schema cache|connect_app.*categories/i.test(message)) {
+    return new AccessApiError(500, "Memact found an older Access connection function. Using the browser-safe connection path.", "legacy_connect_app_rpc", error)
+  }
   if (/could not find the function|schema cache|developer_url.*does not exist|categories.*does not exist/i.test(message)) {
     return new AccessApiError(500, "Access needs the latest Supabase SQL applied once, then refresh this page.", "access_migration_required", error)
   }
@@ -322,8 +395,22 @@ function isLegacyCreateAppRpcError(error) {
   return error instanceof AccessApiError && error.code === "legacy_create_app_rpc"
 }
 
+function isLegacyGrantConsentRpcError(error) {
+  return error instanceof AccessApiError && error.code === "legacy_grant_consent_rpc"
+}
+
+function isLegacyConnectAppRpcError(error) {
+  return error instanceof AccessApiError && error.code === "legacy_connect_app_rpc"
+}
+
 function isLegacyAccessCryptoError(error) {
   return error instanceof AccessApiError && error.code === "legacy_access_crypto"
+}
+
+function filterKnownValues(values, allowedValues) {
+  const requested = Array.isArray(values) ? [...new Set(values)] : []
+  const allowed = Array.isArray(allowedValues) ? allowedValues : []
+  return requested.filter((value) => allowed.includes(value))
 }
 
 function denied(code, message) {

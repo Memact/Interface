@@ -61,3 +61,153 @@ test("createApp falls back when Supabase still has an overloaded legacy RPC", as
   assert.equal(insertedPayload.slug, "my-memact-app")
   assert.deepEqual(insertedPayload.default_categories, ["web:news", "ai:assistant"])
 })
+
+test("grantConsent falls back when Supabase grant RPC is missing from schema cache", async () => {
+  let insertedPayload = null
+  const fakeSupabase = {
+    rpc: async () => ({
+      data: null,
+      error: {
+        message: "Could not find the function public.memact_grant_consent(app_id_input, categories_input, scopes_input) in the schema cache"
+      }
+    }),
+    auth: {
+      getUser: async () => ({ data: { user: { id: "user-123" } }, error: null })
+    },
+    from(table) {
+      if (table === "memact_apps") {
+        return {
+          select() { return this },
+          eq() { return this },
+          is() { return this },
+          maybeSingle: async () => ({
+            data: {
+              id: "app-123",
+              owner_user_id: "user-123",
+              default_scopes: ["capture:webpage", "memory:read_summary"],
+              default_categories: ["web:news", "ai:assistant"],
+              revoked_at: null
+            },
+            error: null
+          })
+        }
+      }
+
+      if (table === "memact_consents") {
+        return {
+          select() { return this },
+          eq() { return this },
+          is() { return this },
+          maybeSingle: async () => ({ data: null, error: null }),
+          insert(payload) {
+            insertedPayload = payload
+            return {
+              select() {
+                return {
+                  single: async () => ({
+                    data: {
+                      id: "consent-123",
+                      created_at: null,
+                      revoked_at: null,
+                      ...payload
+                    },
+                    error: null
+                  })
+                }
+              }
+            }
+          }
+        }
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    }
+  }
+
+  const client = new SupabaseAccessClient(fakeSupabase)
+  const result = await client.grantConsent(null, {
+    app_id: "app-123",
+    scopes: ["capture:webpage", "unknown:scope"],
+    categories: ["web:news", "unknown:category"]
+  })
+
+  assert.equal(result.consent.id, "consent-123")
+  assert.equal(insertedPayload.user_id, "user-123")
+  assert.deepEqual(insertedPayload.scopes, ["capture:webpage"])
+  assert.deepEqual(insertedPayload.categories, ["web:news"])
+})
+
+test("connectApp falls back through durable consent when connect RPC is stale", async () => {
+  let insertedPayload = null
+  const fakeSupabase = {
+    rpc: async () => ({
+      data: null,
+      error: {
+        message: "Could not find the function public.memact_connect_app(app_id_input, categories_input, scopes_input) in the schema cache"
+      }
+    }),
+    auth: {
+      getUser: async () => ({ data: { user: { id: "user-123" } }, error: null })
+    },
+    from(table) {
+      if (table === "memact_apps") {
+        return {
+          select() { return this },
+          eq() { return this },
+          is() { return this },
+          maybeSingle: async () => ({
+            data: {
+              id: "app-123",
+              owner_user_id: "user-123",
+              default_scopes: ["capture:webpage", "schema:write"],
+              default_categories: ["web:news", "web:research"],
+              revoked_at: null
+            },
+            error: null
+          })
+        }
+      }
+
+      if (table === "memact_consents") {
+        return {
+          select() { return this },
+          eq() { return this },
+          is() { return this },
+          maybeSingle: async () => ({ data: null, error: null }),
+          insert(payload) {
+            insertedPayload = payload
+            return {
+              select() {
+                return {
+                  single: async () => ({
+                    data: {
+                      id: "consent-456",
+                      created_at: null,
+                      revoked_at: null,
+                      ...payload
+                    },
+                    error: null
+                  })
+                }
+              }
+            }
+          }
+        }
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    }
+  }
+
+  const client = new SupabaseAccessClient(fakeSupabase)
+  const result = await client.connectApp(null, {
+    app_id: "app-123",
+    scopes: ["capture:webpage", "schema:write"],
+    categories: ["web:research"]
+  })
+
+  assert.equal(result.connected, true)
+  assert.equal(result.consent.id, "consent-456")
+  assert.deepEqual(insertedPayload.scopes, ["capture:webpage", "schema:write"])
+  assert.deepEqual(insertedPayload.categories, ["web:research"])
+})
