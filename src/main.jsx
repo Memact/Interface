@@ -632,7 +632,8 @@ function App() {
 
   const scopes = policy?.scopes || {}
   const showAuth = !session
-  const showStatusPill = Boolean(session || authChecking || error || status.includes("missing") || status.includes("failed") || status.includes("offline"))
+  const statusNeedsAttention = /missing|failed|offline/i.test(status)
+  const showStatusPill = Boolean(error || statusNeedsAttention)
 
   return (
     <main className={showAuth ? "page page-auth" : "page"}>

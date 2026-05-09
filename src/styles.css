@@ -1044,7 +1044,7 @@ textarea:focus {
   .topbar {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: space-between;
     gap: 0.75rem;
     min-height: auto;
     padding-bottom: 12px;
@@ -1095,9 +1095,8 @@ textarea:focus {
   }
 
   .tabs {
-    order: 3;
-    width: 100%;
-    justify-content: center;
+    margin-left: auto;
+    justify-content: flex-end;
   }
 
   .status-pill {
@@ -1105,6 +1104,20 @@ textarea:focus {
     width: auto;
     max-width: min(100%, 420px);
     text-align: center;
+  }
+
+  .page-auth .landing-with-auth {
+    grid-template-columns: 1fr;
+  }
+
+  .page-auth .hero-copy {
+    justify-self: center;
+    max-width: 520px;
+  }
+
+  .page-auth .hero-copy h1 {
+    overflow-wrap: normal;
+    word-break: normal;
   }
 
   .logo-link {
@@ -1195,6 +1208,10 @@ textarea:focus {
     width: clamp(104px, 36vw, 140px);
   }
 
+  .page-auth .logo-link {
+    max-width: 100%;
+  }
+
   .page-auth .logo-img {
     width: clamp(112px, 42vw, 150px);
   }
@@ -1242,12 +1259,7 @@ textarea:focus {
   }
 
   .page-auth .hero-copy {
-    max-width: 100%;
-  }
-
-  .page-auth .hero-copy h1 {
-    font-size: clamp(2.15rem, 10.6vw, 3rem);
-    line-height: 0.96;
+    display: none;
   }
 
   .hero-copy p {
@@ -1407,6 +1419,19 @@ textarea:focus {
   .topbar {
     justify-content: space-between;
     gap: 0.65rem;
+  }
+
+  .tabs {
+    order: 0;
+    width: auto;
+    max-width: 100%;
+    overflow-x: auto;
+    justify-content: flex-end;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
   }
 
   .status-pill {
