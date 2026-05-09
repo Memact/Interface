@@ -632,6 +632,7 @@ function App() {
 
   const scopes = policy?.scopes || {}
   const showAuth = !session
+  const showStatusPill = Boolean(session || authChecking || error || status.includes("missing") || status.includes("failed") || status.includes("offline"))
 
   return (
     <main className={showAuth ? "page page-auth" : "page"}>
@@ -646,7 +647,7 @@ function App() {
             <button type="button" className={activeTab === "help" ? "tab is-active" : "tab"} onClick={() => setActiveTab("help")}>Help</button>
           </nav>
         ) : null}
-        <span className="status-pill">{status}</span>
+        {showStatusPill ? <span className="status-pill" aria-live="polite">{status}</span> : null}
       </header>
 
       {error ? <p id="error-message" className="error" role="alert">{error} {canRetryDashboard ? <button type="button" className="inline-retry" onClick={handleRetryDashboard}>Retry</button> : null}</p> : null}
