@@ -1199,9 +1199,9 @@ textarea:focus {
   }
 
   .page-auth .topbar {
-    gap: 0.55rem;
-    padding-top: 4px;
-    padding-bottom: 8px;
+    gap: 0.8rem;
+    padding-top: 10px;
+    padding-bottom: 12px;
   }
 
   .logo-img {
@@ -1231,11 +1231,11 @@ textarea:focus {
 
   .page-auth .landing {
     display: block;
-    padding-top: 6px;
+    padding-top: 14px;
   }
 
   .page-auth .hero-copy {
-    margin: 0 auto 0.7rem;
+    margin: 0 auto 1rem;
   }
 
   .tabs {
@@ -1297,44 +1297,46 @@ textarea:focus {
   }
 
   .page-auth .auth-panel {
-    border-radius: var(--radius-md);
-    padding: 0.9rem;
+    border-radius: 30px;
+    padding: 1.25rem;
   }
 
   .page-auth .auth-panel .eyebrow {
-    margin-bottom: 0.42rem;
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.28em;
   }
 
   .page-auth .auth-panel h2 {
-    font-size: 1.38rem;
+    font-size: 2.05rem;
+    letter-spacing: -0.03em;
   }
 
   .page-auth .auth-panel .muted {
-    margin: 0.34rem 0;
-    font-size: 0.9rem;
+    margin: 0.48rem 0;
+    font-size: 1rem;
   }
 
   .page-auth .auth-panel .form {
-    gap: 0.42rem;
+    gap: 0.72rem;
   }
 
   .page-auth label {
-    gap: 0.34rem;
-    font-size: 0.92rem;
+    gap: 0.5rem;
+    font-size: 0.98rem;
   }
 
   .page-auth button,
   .page-auth input {
-    min-height: 42px;
+    min-height: 56px;
   }
 
   .page-auth button {
-    padding-block: 0.52rem;
+    padding-block: 0.78rem;
   }
 
   .page-auth input {
-    border-radius: 18px;
-    padding-block: 0.58rem;
+    border-radius: 999px;
+    padding-block: 0.82rem;
   }
 
   .page-auth .auth-divider span {
