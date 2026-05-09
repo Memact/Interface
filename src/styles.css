@@ -27,6 +27,13 @@ html {
   box-sizing: border-box;
 }
 
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
 main,
 section,
 div,
@@ -60,6 +67,7 @@ a {
 }
 
 button {
+  min-width: 0;
   min-height: 44px;
   border: 1px solid var(--line-strong);
   border-radius: 999px;
@@ -69,6 +77,7 @@ button {
   font-weight: 850;
   text-align: center;
   text-decoration: none;
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
 
@@ -411,6 +420,7 @@ button:disabled {
 
 .auth-panel {
   width: 100%;
+  min-width: 0;
   max-width: 560px;
   justify-self: end;
 }
@@ -584,13 +594,13 @@ button:disabled {
 
 .access-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(min(100%, 320px), 0.8fr);
   gap: 1rem;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.84fr);
+  grid-template-columns: minmax(0, 1fr) minmax(min(100%, 320px), 0.84fr);
   gap: 1rem;
 }
 
@@ -610,6 +620,8 @@ label {
 input,
 textarea {
   width: 100%;
+  min-width: 0;
+  font-size: 16px;
   border: 1px solid var(--line);
   border-radius: 24px;
   padding: 1rem 1.1rem;
@@ -679,6 +691,16 @@ textarea:focus {
 .scope-card input {
   width: auto;
   margin-top: 0.25rem;
+}
+
+.scope-card span,
+.app-card span,
+.list-card span,
+.mini-row,
+.metric-card,
+.key-box code {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .scope-card small,
@@ -964,7 +986,13 @@ textarea:focus {
   }
 
   .landing {
+    align-items: start;
     min-height: auto;
+  }
+
+  .auth-panel button,
+  .auth-panel .text-button {
+    width: 100%;
   }
 
   .connect-shell {
@@ -1039,7 +1067,12 @@ textarea:focus {
 
 @media (max-width: 720px) {
   .page {
-    width: min(100% - 24px, 1280px);
+    width: min(calc(100% - 24px), 1280px);
+  }
+
+  .app-chip {
+    width: 100%;
+    text-align: left;
   }
 
   .section-actions,
@@ -1069,12 +1102,12 @@ textarea:focus {
 
 @media (max-width: 540px) {
   .page {
-    width: min(100% - 18px, 1280px);
+    width: min(calc(100% - 18px), 1280px);
     padding-top: max(10px, env(safe-area-inset-top));
   }
 
   .page-auth {
-    width: min(100% - 16px, 1280px);
+    width: min(calc(100% - 16px), 1280px);
     padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
 
@@ -1093,7 +1126,8 @@ textarea:focus {
   }
 
   .page-auth .status-pill {
-    width: auto;
+    order: 2;
+    width: 100%;
     max-width: 100%;
     padding: 0.58rem 0.85rem;
     font-size: 0.78rem;
@@ -1105,8 +1139,12 @@ textarea:focus {
   }
 
   .page-auth .landing {
-    gap: 0.7rem;
+    display: block;
     padding-top: 6px;
+  }
+
+  .page-auth .hero-copy {
+    margin: 0 auto 0.7rem;
   }
 
   .tabs {
@@ -1217,6 +1255,11 @@ textarea:focus {
     font-size: 0.72rem;
   }
 
+  .auth-divider span::before,
+  .auth-divider span::after {
+    width: min(42px, 16vw);
+  }
+
   .dashboard {
     gap: 0.85rem;
     padding-top: 18px;
@@ -1293,7 +1336,7 @@ textarea:focus {
   }
 
   .status-pill {
-    max-width: calc(100vw - 150px);
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1318,6 +1361,10 @@ textarea:focus {
 }
 
 @media (max-width: 360px) {
+  .page-auth .hero-copy {
+    display: none;
+  }
+
   .section-actions,
   .section-toolbar {
     grid-template-columns: 1fr;
@@ -1342,7 +1389,7 @@ textarea:focus {
 }
 
 @media (max-width: 540px) and (max-height: 760px) {
-  .page-auth .hero-copy p {
+  .page-auth .hero-copy {
     display: none;
   }
 
