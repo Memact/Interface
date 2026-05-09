@@ -752,8 +752,8 @@ function Landing({ connectRequest, showAuth, email, password, authLoading, authN
 
       {showAuth ? (
         <section className="panel auth-panel" aria-label="Memact login">
-          <p className="eyebrow">Login</p>
-          <h2>Login.</h2>
+          <p className="eyebrow">Welcome</p>
+          <h2>Sign in to Memact.</h2>
           <p className="muted">
             Use your email and password, or start with a secure email link and set a password right after.
           </p>
