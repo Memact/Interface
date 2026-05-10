@@ -125,12 +125,16 @@ summary:focus-visible {
 }
 
 .danger {
-  border-color: rgba(255, 180, 180, 0.36);
-  color: var(--danger);
-  background: rgba(255, 180, 180, 0.055);
+  border-color: rgba(255, 180, 180, 0.26);
+  color: rgba(255, 180, 180, 0.86);
+  background: rgba(255, 180, 180, 0.04);
 }
 
-.danger:hover:not(:disabled) { background: rgba(255, 180, 180, 0.09); }
+.danger:hover:not(:disabled) {
+  border-color: rgba(255, 180, 180, 0.34);
+  color: var(--danger);
+  background: rgba(255, 180, 180, 0.075);
+}
 
 .subtle-danger {
   border-color: rgba(255, 180, 180, 0.22);
@@ -434,6 +438,8 @@ p { margin-top: 0; }
   gap: 12px;
 }
 
+.app-workspace { gap: 14px; }
+
 label {
   display: grid;
   gap: 6px;
@@ -608,6 +614,46 @@ input:-webkit-autofill:focus {
   line-height: 1.42;
 }
 
+.current-app-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.current-app-block .muted { margin: 6px 0 0; }
+
+.app-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.app-actions button {
+  min-height: 40px;
+  padding: 8px 12px;
+}
+
+.app-delete-button {
+  font-weight: 650;
+}
+
+.registered-apps {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.app-list-label {
+  margin: 0;
+  color: var(--soft);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .app-switcher {
   display: flex;
   flex-wrap: wrap;
@@ -616,8 +662,13 @@ input:-webkit-autofill:focus {
 
 .app-chip {
   width: auto;
+  min-height: 38px;
+  border-color: rgba(255, 255, 255, 0.075);
+  padding: 8px 11px;
   color: var(--muted);
-  background: transparent;
+  background: rgba(255, 255, 255, 0.025);
+  font-size: 14px;
+  font-weight: 650;
 }
 
 .app-chip.is-active { color: var(--text); }
@@ -663,6 +714,13 @@ input:-webkit-autofill:focus {
   gap: 12px;
   min-width: 0;
 }
+
+.identity-card h2 {
+  line-height: 1.12;
+  margin-bottom: 4px;
+}
+
+.identity-card .muted { margin: 0; }
 
 .identity-card img,
 .identity-card span,
@@ -851,9 +909,13 @@ input:-webkit-autofill:focus {
 
   .topbar {
     grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 8px 0;
-    margin-bottom: 10px;
+    gap: 10px;
+    padding: 8px 0 9px;
+    margin-bottom: 12px;
+  }
+
+  .logo-link {
+    justify-self: start;
   }
 
   .page-auth .topbar {
@@ -874,8 +936,9 @@ input:-webkit-autofill:focus {
 
   .tabs {
     gap: 6px;
+    width: 100%;
     margin-inline: -12px;
-    padding: 0 12px 2px;
+    padding: 1px 12px 2px;
   }
 
   .tab {
@@ -922,9 +985,14 @@ input:-webkit-autofill:focus {
     justify-content: stretch;
   }
 
+  .app-actions {
+    justify-content: stretch;
+  }
+
   .section-toolbar > *,
   .actions > *,
   .actions button,
+  .app-actions > *,
   .key-actions button,
   .connect-actions button {
     width: 100%;
@@ -937,14 +1005,18 @@ input:-webkit-autofill:focus {
 
   .tooltip-wrap { display: flex; width: 100%; }
 
+  .registered-apps {
+    margin-top: 2px;
+  }
+
   .app-switcher {
     flex-wrap: nowrap;
-    margin-inline: -16px;
-    padding: 0 16px 2px;
+    margin-inline: -4px;
+    padding: 0 4px 2px;
     overflow-x: auto;
   }
 
-  .app-chip { flex: 0 0 auto; max-width: 86vw; }
+  .app-chip { flex: 0 0 auto; max-width: calc(100vw - 48px); }
 
   .api-key-row { grid-template-columns: 1fr; }
 
@@ -959,6 +1031,12 @@ input:-webkit-autofill:focus {
   body { font-size: 14px; }
 
   .page { width: min(100% - 20px, 720px); }
+
+  .topbar {
+    gap: 9px;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
 
   .logo-img {
     width: 112px;
@@ -980,6 +1058,31 @@ input:-webkit-autofill:focus {
   .dashboard-head { gap: 10px; }
 
   .dashboard-head .muted { margin-top: 6px; }
+
+  .identity-card {
+    align-items: center;
+    gap: 12px;
+  }
+
+  .identity-card img,
+  .identity-card span {
+    width: 48px;
+    height: 48px;
+  }
+
+  .identity-card h2 {
+    line-height: 1.12;
+    margin-bottom: 4px;
+  }
+
+  .identity-card .muted { margin: 0; }
+
+  .current-app-block { padding: 13px; }
+
+  .app-actions button {
+    min-height: 40px;
+    padding: 8px 11px;
+  }
 
   .hero-copy h1 { font-size: 26px; }
 

@@ -221,23 +221,24 @@ export function Dashboard({
       ) : (
         <>
           <section id="app-panel" className="panel app-workspace">
-            <div className="section-head">
+            <div className="current-app-block">
               <div>
                 <p className="eyebrow">App</p>
                 <h2>{appHeading}</h2>
                 <p className="muted">{appDescription}</p>
               </div>
-              {hasApps ? (
-                <div className="section-toolbar">
-                  {!isCreatingApp && selectedApp ? (
-                    <button type="button" className="ghost danger" onClick={onDeleteApp}>Delete app</button>
-                  ) : null}
-                  <button type="button" className="new-app-button" aria-label={isCreatingApp ? "Cancel app creation" : "Create app"} onClick={() => setShowAppForm((current) => !current)}>
-                    {isCreatingApp ? "Cancel" : "New app"}
-                  </button>
-                </div>
-              ) : null}
             </div>
+
+            {hasApps ? (
+              <div className="app-actions" aria-label="App actions">
+                <button type="button" className="new-app-button" aria-label={isCreatingApp ? "Cancel app creation" : "Create app"} onClick={() => setShowAppForm((current) => !current)}>
+                  {isCreatingApp ? "Cancel" : "New app"}
+                </button>
+                {!isCreatingApp && selectedApp ? (
+                  <button type="button" className="ghost danger app-delete-button" onClick={onDeleteApp}>Delete app</button>
+                ) : null}
+              </div>
+            ) : null}
 
             {isCreatingApp ? (
               <form className="form app-create-form" onSubmit={onCreateApp}>
@@ -271,17 +272,20 @@ export function Dashboard({
             ) : null}
 
             {hasApps ? (
-              <div className="app-switcher" aria-label="Select app">
-                {apps.map((app) => (
-                  <button
-                    key={app.id}
-                    type="button"
-                    className={`app-chip ${selectedAppId === app.id ? "is-active" : ""}`}
-                    onClick={() => setSelectedAppId(app.id)}
-                  >
-                    {app.name}
-                  </button>
-                ))}
+              <div className="registered-apps">
+                <p className="app-list-label">Registered apps</p>
+                <div className="app-switcher" aria-label="Select app">
+                  {apps.map((app) => (
+                    <button
+                      key={app.id}
+                      type="button"
+                      className={`app-chip ${selectedAppId === app.id ? "is-active" : ""}`}
+                      onClick={() => setSelectedAppId(app.id)}
+                    >
+                      {app.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : null}
           </section>
