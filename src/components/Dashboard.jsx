@@ -87,7 +87,7 @@ export function Dashboard({
   const appDescription = !isCreatingApp && selectedApp
     ? selectedApp.description || "No description added."
     : "Each app gets its own permissions and API keys."
-  const dashboardLabel = activeTab === "account" ? "Account" : activeTab === "help" ? "Help" : "API keys"
+  const dashboardLabel = activeTab === "account" ? "Account" : activeTab === "help" ? "Help" : "Access / API Keys"
   const dashboardSubtitle = activeTab === "account"
     ? "Manage your account and session."
     : activeTab === "help"
@@ -123,10 +123,6 @@ export function Dashboard({
           </div>
           <div className="account-grid">
             <div className="metric-card">
-              <span>Plan</span>
-              <strong>Free unlimited</strong>
-            </div>
-            <div className="metric-card">
               <span>Registered apps</span>
               <strong>{apps.length}</strong>
             </div>
@@ -151,7 +147,7 @@ export function Dashboard({
                     : "Keep a strong password on this account so you can sign in without requesting a new link."}
                 </p>
               </div>
-              {passwordSuccess ? <p className="success" role="status">{passwordSuccess}</p> : null}
+              {passwordSuccess ? <p className="notice notice-success" role="status">{passwordSuccess}</p> : null}
               <form className="form" onSubmit={onSetPassword}>
                 <label>
                   New password
@@ -201,7 +197,7 @@ export function Dashboard({
                   Start an email change here. Supabase will send verification based on your project email settings.
                 </p>
               </div>
-              {emailChangeSuccess ? <p className="success" role="status">{emailChangeSuccess}</p> : null}
+              {emailChangeSuccess ? <p className="notice notice-success" role="status">{emailChangeSuccess}</p> : null}
               <form className="form" onSubmit={onChangeEmail}>
                 <label>
                   New email address
@@ -336,11 +332,12 @@ export function Dashboard({
               <p className="eyebrow">API keys</p>
               <div className="stack">
                 {selectedKeys.length ? selectedKeys.map((key) => (
-                  <div className="list-card" key={key.id}>
+                  <div className="list-card api-key-row" key={key.id}>
                     <span>
                       <strong>{key.name}</strong>
-                      <small>{key.key_prefix}... | {key.revoked_at ? "revoked" : "active"}</small>
+                      <small>{key.key_prefix}...</small>
                     </span>
+                    <span className={key.revoked_at ? "badge badge-danger" : "badge badge-success"}>{key.revoked_at ? "revoked" : "active"}</span>
                     {!key.revoked_at ? <button type="button" className="ghost" onClick={() => onRevokeKey(key.id)}>Revoke</button> : null}
                   </div>
                 )) : <p className="muted">{selectedAppId ? "No API keys for this app yet." : "Select an app to view API keys."}</p>}
@@ -363,11 +360,11 @@ export function Dashboard({
               <button type="button" className="ghost" onClick={onTestKey}>Test key</button>
             </div>
           </div>
-          {apiTestResult ? <p className="success" role="status">{apiTestResult}</p> : null}
-          <div className="embed-code">
-            <p className="eyebrow">Embed</p>
+          {apiTestResult ? <p className="notice notice-success" role="status">{apiTestResult}</p> : null}
+          <details className="embed-code">
+            <summary>Embed code</summary>
             <pre><code>{buildEmbedCode(oneTimeKey, oneTimeKeyScopes, oneTimeKeyCategories, selectedApp)}</code></pre>
-          </div>
+          </details>
           <p className="muted">Memact stores only a hash. This raw key cannot be shown again.</p>
         </section>
       ) : null}

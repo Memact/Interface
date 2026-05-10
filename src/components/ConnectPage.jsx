@@ -11,17 +11,23 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
   return (
     <section className="connect-shell">
       <article className="panel connect-card">
-        <p className="eyebrow">Connect app</p>
-        <h1>Connect {appName} to Memact.</h1>
-        {app?.developer_url ? (
-          <p className="muted">Developer website: <a href={app.developer_url} target="_blank" rel="noreferrer">{app.developer_url}</a></p>
-        ) : null}
+        <p className="eyebrow">Permission request</p>
+        <h1>{appName} wants to connect.</h1>
+        <div className="app-identity">
+          <span className="app-avatar" aria-hidden="true">{appName.slice(0, 1).toUpperCase()}</span>
+          <div>
+            <strong>{appName}</strong>
+            {app?.developer_url ? (
+              <a className="muted" href={app.developer_url} target="_blank" rel="noreferrer">{app.developer_url}</a>
+            ) : <span className="muted">Developer URL not provided.</span>}
+          </div>
+        </div>
         <p className="muted">
-          This app will only receive the Memact permissions and activity categories you approve. You can disconnect it later from Memact Access.
+          Review the exact permissions and activity categories before approving. You can disconnect this app later from Memact Access.
         </p>
 
         {loading === "loading" ? <p className="status-line">Loading app details.</p> : null}
-        {notice ? <p className="success" role="status">{notice}</p> : null}
+        {notice ? <p className="notice notice-success" role="status">{notice}</p> : null}
 
         <div className="connect-grid">
           <section className="permission-list">
@@ -58,7 +64,7 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
 
         <div className="connect-actions">
           <button type="button" onClick={onApprove} disabled={!app?.id || loading === "approve"}>
-            {loading === "approve" ? "Connecting..." : "Connect App"}
+            {loading === "approve" ? "Connecting..." : "Approve connection"}
           </button>
           <button type="button" className="ghost" onClick={onCancel}>Cancel</button>
         </div>
