@@ -59,6 +59,14 @@ function enhanceEmbedCode() {
   })
 }
 
+function simplifyDashboardLabel() {
+  document.querySelectorAll(".dashboard-head .eyebrow").forEach((label) => {
+    if (label.textContent.trim() === "Access / API Keys") {
+      label.textContent = "Access"
+    }
+  })
+}
+
 async function copyCode(button, text) {
   try {
     await navigator.clipboard.writeText(text)
@@ -123,8 +131,13 @@ function describeStep(title, index) {
   return descriptions[index] || title
 }
 
-enhanceEmbedCode()
-new MutationObserver(enhanceEmbedCode).observe(document.documentElement, {
+function enhanceMemactUi() {
+  enhanceEmbedCode()
+  simplifyDashboardLabel()
+}
+
+enhanceMemactUi()
+new MutationObserver(enhanceMemactUi).observe(document.documentElement, {
   childList: true,
   subtree: true
 })
