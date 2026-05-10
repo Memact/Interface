@@ -62,6 +62,8 @@ export function Dashboard({
   const selectedApp = hasApps ? apps.find((app) => app.id === selectedAppId) : null
   const selectedAppCategories = selectedApp?.default_categories || selectedCategories
   const selectedKeys = apiKeys.filter((key) => key.app_id === selectedAppId)
+  const activeKeys = selectedKeys.filter((key) => !key.revoked_at)
+  const revokedKeys = selectedKeys.filter((key) => key.revoked_at)
   const selectedConsent = consents.find((consent) => consent.app_id === selectedAppId && !consent.revoked_at)
   const scopesChanged = selectedConsent ? !sameValues(selectedScopes, selectedConsent.scopes) : true
   const categoriesChanged = selectedConsent ? !sameValues(selectedAppCategories, selectedConsent.categories || []) : true
@@ -336,19 +338,40 @@ export function Dashboard({
               </div>
             </section>
 
-            <section id="api-keys-panel" className="panel">
+            <section id="api-keys-panel" className="panel api-keys-panel">
               <p className="eyebrow">API keys</p>
               <div className="stack">
-                {selectedKeys.length ? selectedKeys.map((key) => (
-                  <div className="list-card api-key-row" key={key.id}>
-                    <span>
-                      <strong>{key.name}</strong>
-                      <small>{key.key_prefix}...</small>
-                    </span>
-                    <span className={key.revoked_at ? "badge badge-danger" : "badge badge-success"}>{key.revoked_at ? "revoked" : "active"}</span>
-                    {!key.revoked_at ? <button type="button" className="ghost" onClick={() => onRevokeKey(key.id)}>Revoke</button> : null}
-                  </div>
-                )) : <p className="muted">{selectedAppId ? "No API keys for this app yet." : "Select an app to view API keys."}</p>}
+                {selectedAppId ? (
+                  <>
+                    {activeKeys.length ? activeKeys.map((key) => (
+                      <div className="list-card api-key-row" key={key.id}>
+                        <span>
+                          <strong>{key.name}</strong>
+                          <small>{key.key_prefix}...</small>
+                        </span>
+                        <span className="badge badge-success">active</span>
+                        <button type="button" className="ghost" onClick={() => onRevokeKey(key.id)}>Revoke</button>
+                      </div>
+                    )) : <p className="muted">No active API keys for this app.</p>}
+
+                    {revokedKeys.length ? (
+                      <details className="revoked-history">
+                        <summary>Revoked history ({revokedKeys.length})</summary>
+                        <div className="revoked-history-list">
+                          {revokedKeys.map((key) => (
+                            <div className="list-card api-key-row revoked-key-row" key={key.id}>
+                              <span>
+                                <strong>{key.name}</strong>
+                                <small>{key.key_prefix}...</small>
+                              </span>
+                              <span className="badge badge-danger">revoked</span>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    ) : null}
+                  </>
+                ) : <p className="muted">Select an app to view API keys.</p>}
               </div>
             </section>
           </div>

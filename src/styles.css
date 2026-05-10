@@ -416,8 +416,7 @@ p { margin-top: 0; }
 
 .access-layout,
 .grid,
-.connect-grid,
-.faq-grid {
+.connect-grid {
   display: grid;
   gap: 16px;
 }
@@ -425,7 +424,6 @@ p { margin-top: 0; }
 .access-layout { grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); }
 .grid { grid-template-columns: minmax(0, 1fr) minmax(280px, 0.8fr); }
 .connect-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.faq-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 .app-workspace,
 .account-panel,
@@ -437,6 +435,56 @@ p { margin-top: 0; }
 .permission-list {
   display: grid;
   gap: 12px;
+}
+
+.help-panel,
+.app-workspace { gap: 14px; }
+
+.help-intro { margin: 0; }
+
+.faq-section {
+  display: grid;
+  gap: 8px;
+}
+
+.faq-section-advanced { margin-top: 2px; }
+
+.faq-section-title {
+  margin: 10px 0 0;
+  color: var(--soft);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+}
+
+.faq-section-advanced .faq-item { opacity: 0.88; }
+
+.faq-item[open] {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: var(--surface-2);
+}
+
+.faq-item summary {
+  min-height: 44px;
+  padding: 12px;
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 700;
+  list-style-position: inside;
+}
+
+.faq-item p {
+  margin: 0;
+  padding: 0 12px 12px;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .app-workspace { gap: 14px; }
@@ -692,21 +740,59 @@ input:-webkit-autofill:focus {
   justify-content: space-between;
 }
 
+.api-keys-panel .stack { gap: 10px; }
+
 .api-key-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
 }
 
+.revoked-history {
+  margin-top: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.revoked-history summary {
+  min-height: 40px;
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--soft);
+  font-size: 13px;
+  font-weight: 700;
+  list-style-position: inside;
+}
+
+.revoked-history-list {
+  display: grid;
+  gap: 8px;
+  padding: 0 10px 10px;
+}
+
+.revoked-key-row {
+  min-height: 0;
+  padding: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  background: transparent;
+}
+
+.revoked-key-row strong,
+.revoked-key-row small { color: var(--soft); }
+
 .badge {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
+  justify-self: start;
+  width: fit-content;
+  min-height: 24px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 2px 7px;
+  font-size: 11px;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .badge-success {
@@ -967,8 +1053,7 @@ input:-webkit-autofill:focus {
   .landing-with-auth,
   .access-layout,
   .grid,
-  .connect-grid,
-  .faq-grid {
+  .connect-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1032,9 +1117,11 @@ input:-webkit-autofill:focus {
 
   .app-chip { flex: 0 0 auto; max-width: calc(100vw - 48px); }
 
-  .api-key-row { grid-template-columns: 1fr; }
+  .api-key-row { grid-template-columns: minmax(0, 1fr) auto; }
 
-  .api-key-row button { width: 100%; }
+  .api-key-row button { width: 100%; grid-column: 1 / -1; }
+
+  .revoked-key-row { grid-template-columns: minmax(0, 1fr) auto; }
 
   .account-grid { grid-template-columns: 1fr; }
 
