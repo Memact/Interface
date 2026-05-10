@@ -149,6 +149,40 @@
     width: 120px !important;
   }
 
+  .app-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    justify-content: stretch !important;
+  }
+
+  .app-actions button {
+    width: 100% !important;
+    min-height: 40px !important;
+    padding: 8px 10px !important;
+    font-size: 14px !important;
+  }
+
+  .registered-apps {
+    padding: 12px !important;
+  }
+
+  .app-switcher {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding: 0 2px 3px !important;
+    margin-inline: -2px !important;
+  }
+
+  .app-chip {
+    min-height: 38px !important;
+    padding: 8px 12px !important;
+    max-width: 190px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
   .connect-shell {
     display: block !important;
     min-height: 0 !important;
@@ -278,6 +312,10 @@
 
   .page:not(.page-auth) .tab {
     padding-inline: 8px !important;
+  }
+
+  .app-actions {
+    grid-template-columns: 1fr 1fr !important;
   }
 
   .key-actions {
