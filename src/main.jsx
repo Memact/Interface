@@ -638,10 +638,7 @@ function App() {
     <main className={showAuth ? "page page-auth" : "page"}>
       <header className="topbar">
         <a className="logo-link" href="https://www.memact.com/" aria-label="Go to memact.com">
-          <picture>
-            <source media="(max-width: 900px)" srcSet="https://memact.com/icon.png" />
-            <img className="logo-img" src="/logo.png" alt="Memact" />
-          </picture>
+          <img className="logo-img" src="/logo.png" alt="Memact" />
         </a>
         {session ? (
           <nav className="tabs" aria-label="Memact portal tabs">

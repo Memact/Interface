@@ -177,10 +177,6 @@ summary:focus-visible {
   border-radius: var(--radius-sm);
 }
 
-.logo-link picture {
-  display: inline-flex;
-  align-items: center;
-}
 
 .logo-img {
   display: block;
@@ -461,14 +457,40 @@ textarea {
 }
 
 input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
   width: 18px;
   height: 18px;
   min-height: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
   padding: 0;
   margin: 2px 0 0;
-  accent-color: #ffffff;
   cursor: pointer;
   flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+input[type="checkbox"]:checked {
+  border-color: #ffffff;
+  background: #ffffff;
+}
+
+input[type="checkbox"]:checked::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  border: solid #00011b;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-top: -1px;
+}
+
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.78);
+  outline-offset: 3px;
 }
 
 textarea {
@@ -536,7 +558,16 @@ input:-webkit-autofill:focus {
 .scope-card input { align-self: start; }
 
 .scope-card:has(input:checked),
-.category-card:has(input:checked),
+.category-card:has(input:checked) {
+  border-color: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.105);
+}
+
+.scope-card:has(input:checked) strong,
+.category-card:has(input:checked) strong {
+  color: #ffffff;
+}
+
 .app-card.is-active,
 .app-chip.is-active {
   border-color: var(--border-strong);
@@ -811,7 +842,7 @@ input:-webkit-autofill:focus {
 @media (max-width: 900px) {
   .page {
     width: min(100% - 24px, 720px);
-    padding-top: 6px;
+    padding-top: max(10px, env(safe-area-inset-top));
   }
 
   .page-auth {
@@ -831,14 +862,14 @@ input:-webkit-autofill:focus {
   }
 
   .logo-img {
-    width: 42px;
-    height: 42px;
+    width: 120px;
+    height: auto;
     object-fit: contain;
   }
 
   .page-auth .logo-img {
-    width: 46px;
-    height: 46px;
+    width: 120px;
+    height: auto;
   }
 
   .tabs {
@@ -930,17 +961,17 @@ input:-webkit-autofill:focus {
   .page { width: min(100% - 20px, 720px); }
 
   .logo-img {
-    width: 40px;
-    height: 40px;
+    width: 112px;
+    height: auto;
     object-fit: contain;
   }
 
   .page-auth .logo-img {
-    width: 44px;
-    height: 44px;
+    width: 112px;
+    height: auto;
   }
 
-  .page-auth .topbar { padding-top: 8px; }
+  .page-auth .topbar { padding-top: 10px; }
 
   .dashboard { gap: 12px; }
 
