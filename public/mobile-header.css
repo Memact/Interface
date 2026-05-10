@@ -48,6 +48,52 @@
   line-height: 1.5 !important;
 }
 
+@media (min-width: 901px) {
+  .access-layout {
+    grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr) !important;
+    align-items: start !important;
+  }
+
+  .api-keys-panel {
+    align-self: start !important;
+    min-height: 0 !important;
+  }
+
+  .section-head {
+    align-items: start !important;
+  }
+
+  .section-actions {
+    flex: 0 0 156px !important;
+  }
+
+  .section-actions button,
+  .section-actions .tooltip-wrap {
+    width: 100% !important;
+  }
+
+  .section-actions button {
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+
+  .api-key-row {
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
+    gap: 10px !important;
+  }
+
+  .api-key-row button {
+    min-height: 36px !important;
+    padding: 7px 10px !important;
+    font-size: 13px !important;
+  }
+
+  .api-key-row .badge {
+    justify-self: start !important;
+  }
+}
+
 @media (max-width: 900px) {
   .page:not(.page-auth) .topbar {
     grid-template-columns: auto minmax(0, 1fr) !important;
