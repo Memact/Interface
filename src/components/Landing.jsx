@@ -1,4 +1,5 @@
 import React from "react"
+import "../ui-fixes.css"
 
 export function Landing({ isConnecting, showAuth, email, password, authLoading, authNotice, setEmail, setPassword, onEmailLogin, onPasswordLogin, onForgotPassword, onGithubLogin }) {
   return (
