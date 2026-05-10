@@ -1,0 +1,94 @@
+.page-auth .landing {
+  justify-items: center;
+  align-content: center;
+  min-height: calc(100svh - 120px);
+  gap: 20px;
+  padding: 24px 0 40px;
+}
+
+.page-auth .landing-with-auth {
+  grid-template-columns: minmax(0, 480px);
+}
+
+.page-auth .hero-copy {
+  max-width: 480px;
+  text-align: center;
+}
+
+.page-auth .auth-panel {
+  width: min(100%, 440px);
+  justify-self: center;
+}
+
+.page-auth .topbar {
+  justify-items: center;
+}
+
+.account-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.identity-card {
+  align-items: flex-start;
+}
+
+.identity-card > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.identity-meta span:first-child {
+  word-break: break-word;
+}
+
+.compact-form {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.faq-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  list-style: none;
+}
+
+.faq-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.faq-chevron {
+  color: var(--soft);
+  transition: transform 120ms ease;
+}
+
+.faq-item[open] .faq-chevron {
+  transform: rotate(180deg);
+}
+
+.faq-answer {
+  padding: 0 12px 12px;
+}
+
+.faq-answer p {
+  padding: 0;
+}
+
+@media (max-width: 900px) {
+  .page-auth .landing {
+    align-content: start;
+    min-height: auto;
+  }
+
+  .account-panel-head {
+    flex-direction: column;
+  }
+
+  .compact-form {
+    grid-template-columns: 1fr;
+  }
+}
