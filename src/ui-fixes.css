@@ -8,9 +8,20 @@
 }
 
 .page-auth .topbar {
-  justify-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 14px 0 4px;
-  margin: 0;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page-auth .logo,
+.page-auth .brand,
+.page-auth .wordmark,
+.page-auth .topbar > a,
+.page-auth .topbar > img {
+  margin-inline: auto;
 }
 
 .page-auth .landing {
