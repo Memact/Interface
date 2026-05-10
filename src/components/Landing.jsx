@@ -5,7 +5,6 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
   return (
     <section className={showAuth ? "landing landing-with-auth" : "landing"}>
       <div className="hero-copy">
-        <p className="eyebrow">Memact Access</p>
         <h1>{isConnecting ? "Review app access." : "Access Memact"}</h1>
         <p>
           {isConnecting
