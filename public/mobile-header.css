@@ -3,7 +3,7 @@
     grid-template-columns: auto minmax(0, 1fr) !important;
     align-items: center !important;
     gap: 10px !important;
-    padding-inline: 4px !important;
+    padding-inline: 8px !important;
   }
 
   .page:not(.page-auth) .logo-link {
@@ -41,7 +41,7 @@
 
 @media (max-width: 420px) {
   .page:not(.page-auth) .topbar {
-    padding-inline: 2px !important;
+    padding-inline: 6px !important;
   }
 
   .page:not(.page-auth) .logo-img {
