@@ -63,6 +63,37 @@
   color: var(--soft) !important;
 }
 
+.app-actions button,
+.section-actions button,
+.key-actions button,
+.connect-actions button {
+  border-radius: var(--radius-sm) !important;
+  font-weight: 700 !important;
+}
+
+.new-app-button {
+  border-color: var(--border-strong) !important;
+  color: var(--text) !important;
+  background: var(--surface-2) !important;
+}
+
+.new-app-button:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  background: var(--surface-3) !important;
+}
+
+.app-delete-button {
+  border-color: rgba(255, 180, 180, 0.26) !important;
+  color: rgba(255, 180, 180, 0.86) !important;
+  background: rgba(255, 180, 180, 0.04) !important;
+}
+
+.app-delete-button:hover:not(:disabled) {
+  border-color: rgba(255, 180, 180, 0.34) !important;
+  color: var(--danger) !important;
+  background: rgba(255, 180, 180, 0.075) !important;
+}
+
 @media (min-width: 901px) {
   .access-layout {
     grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr) !important;
