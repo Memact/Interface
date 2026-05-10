@@ -80,9 +80,24 @@
 .app-actions button,
 .section-actions button,
 .key-actions button,
-.connect-actions button {
+.connect-actions button,
+.sign-out-button {
   border-radius: var(--radius-sm) !important;
   font-weight: 700 !important;
+}
+
+.sign-out-button {
+  min-height: 40px !important;
+  padding: 8px 14px !important;
+  border-color: rgba(255, 180, 180, 0.24) !important;
+  color: rgba(255, 180, 180, 0.86) !important;
+  background: rgba(255, 180, 180, 0.035) !important;
+}
+
+.sign-out-button:hover:not(:disabled) {
+  border-color: rgba(255, 180, 180, 0.34) !important;
+  color: var(--danger) !important;
+  background: rgba(255, 180, 180, 0.07) !important;
 }
 
 .new-app-button {
@@ -192,6 +207,16 @@
 
   .page-auth .logo-img {
     width: 120px !important;
+  }
+
+  .dashboard-head {
+    align-items: start !important;
+  }
+
+  .sign-out-button {
+    min-height: 40px !important;
+    padding: 8px 14px !important;
+    font-size: 14px !important;
   }
 
   .app-actions,
