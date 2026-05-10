@@ -16,8 +16,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
       {showAuth ? (
         <section className="panel auth-panel" aria-label="Memact login">
           <p className="eyebrow">Secure portal</p>
-          <h2>Access Memact</h2>
-          <p className="muted">Sign in to manage apps, permissions, and API keys.</p>
+          <p className="muted auth-support">Sign in to manage apps, permissions, and API keys.</p>
           {authNotice ? <p className="notice notice-success" role="status">{authNotice}</p> : null}
           <form className="form" onSubmit={onPasswordLogin}>
             <label>
