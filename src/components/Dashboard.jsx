@@ -3,7 +3,7 @@ import { ACCESS_MODE, ACCESS_URL } from "../memact-access-client.js"
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../supabase-client.js"
 import { CategoryGrid } from "./CategoryGrid.jsx"
 import { HelpPanel } from "./HelpPanel.jsx"
-import { getAvatarUrl, getInitials, getProviderLabel, getUserEmail, getUserProvider } from "../user-display.js"
+import { getAvatarUrl, getInitials, getUserEmail, getUserProvider } from "../user-display.js"
 
 export function Dashboard({
   activeTab,
@@ -102,7 +102,6 @@ export function Dashboard({
       : "Create app-specific keys with clear permission scopes."
 
   const provider = getUserProvider(user, authUser)
-  const providerLabel = getProviderLabel(provider)
   const avatar = getAvatarUrl(user, authUser)
   const displayEmail = getUserEmail(user, authUser)
   const initials = getInitials(displayName, displayEmail)
@@ -113,10 +112,7 @@ export function Dashboard({
         <div>
           <p className="eyebrow">{dashboardLabel}</p>
           <h2>{displayName}</h2>
-          <p className="identity-meta">
-            {displayEmail ? <span>{displayEmail}</span> : null}
-            <span className="provider-badge">{providerLabel}</span>
-          </p>
+          <p className="identity-meta">{displayEmail ? <span>{displayEmail}</span> : null}</p>
           <p className="muted">{dashboardSubtitle}</p>
         </div>
       </div>
@@ -133,10 +129,7 @@ export function Dashboard({
             {avatar ? <img src={avatar} alt="" /> : <span aria-hidden="true">{initials}</span>}
             <div>
               <h2>{displayName}</h2>
-              <p className="identity-meta">
-                {displayEmail ? <span>{displayEmail}</span> : null}
-                <span className="provider-badge">{providerLabel}</span>
-              </p>
+              <p className="identity-meta">{displayEmail ? <span>{displayEmail}</span> : null}</p>
             </div>
           </div>
           <section className="password-panel display-name-panel">

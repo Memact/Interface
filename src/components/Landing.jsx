@@ -5,8 +5,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
   return (
     <section className={showAuth ? "landing landing-with-auth" : "landing"}>
       <div className="hero-copy">
-        <p className="eyebrow">Memact Access</p>
-        <h1>{isConnecting ? "Review app access." : "Access Memact"}</h1>
+                <h1>{isConnecting ? "Review app access." : "Access Memact"}</h1>
         <p>
           {isConnecting
             ? "Sign in to review the app, requested scopes, and activity categories before connecting."
@@ -36,10 +35,6 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
             </button>
             <button type="button" className="ghost" disabled={authLoading === "email"} onClick={onEmailLogin}>
               {authLoading === "email" ? "Sending link..." : "Email me a login link"}
-            </button>
-            <div className="auth-divider" aria-hidden="true"><span>or</span></div>
-            <button type="button" className="ghost" disabled={authLoading === "github"} onClick={onGithubLogin}>
-              {authLoading === "github" ? "Opening GitHub..." : "Continue with GitHub"}
             </button>
           </form>
         </section>
