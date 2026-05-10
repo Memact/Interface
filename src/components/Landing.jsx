@@ -4,8 +4,8 @@ import "../ui-fixes.css"
 export function Landing({ isConnecting, showAuth, email, password, authLoading, authNotice, setEmail, setPassword, onEmailLogin, onPasswordLogin, onForgotPassword, onGithubLogin }) {
   return (
     <section className={showAuth ? "landing landing-with-auth" : "landing"}>
-      <div className="hero-copy">
-        <h1>{isConnecting ? "Review app access." : "Access Memact"}</h1>
+      <div className="hero-copy hero-copy-compact">
+        {isConnecting ? <h1>Review app access.</h1> : null}
         <p>
           {isConnecting
             ? "Sign in to review the app, requested scopes, and activity categories before connecting."
