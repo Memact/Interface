@@ -1,0 +1,85 @@
+/* Final FAQ chevron alignment override.
+   Uses two centered strokes instead of a text glyph or single rotated corner. */
+.faq-chevron {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 0;
+  justify-self: end;
+  color: var(--muted);
+  background: var(--surface-2);
+  font-size: 0;
+  line-height: 0;
+  transform: none;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.faq-chevron::before,
+.faq-chevron::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 2px;
+  border: 0;
+  border-radius: 999px;
+  background: currentColor;
+  transform-origin: center;
+  transition: transform 140ms ease;
+}
+
+.faq-chevron::before {
+  transform: translate(calc(-50% - 3px), -50%) rotate(45deg);
+}
+
+.faq-chevron::after {
+  transform: translate(calc(-50% + 3px), -50%) rotate(-45deg);
+}
+
+.faq-item[open] .faq-chevron {
+  border-color: rgba(255, 255, 255, 0.36);
+  color: var(--text);
+  background: var(--surface-3);
+}
+
+.faq-item[open] .faq-chevron::before {
+  transform: translate(calc(-50% - 3px), -50%) rotate(-45deg);
+}
+
+.faq-item[open] .faq-chevron::after {
+  transform: translate(calc(-50% + 3px), -50%) rotate(45deg);
+}
+
+@media (max-width: 900px) {
+  .faq-chevron {
+    width: 36px;
+    height: 36px;
+  }
+
+  .faq-chevron::before,
+  .faq-chevron::after {
+    width: 9px;
+    height: 2px;
+  }
+
+  .faq-chevron::before {
+    transform: translate(calc(-50% - 2.75px), -50%) rotate(45deg);
+  }
+
+  .faq-chevron::after {
+    transform: translate(calc(-50% + 2.75px), -50%) rotate(-45deg);
+  }
+
+  .faq-item[open] .faq-chevron::before {
+    transform: translate(calc(-50% - 2.75px), -50%) rotate(-45deg);
+  }
+
+  .faq-item[open] .faq-chevron::after {
+    transform: translate(calc(-50% + 2.75px), -50%) rotate(45deg);
+  }
+}
