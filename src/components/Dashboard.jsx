@@ -106,7 +106,7 @@ export function Dashboard({
           <h2>{displayEmail}</h2>
           <p className="muted">{dashboardSubtitle}</p>
         </div>
-        <button type="button" className="ghost" onClick={onSignOut}>Sign out</button>
+        <button type="button" className="ghost subtle-danger sign-out-button" onClick={onSignOut}>Sign out</button>
       </div>
 
       {activeTab === "help" ? (
@@ -308,23 +308,27 @@ export function Dashboard({
                 </div>
               </div>
               <div className="scope-grid">
-                {Object.entries(scopes).map(([scope, definition]) => (
-                  <label key={scope} className="scope-card">
-                    <input
-                      type="checkbox"
-                      checked={selectedScopes.includes(scope)}
-                      onChange={() => {
-                        setSelectedScopes((current) => current.includes(scope)
-                          ? current.filter((item) => item !== scope)
-                          : [...current, scope])
-                      }}
-                    />
-                    <span>
-                      <strong>{scope}</strong>
-                      <small>{definition.description}</small>
-                    </span>
-                  </label>
-                ))}
+                {Object.entries(scopes).map(([scope, definition]) => {
+                  const inputId = `scope-${scope.replace(/[^a-z0-9_-]/gi, "-")}`
+                  return (
+                    <label key={scope} className="scope-card" htmlFor={inputId}>
+                      <input
+                        id={inputId}
+                        type="checkbox"
+                        checked={selectedScopes.includes(scope)}
+                        onChange={() => {
+                          setSelectedScopes((current) => current.includes(scope)
+                            ? current.filter((item) => item !== scope)
+                            : [...current, scope])
+                        }}
+                      />
+                      <span>
+                        <strong>{scope}</strong>
+                        <small>{definition.description}</small>
+                      </span>
+                    </label>
+                  )
+                })}
               </div>
             </section>
 
