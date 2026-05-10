@@ -22,8 +22,8 @@
   justify-content: center;
   align-content: center;
   justify-items: stretch;
-  gap: 16px;
-  padding: 8px 0 24px;
+  gap: 14px;
+  padding: 10px 0 20px;
   overflow: auto;
 }
 
@@ -34,6 +34,7 @@
 .page-auth .hero-copy {
   max-width: 440px;
   text-align: center;
+  align-self: end;
 }
 
 .page-auth .hero-copy h1 {
@@ -50,6 +51,7 @@
   max-width: 440px;
   justify-self: stretch;
   padding: 18px;
+  align-self: start;
 }
 
 /* Account: stop identity from collapsing into vertical letters */
@@ -80,19 +82,29 @@
 }
 
 .identity-meta {
-  display: grid;
-  grid-template-columns: minmax(0, max-content) max-content;
-  justify-content: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   max-width: 100%;
 }
 
 .identity-meta span:first-child {
   min-width: 0;
-  max-width: min(100%, 52ch);
+  flex: 1 1 280px;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   word-break: normal;
+}
+
+.identity-card {
+  align-items: flex-start;
+}
+
+.identity-card h2 {
+  margin-bottom: 4px;
 }
 
 .compact-form {
@@ -128,16 +140,24 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
-  color: var(--soft);
-  font-size: 16px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 15px;
+  font-weight: 700;
   line-height: 1;
   transform: rotate(0deg);
+  transition: transform 160ms ease, border-color 160ms ease, color 160ms ease, background 160ms ease;
 }
 
 .faq-item[open] .faq-chevron {
   transform: rotate(180deg);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .faq-answer {
@@ -159,8 +179,16 @@
   .page-auth .landing {
     height: auto;
     align-content: start;
-    padding: 12px 0 28px;
+    padding: 14px 0 28px;
     overflow: visible;
+  }
+
+  .page-auth .hero-copy {
+    align-self: auto;
+  }
+
+  .page-auth .auth-panel {
+    align-self: auto;
   }
 
   .account-panel-head {
@@ -169,7 +197,7 @@
   }
 
   .identity-meta {
-    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
   }
 
   .identity-meta span:first-child {
