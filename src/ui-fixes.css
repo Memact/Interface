@@ -215,17 +215,17 @@
   padding: 0;
 }
 
-/* API key rows: keep status and revoke together inside the key meta cluster */
+/* API key rows: title, key prefix, then compact pills inside the card */
 .api-key-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  overflow: hidden;
 }
 
 .api-key-row > span:first-child {
-  flex: 1 0 100%;
+  min-width: 0;
   display: grid;
   gap: 5px;
 }
@@ -235,20 +235,26 @@
 }
 
 .api-key-row > span:first-child small {
+  max-width: 100%;
   margin-top: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.api-key-row > .badge-success {
-  flex: 0 0 auto;
-  margin-top: 0;
+.api-key-row > .badge-success,
+.api-key-row > button {
+  justify-self: start;
+  width: fit-content;
 }
 
 .api-key-row > button {
-  flex: 0 0 auto;
-  min-height: 28px;
-  padding: 4px 10px;
+  min-height: 30px;
+  max-width: 100%;
+  padding: 5px 12px;
   font-size: 12px;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .badge-success {
