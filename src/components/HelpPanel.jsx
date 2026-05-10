@@ -33,7 +33,10 @@ const ADVANCED_FAQS = [
 function FaqItem({ faq, open = false }) {
   return (
     <details className="faq-item" open={open}>
-      <summary>{faq.question}</summary>
+      <summary>
+        <span className="faq-arrow" aria-hidden="true" />
+        <span>{faq.question}</span>
+      </summary>
       <p>{faq.answer}</p>
     </details>
   )
