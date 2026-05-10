@@ -215,10 +215,11 @@ summary:focus-visible {
   background: var(--surface-2);
 }
 
-.tab.is-active {
-  border-color: var(--border-strong);
-  color: var(--text);
-  background: var(--surface-3);
+.tab.is-active,
+.tab.is-active:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.42);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.105);
 }
 
 .status-pill,
@@ -564,7 +565,9 @@ input:-webkit-autofill:focus {
 .scope-card input { align-self: start; }
 
 .scope-card:has(input:checked),
-.category-card:has(input:checked) {
+.scope-card:has(input:checked):hover,
+.category-card:has(input:checked),
+.category-card:has(input:checked):hover {
   border-color: rgba(255, 255, 255, 0.42);
   background: rgba(255, 255, 255, 0.105);
 }
@@ -575,14 +578,22 @@ input:-webkit-autofill:focus {
 }
 
 .app-card.is-active,
-.app-chip.is-active {
-  border-color: var(--border-strong);
-  background: var(--surface-3);
+.app-card.is-active:hover {
+  border-color: rgba(255, 255, 255, 0.42);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.105);
+}
+
+.app-chip.is-active,
+.app-chip.is-active:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.42);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.105);
 }
 
 .scope-card:hover,
 .app-card:hover,
-.app-chip:hover,
+.app-chip:hover:not(:disabled),
 .list-card:hover,
 .mini-row:hover,
 .metric-card:hover {
@@ -641,8 +652,10 @@ input:-webkit-autofill:focus {
 .registered-apps {
   display: grid;
   gap: 8px;
-  border-top: 1px solid var(--border);
-  padding-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .app-list-label {
@@ -658,20 +671,21 @@ input:-webkit-autofill:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
 }
 
 .app-chip {
+  flex: 0 1 auto;
   width: auto;
-  min-height: 38px;
-  border-color: rgba(255, 255, 255, 0.075);
-  padding: 8px 11px;
+  min-height: 40px;
+  border-color: var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.025);
+  background: var(--surface-1);
   font-size: 14px;
   font-weight: 650;
 }
-
-.app-chip.is-active { color: var(--text); }
 
 .list-card {
   align-items: center;
@@ -1006,7 +1020,7 @@ input:-webkit-autofill:focus {
   .tooltip-wrap { display: flex; width: 100%; }
 
   .registered-apps {
-    margin-top: 2px;
+    margin-top: 0;
   }
 
   .app-switcher {
