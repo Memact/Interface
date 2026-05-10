@@ -123,12 +123,38 @@
   white-space: nowrap;
 }
 
-/* FAQ: plain right-side chevron, no awkward circle */
+/* FAQ: Google People Also Ask style */
+.faq-section {
+  gap: 0;
+}
+
+.faq-item {
+  border-radius: 0;
+  border-inline: 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 0;
+  background: transparent;
+}
+
+.faq-item:first-of-type {
+  border-top: 1px solid var(--border);
+}
+
+.faq-item:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.faq-item[open] {
+  background: transparent;
+}
+
 .faq-item summary.faq-trigger {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 22px;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  min-height: 54px;
+  padding: 14px 0;
   list-style: none;
   list-style-type: none;
 }
@@ -139,22 +165,23 @@
 
 .faq-question {
   min-width: 0;
+  line-height: 1.28;
 }
 
 .faq-chevron {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: auto;
-  height: auto;
-  min-width: 18px;
+  width: 22px;
+  height: 22px;
   border: 0;
   border-radius: 0;
   padding: 0;
+  justify-self: end;
   color: var(--soft);
   background: transparent;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1;
   transform: rotate(0deg);
   transition: transform 140ms ease, color 140ms ease;
@@ -162,18 +189,54 @@
 
 .faq-item[open] .faq-chevron {
   transform: rotate(180deg);
-  border: 0;
   color: var(--text);
-  background: transparent;
 }
 
 .faq-answer {
-  padding: 0 12px 12px;
+  padding: 0 36px 16px 0;
 }
 
 .faq-answer p {
   margin: 0;
   padding: 0;
+}
+
+/* API key rows: keep status inside the row information cluster */
+.api-key-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.api-key-row > span:first-child {
+  display: grid;
+  gap: 5px;
+}
+
+.api-key-row > span:first-child strong {
+  line-height: 1.2;
+}
+
+.api-key-row > span:first-child small {
+  margin-top: 0;
+}
+
+.api-key-row > .badge-success {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: start;
+  margin-top: 2px;
+}
+
+.api-key-row > button {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.badge-success {
+  border-color: rgba(80, 255, 154, 0.42);
+  color: #a8ffd0;
+  background: rgba(35, 180, 95, 0.16);
 }
 
 @media (max-width: 900px) {
@@ -213,5 +276,19 @@
 
   .compact-form button {
     width: 100%;
+  }
+
+  .faq-item summary.faq-trigger {
+    min-height: 52px;
+    padding: 13px 0;
+  }
+
+  .faq-answer {
+    padding-right: 28px;
+  }
+
+  .api-key-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
   }
 }
