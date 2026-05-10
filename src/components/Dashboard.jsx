@@ -94,12 +94,7 @@ export function Dashboard({
   const appDescription = !isCreatingApp && selectedApp
     ? selectedApp.description || "No description added."
     : "Each app gets its own permissions and API keys."
-  const dashboardLabel = activeTab === "account" ? "Account" : activeTab === "help" ? "Help" : "Access"
-  const dashboardSubtitle = activeTab === "account"
-    ? "Manage your account and session."
-    : activeTab === "help"
-      ? "Plain-English help for Memact Access."
-      : "Create app-specific keys with clear permission scopes."
+  const dashboardSubtitle = "Create app-specific keys with clear permission scopes."
 
   const provider = getUserProvider(user, authUser)
   const avatar = getAvatarUrl(user, authUser)
@@ -108,16 +103,15 @@ export function Dashboard({
 
   return (
     <section className="dashboard">
-      <div className="dashboard-head panel slim-panel">
-        <div>
-          <p className="eyebrow">{dashboardLabel}</p>
-          <h2>{displayName}</h2>
-          <p className="identity-meta">
-            {displayEmail ? <span>{displayEmail}</span> : null}
-          </p>
-          <p className="muted">{dashboardSubtitle}</p>
+      {activeTab === "access" ? (
+        <div className="dashboard-head panel slim-panel">
+          <div>
+            <p className="eyebrow">Access</p>
+            <h2>{`Welcome${displayName ? `, ${displayName}` : ""}`}</h2>
+            <p className="muted">{dashboardSubtitle}</p>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {activeTab === "help" ? (
         <HelpPanel />
