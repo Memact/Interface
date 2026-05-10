@@ -201,13 +201,17 @@
   padding: 0;
 }
 
-/* API key rows: keep status inside the row information cluster */
+/* API key rows: keep status and revoke together inside the key meta cluster */
 .api-key-row {
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px 10px;
 }
 
 .api-key-row > span:first-child {
+  flex: 1 0 100%;
   display: grid;
   gap: 5px;
 }
@@ -221,16 +225,16 @@
 }
 
 .api-key-row > .badge-success {
-  grid-column: 1;
-  grid-row: 2;
-  justify-self: start;
-  margin-top: 2px;
+  flex: 0 0 auto;
+  margin-top: 0;
 }
 
 .api-key-row > button {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
+  flex: 0 0 auto;
+  min-height: 28px;
+  padding: 4px 10px;
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .badge-success {
@@ -285,10 +289,5 @@
 
   .faq-answer {
     padding-right: 28px;
-  }
-
-  .api-key-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
   }
 }
