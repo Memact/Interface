@@ -1,0 +1,37 @@
+@media (max-width: 900px) {
+  .page:not(.page-auth) .topbar {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+  }
+
+  .page:not(.page-auth) .logo-img {
+    width: 102px;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .page:not(.page-auth) .tabs {
+    justify-content: flex-end;
+    width: auto;
+    margin-inline: 0;
+    padding: 1px 0 2px;
+    overflow-x: auto;
+  }
+
+  .page:not(.page-auth) .tab {
+    min-height: 36px;
+    padding: 7px 9px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 420px) {
+  .page:not(.page-auth) .logo-img {
+    width: 96px;
+  }
+
+  .page:not(.page-auth) .tab {
+    padding-inline: 8px;
+  }
+}
