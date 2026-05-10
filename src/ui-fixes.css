@@ -215,7 +215,7 @@
   padding: 0;
 }
 
-/* API key rows: title, key prefix, then compact pills inside the card */
+/* API key rows: title, key prefix, then one compact pill row inside the card */
 .api-key-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -242,15 +242,18 @@
   white-space: nowrap;
 }
 
-.api-key-row > .badge-success,
-.api-key-row > button {
+.api-key-row > .badge-success {
   justify-self: start;
   width: fit-content;
 }
 
 .api-key-row > button {
+  justify-self: start;
+  width: fit-content;
   min-height: 30px;
   max-width: 100%;
+  margin-top: -40px;
+  margin-left: 88px;
   padding: 5px 12px;
   font-size: 12px;
   line-height: 1.2;
