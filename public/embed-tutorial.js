@@ -33,11 +33,23 @@ function enhanceEmbedCode() {
       section.appendChild(body)
 
       if (step.code.trim()) {
+        const codeWrap = document.createElement("div")
+        codeWrap.className = "embed-code-wrap"
+
+        const copyButton = document.createElement("button")
+        copyButton.type = "button"
+        copyButton.className = "embed-copy-button"
+        copyButton.textContent = "Copy"
+        copyButton.setAttribute("aria-label", `Copy code for step ${index + 1}`)
+        copyButton.addEventListener("click", () => copyCode(copyButton, step.code.trim()))
+
         const pre = document.createElement("pre")
         const code = document.createElement("code")
         code.textContent = step.code.trim()
         pre.appendChild(code)
-        section.appendChild(pre)
+        codeWrap.appendChild(copyButton)
+        codeWrap.appendChild(pre)
+        section.appendChild(codeWrap)
       }
 
       tutorial.appendChild(section)
@@ -45,6 +57,24 @@ function enhanceEmbedCode() {
 
     originalPre.replaceWith(tutorial)
   })
+}
+
+async function copyCode(button, text) {
+  try {
+    await navigator.clipboard.writeText(text)
+    const previous = button.textContent
+    button.textContent = "Copied"
+    button.dataset.copied = "true"
+    window.setTimeout(() => {
+      button.textContent = previous || "Copy"
+      delete button.dataset.copied
+    }, 1400)
+  } catch {
+    button.textContent = "Copy failed"
+    window.setTimeout(() => {
+      button.textContent = "Copy"
+    }, 1400)
+  }
 }
 
 function splitEmbedSteps(code) {
