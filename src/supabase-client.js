@@ -14,7 +14,8 @@ export const supabase = isSupabaseConfigured
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true
+        detectSessionInUrl: true,
+        flowType: "pkce"
       }
     })
   : null
@@ -26,10 +27,10 @@ export function requireSupabase() {
   return supabase
 }
 
-export function getAuthRedirectUrl() {
+export function getAuthRedirectUrl(path = "/dashboard") {
   if (authRedirectUrl) return authRedirectUrl
   if (typeof window !== "undefined" && window.location?.origin) {
-    return new URL("/dashboard", window.location.origin).toString()
+    return new URL(path, window.location.origin).toString()
   }
-  return "https://memact.com/dashboard"
+  return new URL(path, "https://www.memact.com").toString()
 }
