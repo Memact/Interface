@@ -642,7 +642,7 @@ function App() {
         </a>
         {session ? (
           <nav className="tabs" aria-label="Memact portal tabs">
-            <button type="button" className={activeTab === "access" ? "tab is-active" : "tab"} onClick={() => setActiveTab("access")}>Access / API Keys</button>
+            <button type="button" className={activeTab === "access" ? "tab is-active" : "tab"} onClick={() => setActiveTab("access")}>Access</button>
             <button type="button" className={activeTab === "account" ? "tab is-active" : "tab"} onClick={() => setActiveTab("account")}>Account</button>
             <button type="button" className={activeTab === "help" ? "tab is-active" : "tab"} onClick={() => setActiveTab("help")}>Help</button>
           </nav>

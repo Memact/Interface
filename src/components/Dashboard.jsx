@@ -361,7 +361,7 @@ export function Dashboard({
             </div>
           </div>
           {apiTestResult ? <p className="notice notice-success" role="status">{apiTestResult}</p> : null}
-          <details className="embed-code" open>
+          <details className="embed-code">
             <summary>Embed code</summary>
             <pre><code>{buildEmbedCode(oneTimeKey, oneTimeKeyScopes, oneTimeKeyCategories, selectedApp)}</code></pre>
           </details>
