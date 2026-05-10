@@ -53,9 +53,8 @@
 }
 
 .faq-item summary {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
+  display: revert !important;
+  padding-left: 22px !important;
   list-style-position: outside !important;
 }
 
@@ -180,15 +179,22 @@
     width: 120px !important;
   }
 
-  .app-actions {
+  .app-actions,
+  .section-actions {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
     justify-content: stretch !important;
   }
 
-  .app-actions button {
+  .app-actions button,
+  .section-actions button,
+  .section-actions .tooltip-wrap {
     width: 100% !important;
+  }
+
+  .app-actions button,
+  .section-actions button {
     min-height: 40px !important;
     padding: 8px 10px !important;
     font-size: 14px !important;
@@ -345,7 +351,8 @@
     padding-inline: 8px !important;
   }
 
-  .app-actions {
+  .app-actions,
+  .section-actions {
     grid-template-columns: 1fr 1fr !important;
   }
 
