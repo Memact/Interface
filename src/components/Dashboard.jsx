@@ -89,7 +89,7 @@ export function Dashboard({
   const appDescription = !isCreatingApp && selectedApp
     ? selectedApp.description || "No description added."
     : "Each app gets its own permissions and API keys."
-  const dashboardLabel = activeTab === "account" ? "Account" : activeTab === "help" ? "Help" : "Access / API Keys"
+  const dashboardLabel = activeTab === "account" ? "Account" : activeTab === "help" ? "Help" : "Access"
   const dashboardSubtitle = activeTab === "account"
     ? "Manage your account and session."
     : activeTab === "help"
@@ -108,14 +108,16 @@ export function Dashboard({
           <h2>{displayEmail}</h2>
           <p className="muted">{dashboardSubtitle}</p>
         </div>
-        <button type="button" className="ghost subtle-danger sign-out-button" onClick={onSignOut}>Sign out</button>
       </div>
 
       {activeTab === "help" ? (
         <HelpPanel />
       ) : activeTab === "account" ? (
         <section className="panel account-panel">
-          <p className="eyebrow">Account</p>
+          <div className="account-panel-head">
+            <p className="eyebrow">Account</p>
+            <button type="button" className="ghost subtle-danger sign-out-button" onClick={onSignOut}>Sign out</button>
+          </div>
           <div className="identity-card">
             {avatar ? <img src={avatar} alt="" /> : <span aria-hidden="true">{displayEmail.slice(0, 1).toUpperCase()}</span>}
             <div>
