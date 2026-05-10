@@ -1,29 +1,58 @@
-.page-auth .landing {
-  justify-items: center;
-  align-content: center;
-  min-height: calc(100svh - 120px);
-  gap: 20px;
-  padding: 24px 0 40px;
-}
-
-.page-auth .landing-with-auth {
-  grid-template-columns: minmax(0, 480px);
-}
-
-.page-auth .hero-copy {
-  max-width: 480px;
-  text-align: center;
-}
-
-.page-auth .auth-panel {
-  width: min(100%, 440px);
-  justify-self: center;
+/* Tight auth screen: centered, no forced document scroll on normal desktop */
+.page-auth {
+  min-height: 100svh;
+  height: 100svh;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .page-auth .topbar {
   justify-items: center;
+  padding: 14px 0 4px;
+  margin: 0;
 }
 
+.page-auth .landing {
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 440px);
+  justify-content: center;
+  align-content: center;
+  justify-items: stretch;
+  gap: 16px;
+  padding: 8px 0 24px;
+  overflow: auto;
+}
+
+.page-auth .landing-with-auth {
+  grid-template-columns: minmax(0, 440px);
+}
+
+.page-auth .hero-copy {
+  max-width: 440px;
+  text-align: center;
+}
+
+.page-auth .hero-copy h1 {
+  font-size: clamp(26px, 4.5vw, 34px);
+}
+
+.page-auth .hero-copy p:not(.eyebrow) {
+  margin-top: 8px;
+  font-size: 15px;
+}
+
+.page-auth .auth-panel {
+  width: 100%;
+  max-width: 440px;
+  justify-self: stretch;
+  padding: 18px;
+}
+
+/* Account: stop identity from collapsing into vertical letters */
 .account-panel-head {
   display: flex;
   align-items: flex-start;
@@ -32,38 +61,79 @@
 }
 
 .identity-card {
-  align-items: flex-start;
-}
-
-.identity-card > div {
-  flex: 1;
-  min-width: 0;
-}
-
-.identity-meta span:first-child {
-  word-break: break-word;
-}
-
-.compact-form {
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
   gap: 12px;
 }
 
-.faq-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  list-style: none;
+.identity-card > div {
+  min-width: 0;
+  width: 100%;
 }
 
-.faq-trigger::-webkit-details-marker {
+.identity-card h2 {
+  max-width: 100%;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: normal;
+}
+
+.identity-meta {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) max-content;
+  justify-content: start;
+  max-width: 100%;
+}
+
+.identity-meta span:first-child {
+  min-width: 0;
+  max-width: min(100%, 52ch);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: normal;
+}
+
+.compact-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 12px;
+}
+
+.compact-form button {
+  align-self: end;
+  white-space: nowrap;
+}
+
+/* FAQ: native details row with plain right chevron */
+.faq-item summary.faq-trigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  list-style: none;
+  list-style-type: none;
+}
+
+.faq-item summary.faq-trigger::-webkit-details-marker {
   display: none;
 }
 
+.faq-question {
+  min-width: 0;
+}
+
 .faq-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
   color: var(--soft);
-  transition: transform 120ms ease;
+  font-size: 16px;
+  line-height: 1;
+  transform: rotate(0deg);
 }
 
 .faq-item[open] .faq-chevron {
@@ -75,20 +145,42 @@
 }
 
 .faq-answer p {
+  margin: 0;
   padding: 0;
 }
 
 @media (max-width: 900px) {
+  .page-auth {
+    height: auto;
+    min-height: 100svh;
+    overflow: visible;
+  }
+
   .page-auth .landing {
+    height: auto;
     align-content: start;
-    min-height: auto;
+    padding: 12px 0 28px;
+    overflow: visible;
   }
 
   .account-panel-head {
-    flex-direction: column;
+    display: grid;
+    gap: 10px;
+  }
+
+  .identity-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .identity-meta span:first-child {
+    max-width: 100%;
   }
 
   .compact-form {
     grid-template-columns: 1fr;
+  }
+
+  .compact-form button {
+    width: 100%;
   }
 }
