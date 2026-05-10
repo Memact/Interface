@@ -1,6 +1,7 @@
 import { AccessApiError } from "./legacy-access-http-client.js"
 
 import { normalizeAppName } from "./app-name.js"
+import { getDisplayName } from "./user-display.js"
 
 export class SupabaseAccessClient {
   constructor(supabase) {
@@ -25,6 +26,7 @@ export class SupabaseAccessClient {
         id: data.user.id,
         email: data.user.email || "",
         provider: data.user.app_metadata?.provider || data.user.identities?.[0]?.provider || "email",
+        display_name: getDisplayName(null, data.user),
         avatar_url: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || "",
         plan: "free_unlimited",
         created_at: data.user.created_at || null
@@ -73,7 +75,7 @@ export class SupabaseAccessClient {
   }
 
   async grantConsent(_session, body) {
-    return this.grantConsentFallback(body)
+    return this.grantConsentFallback(body, { requireOwner: true })
   }
 
   async getConnectApp(_session, request = {}) {
@@ -102,7 +104,7 @@ export class SupabaseAccessClient {
         app_id: request?.app_id,
         scopes: request?.scopes || [],
         categories: request?.categories || []
-      })
+      }, { requireOwner: false })
       return { ...granted, connected: true }
     }
   }
@@ -277,19 +279,22 @@ export class SupabaseAccessClient {
     return { ok: true, app_id: app.id }
   }
 
-  async grantConsentFallback(body) {
+  async grantConsentFallback(body, options = {}) {
+    const requireOwner = options.requireOwner !== false
     const { data: userData, error: userError } = await this.supabase.auth.getUser()
     if (userError) throw mapSupabaseRpcError(userError)
     const user = userData?.user
     if (!user?.id) throw new AccessApiError(401, "Please sign in again.", "invalid_session")
 
-    const { data: app, error: appError } = await this.supabase
+    let appQuery = this.supabase
       .from("memact_apps")
       .select("id, owner_user_id, default_scopes, default_categories, revoked_at")
       .eq("id", body?.app_id)
-      .eq("owner_user_id", user.id)
       .is("revoked_at", null)
-      .maybeSingle()
+    if (requireOwner) {
+      appQuery = appQuery.eq("owner_user_id", user.id)
+    }
+    const { data: app, error: appError } = await appQuery.maybeSingle()
 
     if (appError) throw new AccessApiError(500, appError.message || "Could not check the selected app.", "app_lookup_failed", appError)
     if (!app?.id) throw new AccessApiError(404, "App not found.", "app_not_found")

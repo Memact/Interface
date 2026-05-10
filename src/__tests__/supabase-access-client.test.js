@@ -274,3 +274,81 @@ test("connectApp falls back through durable consent when connect RPC is stale", 
   assert.deepEqual(insertedPayload.scopes, ["capture:webpage", "schema:write"])
   assert.deepEqual(insertedPayload.categories, ["web:research"])
 })
+
+test("connectApp fallback lets a signed-in user approve an app they do not own", async () => {
+  const appOwnerId = "developer-123"
+  const connectingUserId = "user-456"
+  let appOwnerFilterWasRequired = false
+  const fakeSupabase = {
+    rpc: async () => ({
+      data: null,
+      error: {
+        message: "Could not find the function public.memact_connect_app(app_id_input, categories_input, scopes_input) in the schema cache"
+      }
+    }),
+    auth: {
+      getUser: async () => ({ data: { user: { id: connectingUserId } }, error: null })
+    },
+    from(table) {
+      if (table === "memact_apps") {
+        return {
+          select() { return this },
+          eq(column) {
+            if (column === "owner_user_id") appOwnerFilterWasRequired = true
+            return this
+          },
+          is() { return this },
+          maybeSingle: async () => ({
+            data: {
+              id: "app-123",
+              owner_user_id: appOwnerId,
+              default_scopes: ["memory:read_summary"],
+              default_categories: ["web:research"],
+              revoked_at: null
+            },
+            error: null
+          })
+        }
+      }
+
+      if (table === "memact_consents") {
+        return {
+          select() { return this },
+          eq() { return this },
+          is() { return this },
+          maybeSingle: async () => ({ data: null, error: null }),
+          insert(payload) {
+            return {
+              select() {
+                return {
+                  single: async () => ({
+                    data: {
+                      id: "consent-789",
+                      created_at: null,
+                      revoked_at: null,
+                      ...payload
+                    },
+                    error: null
+                  })
+                }
+              }
+            }
+          }
+        }
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    }
+  }
+
+  const client = new SupabaseAccessClient(fakeSupabase)
+  const result = await client.connectApp(null, {
+    app_id: "app-123",
+    scopes: ["memory:read_summary"],
+    categories: ["web:research"]
+  })
+
+  assert.equal(appOwnerFilterWasRequired, false)
+  assert.equal(result.consent.user_id, connectingUserId)
+  assert.equal(result.connected, true)
+})
