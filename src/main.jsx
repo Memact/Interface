@@ -642,7 +642,7 @@ function App() {
         </a>
         {session ? (
           <nav className="tabs" aria-label="Memact portal tabs">
-            <button type="button" className={activeTab === "access" ? "tab is-active" : "tab"} onClick={() => setActiveTab("access")}>API Keys</button>
+            <button type="button" className={activeTab === "access" ? "tab is-active" : "tab"} onClick={() => setActiveTab("access")}>Access / API Keys</button>
             <button type="button" className={activeTab === "account" ? "tab is-active" : "tab"} onClick={() => setActiveTab("account")}>Account</button>
             <button type="button" className={activeTab === "help" ? "tab is-active" : "tab"} onClick={() => setActiveTab("help")}>Help</button>
           </nav>
@@ -650,7 +650,7 @@ function App() {
         {showStatusPill ? <span className="status-pill" aria-live="polite">{status}</span> : null}
       </header>
 
-      {error ? <p id="error-message" className="error" role="alert">{error} {canRetryDashboard ? <button type="button" className="inline-retry" onClick={handleRetryDashboard}>Retry</button> : null}</p> : null}
+      {error ? <p id="error-message" className="notice notice-danger" role="alert">{error} {canRetryDashboard ? <button type="button" className="inline-retry" onClick={handleRetryDashboard}>Retry</button> : null}</p> : null}
       {authChecking ? <p className="status-line">Checking login.</p> : null}
 
       {session && activeTab === "connect" ? (

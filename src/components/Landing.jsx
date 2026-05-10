@@ -4,22 +4,21 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
   return (
     <section className={showAuth ? "landing landing-with-auth" : "landing"}>
       <div className="hero-copy">
-        <h1>{isConnecting ? "Sign in to connect Memact." : "Manage access to Memact."}</h1>
+        <p className="eyebrow">Memact Access</p>
+        <h1>{isConnecting ? "Review app access." : "Access Memact"}</h1>
         <p>
           {isConnecting
-            ? "Memact will show the app name, exact permissions, and activity categories before anything is connected."
-            : "Sign in, register apps, save permissions, and create scoped API keys. Apps can use Memact through clear permissions while your memory data stays protected by default."}
+            ? "Sign in to review the app, requested scopes, and activity categories before connecting."
+            : "Sign in to manage apps, permissions, and API keys."}
         </p>
       </div>
 
       {showAuth ? (
         <section className="panel auth-panel" aria-label="Memact login">
-          <p className="eyebrow">Welcome</p>
-          <h2>Sign in to Memact.</h2>
-          <p className="muted">
-            Use your email and password, or start with a secure email link and set a password right after.
-          </p>
-          {authNotice ? <p className="success" role="status">{authNotice}</p> : null}
+          <p className="eyebrow">Secure portal</p>
+          <h2>Access Memact</h2>
+          <p className="muted">Sign in to manage apps, permissions, and API keys.</p>
+          {authNotice ? <p className="notice notice-success" role="status">{authNotice}</p> : null}
           <form className="form" onSubmit={onPasswordLogin}>
             <label>
               Email
@@ -30,7 +29,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
               <input value={password} type="password" autoComplete="current-password" placeholder="Enter your password" onChange={(event) => setPassword(event.target.value)} required />
             </label>
             <button type="submit" disabled={authLoading === "password"}>
-              {authLoading === "password" ? "Signing in..." : "Continue with Password"}
+              {authLoading === "password" ? "Signing in..." : "Continue"}
             </button>
             <button type="button" className="text-button" disabled={authLoading === "forgot-password"} onClick={onForgotPassword}>
               {authLoading === "forgot-password" ? "Sending reset link..." : "Forgot password?"}
