@@ -1,3 +1,53 @@
+.embed-code {
+  border-color: var(--border) !important;
+  background: rgba(255, 255, 255, 0.018) !important;
+  overflow: hidden !important;
+}
+
+.embed-code summary {
+  display: grid !important;
+  gap: 3px !important;
+  min-height: 42px !important;
+  padding: 12px !important;
+  color: var(--text) !important;
+  font-weight: 700 !important;
+}
+
+.embed-code summary::after {
+  content: "Starter snippet for wiring Connect App + access verification.";
+  color: var(--soft) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+}
+
+.embed-code[open] {
+  background: rgba(255, 255, 255, 0.026) !important;
+}
+
+.embed-code pre {
+  width: calc(100% - 24px) !important;
+  max-width: calc(100% - 24px) !important;
+  max-height: 360px !important;
+  margin: 0 12px 12px !important;
+  overflow: auto !important;
+  overscroll-behavior: contain !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 12px !important;
+  background: rgba(0, 1, 27, 0.64) !important;
+  white-space: pre !important;
+}
+
+.embed-code code {
+  display: block !important;
+  width: max-content !important;
+  min-width: 100% !important;
+  color: var(--text) !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
 @media (max-width: 900px) {
   .page:not(.page-auth) .topbar {
     grid-template-columns: auto minmax(0, 1fr) !important;
@@ -79,34 +129,18 @@
     padding: 8px 10px !important;
   }
 
-  .embed-code {
-    overflow: hidden !important;
-  }
-
   .embed-code summary {
-    min-height: 40px !important;
-    padding: 10px 0 !important;
+    padding: 11px !important;
   }
 
   .embed-code pre {
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 360px !important;
-    margin: 8px 0 0 !important;
-    overflow: auto !important;
-    overscroll-behavior: contain !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius-sm) !important;
-    padding: 12px !important;
-    background: rgba(255, 255, 255, 0.025) !important;
-    white-space: pre !important;
+    width: calc(100% - 22px) !important;
+    max-width: calc(100% - 22px) !important;
+    margin: 0 11px 11px !important;
+    padding: 10px !important;
   }
 
   .embed-code code {
-    display: block !important;
-    width: max-content !important;
-    min-width: 100% !important;
-    color: var(--text) !important;
     font-size: 11px !important;
     line-height: 1.45 !important;
   }
