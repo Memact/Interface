@@ -177,6 +177,11 @@ summary:focus-visible {
   border-radius: var(--radius-sm);
 }
 
+.logo-link picture {
+  display: inline-flex;
+  align-items: center;
+}
+
 .logo-img {
   display: block;
   width: 132px;
@@ -825,6 +830,17 @@ input:-webkit-autofill:focus {
     margin-bottom: 4px;
   }
 
+  .logo-img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+  }
+
+  .page-auth .logo-img {
+    width: 46px;
+    height: 46px;
+  }
+
   .tabs {
     gap: 6px;
     margin-inline: -12px;
@@ -913,9 +929,16 @@ input:-webkit-autofill:focus {
 
   .page { width: min(100% - 20px, 720px); }
 
-  .logo-img { width: 104px; }
+  .logo-img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+  }
 
-  .page-auth .logo-img { width: 112px; }
+  .page-auth .logo-img {
+    width: 44px;
+    height: 44px;
+  }
 
   .page-auth .topbar { padding-top: 8px; }
 
