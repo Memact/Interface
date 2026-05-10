@@ -3,9 +3,11 @@
   --panel: rgba(255, 255, 255, 0.07);
   --panel-strong: rgba(255, 255, 255, 0.12);
   --glass-floor: rgba(255, 255, 255, 0.032);
-  --glass-surface: rgba(255, 255, 255, 0.064);
-  --glass-surface-strong: rgba(255, 255, 255, 0.082);
-  --glass-inner: rgba(255, 255, 255, 0.045);
+  --glass-surface: rgba(255, 255, 255, 0.066);
+  --glass-surface-strong: rgba(255, 255, 255, 0.104);
+  --glass-inner: rgba(255, 255, 255, 0.052);
+  --glass-hover: rgba(255, 255, 255, 0.084);
+  --glass-active: rgba(255, 255, 255, 0.13);
   --line: rgba(255, 255, 255, 0.19);
   --line-strong: rgba(255, 255, 255, 0.36);
   --text: #ffffff;
@@ -16,8 +18,8 @@
   --radius-xl: 34px;
   --radius-lg: 28px;
   --radius-md: 24px;
-  --shadow-soft: 0 24px 80px rgba(0, 0, 0, 0.24);
-  --shadow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -42px 88px rgba(0, 0, 0, 0.24);
+  --shadow-soft: 0 24px 80px rgba(0, 0, 0, 0.22);
+  --shadow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.11), inset 0 -34px 72px rgba(0, 0, 0, 0.16);
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
   color: var(--text);
   background: var(--bg);
@@ -56,9 +58,16 @@ body {
   background:
     radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.12), transparent 28rem),
     radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.08), transparent 30rem),
-    linear-gradient(180deg, var(--glass-floor), rgba(255, 255, 255, 0.018) 46rem, rgba(255, 255, 255, 0.026)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.016) 44rem, rgba(255, 255, 255, 0.028)),
     var(--bg);
   background-attachment: fixed;
+}
+
+html:has(.page-auth),
+body:has(.page-auth),
+#root:has(.page-auth) {
+  height: 100%;
+  overflow: hidden;
 }
 
 button,
@@ -136,13 +145,13 @@ button:disabled {
 
 .ghost {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-inner);
   box-shadow: none;
 }
 
 .ghost:hover:not(:disabled) {
   border-color: rgba(255, 255, 255, 0.54);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-hover);
 }
 
 .page {
@@ -169,13 +178,15 @@ button:disabled {
   isolation: isolate;
   justify-content: space-between;
   min-height: 72px;
+  margin-inline: calc(50% - 50vw);
   margin-bottom: clamp(0.75rem, 1.8vw, 1.35rem);
   border: 1px solid rgba(255, 255, 255, 0.13);
+  border-inline: 0;
   border-radius: var(--radius-lg);
-  padding: 0.72rem clamp(0.85rem, 2vw, 1.25rem);
+  padding: 0.72rem max(clamp(0.85rem, 2vw, 1.25rem), calc((100vw - 1280px) / 2 + 16px));
   background:
-    radial-gradient(circle at 10% -60%, rgba(255, 255, 255, 0.13), transparent 22rem),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.028));
+    radial-gradient(circle at 10% -80%, rgba(255, 255, 255, 0.14), transparent 22rem),
+    linear-gradient(135deg, var(--glass-surface-strong), var(--glass-surface));
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(22px) saturate(135%);
   -webkit-backdrop-filter: blur(22px) saturate(135%);
@@ -206,7 +217,7 @@ button:disabled {
   min-width: 0;
   border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 0.72rem 0.95rem;
-  background: rgba(255, 255, 255, 0.055);
+  background: var(--glass-surface);
   box-shadow: 0 14px 44px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(18px) saturate(125%);
   -webkit-backdrop-filter: blur(18px) saturate(125%);
@@ -222,7 +233,7 @@ button:disabled {
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0.34rem;
-  background: rgba(255, 255, 255, 0.055);
+  background: var(--glass-inner);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
@@ -237,7 +248,7 @@ button:disabled {
 
 .tab:hover:not(:disabled) {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-hover);
 }
 
 .tab.is-active {
@@ -252,7 +263,7 @@ button:disabled {
   border-radius: 999px;
   padding: 0.68rem 0.95rem;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-inner);
   font-size: 0.9rem;
   font-weight: 750;
   text-align: center;
@@ -297,6 +308,7 @@ button:disabled {
 .hero-copy h1 {
   max-width: 720px;
   font-size: clamp(3rem, 6.2vw, 5.55rem);
+  text-wrap: balance;
 }
 
 .hero-copy p,
@@ -359,7 +371,7 @@ button:disabled {
   min-width: 136px;
   padding-inline: 1.25rem;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-hover);
 }
 
 .section-toolbar button {
@@ -410,7 +422,7 @@ button:disabled {
   border-radius: var(--radius-md);
   padding: 1rem 1.2rem;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-hover);
   font-weight: 800;
 }
 
@@ -463,8 +475,8 @@ button:disabled {
   border-radius: var(--radius-xl);
   padding: clamp(1.15rem, 2.8vw, 2rem);
   background:
-    linear-gradient(135deg, var(--glass-surface-strong), var(--glass-surface)),
-    rgba(0, 1, 27, 0.42);
+    radial-gradient(circle at 12% -12%, rgba(255, 255, 255, 0.105), transparent 22rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.088), rgba(255, 255, 255, 0.064));
   box-shadow: var(--shadow-inner);
   backdrop-filter: blur(18px) saturate(126%);
   -webkit-backdrop-filter: blur(18px) saturate(126%);
@@ -491,6 +503,8 @@ button:disabled {
 }
 
 .page-auth .topbar {
+  margin-inline: 0;
+  border-inline: 0;
   padding-top: 10px;
   padding-bottom: 12px;
 }
@@ -698,7 +712,7 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--text);
   caret-color: var(--text);
-  box-shadow: 0 0 0 1000px rgba(0, 1, 27, 0.9) inset;
+  box-shadow: 0 0 0 1000px #111328 inset;
   transition: background-color 9999s ease-in-out 0s;
 }
 
@@ -710,7 +724,7 @@ textarea {
 input:focus,
 textarea:focus {
   border-color: rgba(255, 255, 255, 0.78);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-hover);
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
 }
 
@@ -793,12 +807,12 @@ textarea:focus {
 .metric-card:hover,
 .mini-row:hover {
   border-color: rgba(255, 255, 255, 0.34);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-hover);
 }
 
 .app-card.is-active {
   border-color: #ffffff;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--glass-active);
 }
 
 .app-workspace {
@@ -1047,12 +1061,17 @@ textarea:focus {
   }
 
   .topbar {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
     gap: 0.75rem;
     min-height: auto;
     padding-bottom: 12px;
+  }
+
+  .topbar .status-pill {
+    grid-column: 1 / -1;
+    justify-self: stretch;
   }
 
   .landing-with-auth,
@@ -1100,12 +1119,10 @@ textarea:focus {
   }
 
   .tabs {
-    margin-left: auto;
     justify-content: flex-end;
   }
 
   .status-pill {
-    flex-basis: auto;
     width: auto;
     max-width: min(100%, 420px);
     text-align: center;
@@ -1121,7 +1138,7 @@ textarea:focus {
   }
 
   .page-auth .hero-copy h1 {
-    overflow-wrap: normal;
+    overflow-wrap: anywhere;
     word-break: normal;
   }
 
@@ -1169,7 +1186,7 @@ textarea:focus {
 
   .section-actions,
   .section-toolbar {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .connect-actions,
@@ -1194,16 +1211,20 @@ textarea:focus {
 
 @media (max-width: 540px) {
   .page {
-    width: min(calc(100% - 18px), 1280px);
+    width: 100%;
+    padding-inline: 8px;
     padding-top: max(10px, env(safe-area-inset-top));
   }
 
   .page-auth {
-    width: min(calc(100% - 16px), 1280px);
+    width: 100%;
+    max-width: 100dvw;
+    padding-inline: 8px;
     padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
 
   .page-auth .topbar {
+    display: flex;
     gap: 0.8rem;
     padding-top: 10px;
     padding-bottom: 12px;
@@ -1235,17 +1256,26 @@ textarea:focus {
   }
 
   .page-auth .landing {
-    display: block;
-    padding-top: 14px;
+    display: grid;
+    align-content: center;
+    width: 100%;
+    max-width: calc(100dvw - 16px);
+    min-height: calc(100svh - 92px);
+    gap: 0.82rem;
+    padding-top: 4px;
+    padding-bottom: 6px;
   }
 
   .page-auth .hero-copy {
-    margin: 0 auto 1rem;
+    margin: 0 auto;
   }
 
   .tabs {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    grid-column: 1 / -1;
+    order: 2;
   }
 
   .tab {
@@ -1259,12 +1289,19 @@ textarea:focus {
   }
 
   .hero-copy h1 {
-    font-size: clamp(2.55rem, 14vw, 3.95rem);
-    letter-spacing: -0.06em;
+    font-size: clamp(2.1rem, 10.6vw, 3.05rem);
+    letter-spacing: -0.052em;
   }
 
   .page-auth .hero-copy {
     display: block;
+    width: 100%;
+    max-width: 21rem;
+  }
+
+  .page-auth .hero-copy h1 {
+    font-size: clamp(1.82rem, 8.8vw, 2.42rem);
+    line-height: 1.04;
   }
 
   .hero-copy p {
@@ -1272,10 +1309,7 @@ textarea:focus {
   }
 
   .page-auth .hero-copy p {
-    max-width: 32rem;
-    margin-top: 0.6rem;
-    font-size: 0.92rem;
-    line-height: 1.4;
+    display: none;
   }
 
   .panel {
@@ -1302,46 +1336,50 @@ textarea:focus {
   }
 
   .page-auth .auth-panel {
-    border-radius: 30px;
-    padding: 1.25rem;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 28px;
+    padding: 0.95rem;
+    overflow-wrap: anywhere;
   }
 
   .page-auth .auth-panel .eyebrow {
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.42rem;
     letter-spacing: 0.28em;
   }
 
   .page-auth .auth-panel h2 {
-    font-size: 2.05rem;
+    font-size: 1.52rem;
     letter-spacing: -0.03em;
   }
 
   .page-auth .auth-panel .muted {
-    margin: 0.48rem 0;
-    font-size: 0.95rem;
+    margin: 0.36rem 0;
+    font-size: 0.88rem;
+    line-height: 1.32;
   }
 
   .page-auth .auth-panel .form {
-    gap: 0.72rem;
+    gap: 0.52rem;
   }
 
   .page-auth label {
-    gap: 0.5rem;
-    font-size: 0.98rem;
+    gap: 0.36rem;
+    font-size: 0.9rem;
   }
 
   .page-auth button,
   .page-auth input {
-    min-height: 52px;
+    min-height: 46px;
   }
 
   .page-auth button {
-    padding-block: 0.78rem;
+    padding-block: 0.62rem;
   }
 
   .page-auth input {
     border-radius: 999px;
-    padding-block: 0.82rem;
+    padding-block: 0.68rem;
   }
 
   .page-auth .auth-divider span {
@@ -1382,7 +1420,7 @@ textarea:focus {
   }
 
   .section-toolbar {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.65rem;
   }
 
@@ -1391,14 +1429,14 @@ textarea:focus {
   }
 
   .section-actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.65rem;
   }
 
   .section-actions button,
   .section-toolbar button {
     padding-inline: 0.7rem;
-    font-size: 0.95rem;
+    font-size: clamp(0.82rem, 3.8vw, 0.95rem);
   }
 
   .connect-actions {
