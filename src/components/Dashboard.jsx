@@ -3,6 +3,7 @@ import { ACCESS_MODE, ACCESS_URL } from "../memact-access-client.js"
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../supabase-client.js"
 import { CategoryGrid } from "./CategoryGrid.jsx"
 import { HelpPanel } from "./HelpPanel.jsx"
+import { getAvatarUrl, getInitials, getProviderLabel, getUserEmail, getUserProvider } from "../user-display.js"
 
 export function Dashboard({
   activeTab,
@@ -15,7 +16,6 @@ export function Dashboard({
   categories,
   selectedAppId,
   selectedScopes,
-  selectedCategories,
   newAppName,
   newAppDescription,
   newAppDeveloperUrl,
@@ -55,12 +55,17 @@ export function Dashboard({
   setNewEmailAddress,
   emailChangeSuccess,
   authFlow,
-  onChangeEmail
+  onChangeEmail,
+  displayName,
+  displayNameDraft,
+  setDisplayNameDraft,
+  displayNameSuccess,
+  onUpdateDisplayName
 }) {
   const hasApps = apps.length > 0
   const isCreatingApp = showAppForm || !hasApps
   const selectedApp = hasApps ? apps.find((app) => app.id === selectedAppId) : null
-  const selectedAppCategories = selectedApp?.default_categories || selectedCategories
+  const selectedAppCategories = selectedApp?.default_categories || []
   const selectedKeys = apiKeys.filter((key) => key.app_id === selectedAppId)
   const activeKeys = selectedKeys.filter((key) => !key.revoked_at)
   const revokedKeys = selectedKeys.filter((key) => key.revoked_at)
@@ -96,16 +101,22 @@ export function Dashboard({
       ? "Plain-English help for Memact Access."
       : "Create app-specific keys with clear permission scopes."
 
-  const provider = user?.provider || authUser?.app_metadata?.provider || authUser?.identities?.[0]?.provider || "email"
-  const avatar = user?.avatar_url || authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || ""
-  const displayEmail = user?.email || authUser?.email || ""
+  const provider = getUserProvider(user, authUser)
+  const providerLabel = getProviderLabel(provider)
+  const avatar = getAvatarUrl(user, authUser)
+  const displayEmail = getUserEmail(user, authUser)
+  const initials = getInitials(displayName, displayEmail)
 
   return (
     <section className="dashboard">
       <div className="dashboard-head panel slim-panel">
         <div>
           <p className="eyebrow">{dashboardLabel}</p>
-          <h2>{displayEmail}</h2>
+          <h2>{displayName}</h2>
+          <p className="identity-meta">
+            {displayEmail ? <span>{displayEmail}</span> : null}
+            <span className="provider-badge">{providerLabel}</span>
+          </p>
           <p className="muted">{dashboardSubtitle}</p>
         </div>
       </div>
@@ -119,12 +130,40 @@ export function Dashboard({
             <button type="button" className="ghost subtle-danger sign-out-button" onClick={onSignOut}>Sign out</button>
           </div>
           <div className="identity-card">
-            {avatar ? <img src={avatar} alt="" /> : <span aria-hidden="true">{displayEmail.slice(0, 1).toUpperCase()}</span>}
+            {avatar ? <img src={avatar} alt="" /> : <span aria-hidden="true">{initials}</span>}
             <div>
-              <h2>{displayEmail}</h2>
-              <p className="muted">Signed in with {provider}.</p>
+              <h2>{displayName}</h2>
+              <p className="identity-meta">
+                {displayEmail ? <span>{displayEmail}</span> : null}
+                <span className="provider-badge">{providerLabel}</span>
+              </p>
             </div>
           </div>
+          <section className="password-panel display-name-panel">
+            <div>
+              <p className="eyebrow">Display name</p>
+              <h2>Choose how Memact names you.</h2>
+              <p className="muted">This becomes the main name on your dashboard. Your email stays secondary.</p>
+            </div>
+            {displayNameSuccess ? <p className="notice notice-success" role="status">{displayNameSuccess}</p> : null}
+            <form className="form compact-form" onSubmit={onUpdateDisplayName}>
+              <label>
+                Display name
+                <input
+                  value={displayNameDraft}
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Example: Sujay"
+                  maxLength={80}
+                  onChange={(event) => setDisplayNameDraft(event.target.value)}
+                  required
+                />
+              </label>
+              <button type="submit" disabled={authLoading === "display-name"}>
+                {authLoading === "display-name" ? "Saving name..." : "Save display name"}
+              </button>
+            </form>
+          </section>
           <div className="account-grid">
             <div className="metric-card">
               <span>Registered apps</span>

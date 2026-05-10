@@ -14,6 +14,7 @@ import { ConnectPage } from "./components/ConnectPage.jsx"
 import { Dashboard } from "./components/Dashboard.jsx"
 import { Landing } from "./components/Landing.jsx"
 import { refreshDashboard, useDashboardState } from "./hooks/useDashboardState.js"
+import { getDisplayName } from "./user-display.js"
 
 function App() {
   const client = useMemo(() => new AccessClient(ACCESS_URL), [])
@@ -35,7 +36,6 @@ function App() {
   const [newAppCategories, setNewAppCategories] = useState(() => defaultCategoriesForPolicy(null))
   const [selectedAppId, setSelectedAppId] = useState("")
   const [selectedScopes, setSelectedScopes] = useState(() => defaultScopesForPolicy(null))
-  const [selectedCategories, setSelectedCategories] = useState(() => defaultCategoriesForPolicy(null))
   const [oneTimeKey, setOneTimeKey] = useState("")
   const [oneTimeKeyId, setOneTimeKeyId] = useState("")
   const [oneTimeKeyScopes, setOneTimeKeyScopes] = useState([])
@@ -51,6 +51,8 @@ function App() {
   const [passwordSuccess, setPasswordSuccess] = useState("")
   const [newEmailAddress, setNewEmailAddress] = useState("")
   const [emailChangeSuccess, setEmailChangeSuccess] = useState("")
+  const [displayNameDraft, setDisplayNameDraft] = useState("")
+  const [displayNameSuccess, setDisplayNameSuccess] = useState("")
   const { user, apps, apiKeys, consents, status, error, canRetryDashboard } = dashboard
   const { setStatus, setError, setCanRetryDashboard } = dashboardActions
   const session = authSession?.access_token || ""
@@ -206,13 +208,19 @@ function App() {
 
   useEffect(() => {
     if (!selectedAppId) return
-    const selectedApp = apps.find((app) => app.id === selectedAppId)
     const appConsent = consents.find((consent) => consent.app_id === selectedAppId && !consent.revoked_at)
     const nextScopes = appConsent?.scopes?.length ? appConsent.scopes : defaultScopesForPolicy(policy)
-    const nextCategories = selectedApp?.default_categories?.length ? selectedApp.default_categories : defaultCategoriesForPolicy(policy)
     setSelectedScopes(normalizeSelectedScopes(nextScopes, policy))
-    setSelectedCategories(normalizeSelectedCategories(nextCategories, policy))
   }, [apps, consents, policy, selectedAppId])
+
+  useEffect(() => {
+    if (!authUser) {
+      setDisplayNameDraft("")
+      setDisplayNameSuccess("")
+      return
+    }
+    setDisplayNameDraft(authUser.user_metadata?.memact_display_name || "")
+  }, [authUser?.id])
 
   async function handleEmailLogin(event) {
     event.preventDefault()
@@ -393,6 +401,42 @@ function App() {
     }
   }
 
+  async function handleUpdateDisplayName(event) {
+    event.preventDefault()
+    setError("")
+    setDisplayNameSuccess("")
+    const cleanName = displayNameDraft.trim().replace(/\s+/g, " ").slice(0, 80)
+    if (cleanName.length < 2) {
+      setError("Use at least 2 characters for your display name.")
+      scrollElementIntoView("error-message")
+      return
+    }
+    setAuthLoading("display-name")
+    setStatus("Saving display name.")
+    try {
+      const { data, error: updateError } = await requireSupabase().auth.updateUser({
+        data: {
+          ...(authUser?.user_metadata || {}),
+          memact_display_name: cleanName,
+          memact_display_name_updated_at: new Date().toISOString()
+        }
+      })
+      if (updateError) throw updateError
+      if (data?.user) {
+        setAuthUser(data.user)
+      }
+      setDisplayNameDraft(cleanName)
+      setDisplayNameSuccess("Display name saved.")
+      setStatus("Display name saved.")
+    } catch (displayNameError) {
+      setError(String(displayNameError?.message || "Display name did not save."))
+      setStatus(authStatusMessage(displayNameError))
+      scrollElementIntoView("error-message")
+    } finally {
+      setAuthLoading("")
+    }
+  }
+
   async function handleCreateApp(event) {
     event.preventDefault()
     setError("")
@@ -472,12 +516,11 @@ function App() {
 
   async function handleGrantConsent() {
     setError("")
-    const selectedApp = apps.find((app) => app.id === selectedAppId)
     try {
       await client.grantConsent(session, {
         app_id: selectedAppId,
         scopes: normalizeSelectedScopes(selectedScopes, policy),
-        categories: normalizeSelectedCategories(selectedApp?.default_categories || selectedCategories, policy)
+        categories: getSelectedAppCategories()
       })
       await refreshDashboard(client, session, dashboardActions, statusForAccessError)
       setStatus("Permissions saved.")
@@ -495,8 +538,7 @@ function App() {
     setOneTimeKeyScopes([])
     setOneTimeKeyCategories([])
     const keyScopes = normalizeSelectedScopes(selectedScopes, policy)
-    const selectedApp = apps.find((app) => app.id === selectedAppId)
-    const permissionCategories = normalizeSelectedCategories(selectedApp?.default_categories || selectedCategories, policy)
+    const permissionCategories = getSelectedAppCategories()
     try {
       const result = await client.createApiKey(session, {
         app_id: selectedAppId,
@@ -515,6 +557,12 @@ function App() {
       setError(keyError.message)
       scrollElementIntoView("error-message")
     }
+  }
+
+  function getSelectedAppCategories() {
+    const selectedApp = apps.find((app) => app.id === selectedAppId)
+    const appCategories = selectedApp?.default_categories?.length ? selectedApp.default_categories : defaultCategoriesForPolicy(policy)
+    return normalizeSelectedCategories(appCategories, policy)
   }
 
   async function handleRevokeKey(keyId) {
@@ -624,6 +672,8 @@ function App() {
     setOneTimeKeyScopes([])
     setOneTimeKeyCategories([])
     setApiTestResult("")
+    setDisplayNameDraft("")
+    setDisplayNameSuccess("")
     setActiveTab("login")
     setStatus("Signed out.")
     window.history.replaceState({}, "", "/login")
@@ -632,7 +682,7 @@ function App() {
   const scopes = policy?.scopes || {}
   const showAuth = !session
   const statusNeedsAttention = /missing|failed|offline/i.test(status)
-  const showStatusPill = Boolean(error || statusNeedsAttention)
+  const showStatusPill = !showAuth && Boolean(error || statusNeedsAttention)
 
   return (
     <main className={showAuth ? "page page-auth" : "page"}>
@@ -674,7 +724,6 @@ function App() {
           categories={policy?.activity_categories || {}}
           selectedAppId={selectedAppId}
           selectedScopes={selectedScopes}
-          selectedCategories={selectedCategories}
           newAppName={newAppName}
           newAppDescription={newAppDescription}
           newAppDeveloperUrl={newAppDeveloperUrl}
@@ -715,6 +764,11 @@ function App() {
           emailChangeSuccess={emailChangeSuccess}
           authFlow={authFlow}
           onChangeEmail={handleChangeEmail}
+          displayName={getDisplayName(user, authUser)}
+          displayNameDraft={displayNameDraft}
+          setDisplayNameDraft={setDisplayNameDraft}
+          displayNameSuccess={displayNameSuccess}
+          onUpdateDisplayName={handleUpdateDisplayName}
         />
       ) : (
         <Landing

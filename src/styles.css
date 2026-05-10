@@ -400,6 +400,39 @@ p { margin-top: 0; }
 .dashboard-head .muted,
 .section-head .muted { margin-bottom: 0; }
 
+.identity-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.provider-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: var(--text);
+  background: var(--surface-2);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+}
+
+.compact-form {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.compact-form label { margin: 0; }
+
 .section-copy { max-width: 620px; }
 
 .section-toolbar,
@@ -817,10 +850,11 @@ input:-webkit-autofill:focus {
 
 .identity-card h2 {
   line-height: 1.12;
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
 
-.identity-card .muted { margin: 0; }
+.identity-card .muted,
+.identity-card .identity-meta { margin: 0; }
 
 .identity-card img,
 .identity-card span,
@@ -1092,6 +1126,8 @@ input:-webkit-autofill:focus {
   .actions > *,
   .actions button,
   .app-actions > *,
+  .compact-form,
+  .compact-form button,
   .key-actions button,
   .connect-actions button {
     width: 100%;
@@ -1103,6 +1139,8 @@ input:-webkit-autofill:focus {
   }
 
   .tooltip-wrap { display: flex; width: 100%; }
+
+  .compact-form { grid-template-columns: 1fr; }
 
   .registered-apps {
     margin-top: 0;
