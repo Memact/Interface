@@ -37,6 +37,79 @@
   .page-auth .logo-img {
     width: 120px !important;
   }
+
+  .key-panel,
+  .key-box,
+  .embed-code,
+  .embed-code pre,
+  .embed-code code {
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .key-box {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+  }
+
+  .key-box code {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-all !important;
+    white-space: normal !important;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+  }
+
+  .key-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .key-actions button {
+    width: 100% !important;
+    min-height: 40px !important;
+    padding: 8px 10px !important;
+  }
+
+  .embed-code {
+    overflow: hidden !important;
+  }
+
+  .embed-code summary {
+    min-height: 40px !important;
+    padding: 10px 0 !important;
+  }
+
+  .embed-code pre {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 360px !important;
+    margin: 8px 0 0 !important;
+    overflow: auto !important;
+    overscroll-behavior: contain !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 12px !important;
+    background: rgba(255, 255, 255, 0.025) !important;
+    white-space: pre !important;
+  }
+
+  .embed-code code {
+    display: block !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    color: var(--text) !important;
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+  }
 }
 
 @media (max-width: 420px) {
@@ -50,5 +123,9 @@
 
   .page:not(.page-auth) .tab {
     padding-inline: 8px !important;
+  }
+
+  .key-actions {
+    grid-template-columns: 1fr !important;
   }
 }
