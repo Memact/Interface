@@ -3,7 +3,7 @@ import { ACCESS_MODE, ACCESS_URL } from "../memact-access-client.js"
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../supabase-client.js"
 import { CategoryGrid } from "./CategoryGrid.jsx"
 import { HelpPanel } from "./HelpPanel.jsx"
-import { getAvatarUrl, getInitials, getProviderLabel, getUserEmail, getUserProvider } from "../user-display.js"
+import { getAvatarUrl, getInitials, getUserEmail, getUserProvider } from "../user-display.js"
 
 export function Dashboard({
   activeTab,
@@ -94,32 +94,24 @@ export function Dashboard({
   const appDescription = !isCreatingApp && selectedApp
     ? selectedApp.description || "No description added."
     : "Each app gets its own permissions and API keys."
-  const dashboardLabel = activeTab === "account" ? "Account" : activeTab === "help" ? "Help" : "Access"
-  const dashboardSubtitle = activeTab === "account"
-    ? "Manage your account and session."
-    : activeTab === "help"
-      ? "Plain-English help for Memact Access."
-      : "Create app-specific keys with clear permission scopes."
+  const dashboardSubtitle = "Create app-specific keys with clear permission scopes."
 
   const provider = getUserProvider(user, authUser)
-  const providerLabel = getProviderLabel(provider)
   const avatar = getAvatarUrl(user, authUser)
   const displayEmail = getUserEmail(user, authUser)
   const initials = getInitials(displayName, displayEmail)
 
   return (
     <section className="dashboard">
-      <div className="dashboard-head panel slim-panel">
-        <div>
-          <p className="eyebrow">{dashboardLabel}</p>
-          <h2>{displayName}</h2>
-          <p className="identity-meta">
-            {displayEmail ? <span>{displayEmail}</span> : null}
-            <span className="provider-badge">{providerLabel}</span>
-          </p>
-          <p className="muted">{dashboardSubtitle}</p>
+      {activeTab === "access" ? (
+        <div className="dashboard-head panel slim-panel">
+          <div>
+            <p className="eyebrow">Access</p>
+            <h2>{`Welcome${displayName ? `, ${displayName}` : ""}`}</h2>
+            <p className="muted">{dashboardSubtitle}</p>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {activeTab === "help" ? (
         <HelpPanel />
@@ -135,15 +127,14 @@ export function Dashboard({
               <h2>{displayName}</h2>
               <p className="identity-meta">
                 {displayEmail ? <span>{displayEmail}</span> : null}
-                <span className="provider-badge">{providerLabel}</span>
               </p>
             </div>
           </div>
           <section className="password-panel display-name-panel">
             <div>
               <p className="eyebrow">Display name</p>
-              <h2>Choose how Memact names you.</h2>
-              <p className="muted">This becomes the main name on your dashboard. Your email stays secondary.</p>
+              <h2>Set your display name.</h2>
+              <p className="muted">This is the name shown across your dashboard.</p>
             </div>
             {displayNameSuccess ? <p className="notice notice-success" role="status">{displayNameSuccess}</p> : null}
             <form className="form compact-form" onSubmit={onUpdateDisplayName}>
