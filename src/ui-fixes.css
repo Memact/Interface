@@ -169,6 +169,7 @@
 }
 
 .faq-chevron {
+  position: relative;
   display: grid;
   place-items: center;
   width: 38px;
@@ -179,18 +180,30 @@
   justify-self: end;
   color: var(--muted);
   background: var(--surface-2);
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1;
-  transform: rotate(0deg);
-  transition: transform 140ms ease, color 140ms ease, border-color 140ms ease, background 140ms ease;
+  font-size: 0;
+  line-height: 0;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.faq-chevron::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transform-origin: center;
+  transition: transform 140ms ease;
 }
 
 .faq-item[open] .faq-chevron {
-  transform: rotate(180deg);
   border-color: rgba(255, 255, 255, 0.36);
   color: var(--text);
   background: var(--surface-3);
+}
+
+.faq-item[open] .faq-chevron::before {
+  transform: translateY(2px) rotate(225deg);
 }
 
 .faq-answer {
@@ -292,7 +305,11 @@
   .faq-chevron {
     width: 36px;
     height: 36px;
-    font-size: 21px;
+  }
+
+  .faq-chevron::before {
+    width: 8px;
+    height: 8px;
   }
 
   .faq-answer {
