@@ -107,7 +107,7 @@ export function Dashboard({
         <div className="dashboard-head panel slim-panel">
           <div>
             <p className="eyebrow">Access</p>
-            <h2>{`Welcome${displayName ? `, ${displayName}` : ""}`}</h2>
+            <h2>{`Welcome${displayName ? `, ${displayName}` : ""}!`}</h2>
             <p className="muted">{dashboardSubtitle}</p>
           </div>
         </div>
