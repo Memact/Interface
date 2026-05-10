@@ -1,4 +1,5 @@
 import React from "react"
+import "../ui-fixes.css"
 
 const BASIC_FAQS = [
   {
@@ -33,11 +34,13 @@ const ADVANCED_FAQS = [
 function FaqItem({ faq, open = false }) {
   return (
     <details className="faq-item" open={open}>
-      <summary>
-        <span className="faq-arrow" aria-hidden="true" />
-        <span>{faq.question}</span>
+      <summary className="faq-trigger">
+        <span className="faq-question">{faq.question}</span>
+        <span className="faq-chevron" aria-hidden="true">⌄</span>
       </summary>
-      <p>{faq.answer}</p>
+      <div className="faq-answer">
+        <p>{faq.answer}</p>
+      </div>
     </details>
   )
 }
