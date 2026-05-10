@@ -67,6 +67,15 @@ function simplifyDashboardLabel() {
   })
 }
 
+function showSignOutOnlyOnAccount() {
+  document.querySelectorAll(".dashboard-head").forEach((head) => {
+    const label = head.querySelector(".eyebrow")?.textContent.trim().toLowerCase()
+    const signOut = head.querySelector(".sign-out-button")
+    if (!signOut || !label) return
+    signOut.hidden = label !== "account"
+  })
+}
+
 async function copyCode(button, text) {
   try {
     await navigator.clipboard.writeText(text)
@@ -134,6 +143,7 @@ function describeStep(title, index) {
 function enhanceMemactUi() {
   enhanceEmbedCode()
   simplifyDashboardLabel()
+  showSignOutOnlyOnAccount()
 }
 
 enhanceMemactUi()
