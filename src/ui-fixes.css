@@ -60,6 +60,11 @@
   align-self: start;
 }
 
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  filter: invert(1) opacity(0.72);
+}
+
 /* Account: keep avatar styling away from email/meta text */
 .account-panel-head {
   display: flex;
