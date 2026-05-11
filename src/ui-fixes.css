@@ -11,11 +11,30 @@
   display: none;
 }
 
+.auth-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 22px;
+  width: 100%;
+  max-width: 760px;
+  justify-self: center;
+}
+
 .auth-logo-img {
   display: block;
-  width: min(195px, 56vw);
+  width: min(190px, 26vw);
   height: auto;
-  margin: 0 auto 10px;
+  margin: 0;
+}
+
+.hero-points {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
 }
 
 .page-auth .landing {
@@ -23,39 +42,41 @@
   min-height: 0;
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 420px);
+  grid-template-columns: minmax(0, 760px);
   justify-content: center;
   align-content: center;
   justify-items: stretch;
-  gap: 12px;
+  gap: 18px;
   padding: 20px 0;
   overflow: auto;
 }
 
 .page-auth .landing-with-auth {
-  grid-template-columns: minmax(0, 420px);
+  grid-template-columns: minmax(0, 760px);
 }
 
 .page-auth .hero-copy {
-  max-width: 420px;
-  text-align: center;
-  align-self: end;
+  max-width: 460px;
+  text-align: left;
+  align-self: center;
 }
 
 .page-auth .hero-copy h1 {
-  font-size: clamp(24px, 4.5vw, 32px);
+  font-size: clamp(28px, 5vw, 42px);
+  line-height: 1.02;
+  letter-spacing: -0.055em;
 }
 
 .page-auth .hero-copy p:not(.eyebrow) {
-  margin-top: 0;
-  font-size: 14px;
+  margin-top: 10px;
+  font-size: 15px;
   line-height: 1.5;
 }
 
 .page-auth .auth-panel {
   width: 100%;
   max-width: 420px;
-  justify-self: stretch;
+  justify-self: center;
   padding: 18px;
   align-self: start;
 }
@@ -310,21 +331,40 @@ input[type="password"]::-ms-clear {
     overflow: visible;
   }
 
-  .page-auth .landing {
+  .page-auth .landing,
+  .page-auth .landing-with-auth {
     height: auto;
     min-height: 100svh;
+    grid-template-columns: minmax(0, 420px);
     align-content: start;
     padding: 28px 0;
     overflow: visible;
   }
 
+  .auth-intro {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 12px;
+  }
+
   .auth-logo-img {
-    width: min(180px, 52vw);
-    margin-bottom: 8px;
+    width: min(170px, 50vw);
+    margin: 0;
+    order: -1;
   }
 
   .page-auth .hero-copy {
+    max-width: 420px;
+    text-align: center;
     align-self: auto;
+  }
+
+  .page-auth .hero-copy h1 {
+    font-size: clamp(27px, 8vw, 34px);
+  }
+
+  .hero-points {
+    margin-top: 12px;
   }
 
   .page-auth .auth-panel {
