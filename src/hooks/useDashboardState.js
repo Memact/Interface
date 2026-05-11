@@ -10,6 +10,8 @@ export const initialDashboardState = {
   canRetryDashboard: false
 }
 
+export const DASHBOARD_REFRESH_TIMEOUT_MS = 9000
+
 export function dashboardReducer(state, action) {
   switch (action.type) {
     case "status":
@@ -77,13 +79,13 @@ export function useDashboardState() {
   return [state, actions]
 }
 
-export async function refreshDashboard(client, session, actions, getAccessStatus) {
+export async function refreshDashboard(client, session, actions, getAccessStatus, options = {}) {
   actions.setCanRetryDashboard(false)
   try {
-    const [me, dashboard] = await Promise.all([
+    const [me, dashboard] = await withTimeout(Promise.all([
       client.me(session),
       client.dashboard(session)
-    ])
+    ]), options.timeoutMs || DASHBOARD_REFRESH_TIMEOUT_MS)
     actions.sync({
       user: me.user,
       apps: dashboard.apps || [],
@@ -93,4 +95,17 @@ export async function refreshDashboard(client, session, actions, getAccessStatus
   } catch (error) {
     actions.fail(getAccessStatus(error))
   }
+}
+
+function withTimeout(promise, timeoutMs) {
+  let timeoutId
+  const timeoutError = new Error("Dashboard sync took too long. Check the connection and try again.")
+  timeoutError.code = "dashboard_sync_timeout"
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(timeoutError), timeoutMs)
+  })
+
+  return Promise.race([promise, timeout]).finally(() => {
+    clearTimeout(timeoutId)
+  })
 }

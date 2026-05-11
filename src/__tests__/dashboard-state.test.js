@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { dashboardReducer, initialDashboardState } from "../hooks/useDashboardState.js"
+import { dashboardReducer, initialDashboardState, refreshDashboard } from "../hooks/useDashboardState.js"
 
 test("dashboard reducer stores synced dashboard data", () => {
   const next = dashboardReducer(initialDashboardState, {
@@ -47,4 +47,32 @@ test("dashboard reducer clears dashboard data without changing status", () => {
   assert.deepEqual(next.apiKeys, [])
   assert.deepEqual(next.consents, [])
   assert.equal(next.status, "Dashboard synced.")
+})
+
+test("refreshDashboard records a retryable failure when dashboard sync times out", async () => {
+  const actions = {
+    setCanRetryDashboard(value) {
+      actions.retry = value
+    },
+    sync() {
+      actions.synced = true
+    },
+    fail(payload) {
+      actions.failed = payload
+    }
+  }
+  const client = {
+    me: async () => ({ user: { email: "user@example.com" } }),
+    dashboard: () => new Promise(() => {})
+  }
+
+  await refreshDashboard(client, "session", actions, (error) => ({
+    message: error.message,
+    status: "Dashboard sync failed."
+  }), { timeoutMs: 5 })
+
+  assert.equal(actions.retry, false)
+  assert.equal(actions.synced, undefined)
+  assert.equal(actions.failed.status, "Dashboard sync failed.")
+  assert.match(actions.failed.message, /took too long/i)
 })

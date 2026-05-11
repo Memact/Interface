@@ -113,7 +113,7 @@ function App() {
         }
       }, 4500)
 
-      supabase.auth.getSession()
+      resolveInitialSession(supabase)
         .then(({ data, error }) => {
           if (!mounted) return
           if (error) {
@@ -296,27 +296,22 @@ function App() {
       })
       if (signInError) throw signInError
       setPassword("")
-      const signedInUser = data?.user
-      if (signedInUser && !signedInUser.user_metadata?.memact_password_ready) {
-        const { data: updated, error: updateError } = await auth.auth.updateUser({
-          data: {
-            ...signedInUser.user_metadata,
-            memact_password_ready: true,
-            memact_password_updated_at: new Date().toISOString()
-          }
-        })
-        if (updateError) throw updateError
-        if (updated?.user) {
-          setAuthUser(updated.user)
-        }
+      let signedInSession = data?.session || null
+      const signedInUser = signedInSession?.user || data?.user || null
+
+      if (!signedInSession) {
+        const { data: sessionData, error: sessionError } = await auth.auth.getSession()
+        if (sessionError) throw sessionError
+        signedInSession = sessionData?.session || null
       }
-      if (data?.session) {
-        setAuthChecking(false)
-        setAuthSession(data.session)
-        setAuthUser(data.session.user || signedInUser || null)
-        setActiveTab(shouldOpenAccountTab(data.session.user || signedInUser, false) ? "account" : "access")
-        window.history.replaceState({}, "", "/dashboard")
+
+      if (!signedInSession) {
+        throw new Error("Login finished, but Memact did not receive a browser session. Refresh and try again.")
       }
+
+      setAuthChecking(false)
+      applySession(signedInSession, "default")
+      markPasswordReadyInBackground(auth, signedInUser || signedInSession.user, setAuthUser)
       setStatus("Signed in.")
     } catch (authError) {
       setError(passwordLoginErrorMessage(authError))
@@ -924,6 +919,56 @@ function shouldCheckSessionOnLoad() {
     authPayload.includes("access_token=") ||
     authPayload.includes("type=recovery") ||
     authPayload.includes("type=magiclink")
+}
+
+async function resolveInitialSession(authClient) {
+  const authCode = getAuthCodeFromUrl()
+  if (authCode && typeof authClient?.auth?.exchangeCodeForSession === "function") {
+    try {
+      const exchanged = await withAuthTimeout(authClient.auth.exchangeCodeForSession(authCode), 6500)
+      if (exchanged?.data?.session || exchanged?.error) {
+        return exchanged
+      }
+    } catch (exchangeError) {
+      const fallback = await authClient.auth.getSession()
+      if (fallback?.data?.session) return fallback
+      return { data: { session: null }, error: exchangeError }
+    }
+  }
+
+  return authClient.auth.getSession()
+}
+
+function getAuthCodeFromUrl() {
+  if (typeof window === "undefined") return ""
+  return new URLSearchParams(window.location.search || "").get("code") || ""
+}
+
+function withAuthTimeout(promise, timeoutMs) {
+  let timeoutId
+  const timeout = new Promise((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error("Login callback took too long.")), timeoutMs)
+  })
+  return Promise.race([promise, timeout]).finally(() => {
+    window.clearTimeout(timeoutId)
+  })
+}
+
+function markPasswordReadyInBackground(auth, user, setAuthUser) {
+  if (!user || user.user_metadata?.memact_password_ready) return
+  auth.auth.updateUser({
+    data: {
+      ...user.user_metadata,
+      memact_password_ready: true,
+      memact_password_updated_at: new Date().toISOString()
+    }
+  })
+    .then(({ data }) => {
+      if (data?.user) {
+        setAuthUser(data.user)
+      }
+    })
+    .catch(() => {})
 }
 
 function isConnectPath() {
