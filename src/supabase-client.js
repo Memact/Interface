@@ -25,13 +25,14 @@ if (supabase?.auth?.getSession) {
   const getSession = supabase.auth.getSession.bind(supabase.auth)
   supabase.auth.getSession = async () => {
     try {
+      const fallbackSession = getStoredSupabaseSession()
       return await withTimeout(
         Promise.resolve().then(() => getSession()),
         SESSION_CHECK_TIMEOUT_MS,
-        { data: { session: null }, error: null }
+        { data: { session: fallbackSession }, error: null }
       )
     } catch (error) {
-      return { data: { session: null }, error }
+      return { data: { session: getStoredSupabaseSession() }, error }
     }
   }
 }
@@ -44,10 +45,10 @@ export function requireSupabase() {
 }
 
 export function getAuthRedirectUrl(path = "/dashboard") {
+  if (authRedirectUrl) return authRedirectUrl
   if (typeof window !== "undefined" && window.location?.origin) {
     return new URL(path, window.location.origin).toString()
   }
-  if (authRedirectUrl) return authRedirectUrl
   return new URL(path, "https://www.memact.com").toString()
 }
 
@@ -66,4 +67,25 @@ function withTimeout(promise, timeoutMs, fallbackValue) {
   return Promise.race([promise, timeoutPromise]).finally(() => {
     clearTimeoutApi(timeoutId)
   })
+}
+
+function getStoredSupabaseSession() {
+  try {
+    if (typeof window === "undefined" || !window.localStorage || !supabaseUrl) {
+      return null
+    }
+
+    const projectRef = new URL(supabaseUrl).hostname.split(".")[0]
+    const storageKey = `sb-${projectRef}-auth-token`
+    const rawValue = window.localStorage.getItem(storageKey)
+    if (!rawValue) return null
+
+    const parsedValue = JSON.parse(rawValue)
+    const session = parsedValue?.currentSession || parsedValue
+    if (!session?.access_token || !session?.user) return null
+
+    return session
+  } catch {
+    return null
+  }
 }
