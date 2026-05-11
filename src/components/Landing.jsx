@@ -1,6 +1,7 @@
 import React from "react"
 import "../ui-fixes.css"
 import "../landing-polish.css"
+import "../desktop-landing-lift.css"
 
 export function Landing({ isConnecting, showAuth, email, password, authLoading, authNotice, setEmail, setPassword, onEmailLogin, onPasswordLogin, onForgotPassword, onGithubLogin }) {
   const handleSignInScroll = (event) => {
