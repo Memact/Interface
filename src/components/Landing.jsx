@@ -17,7 +17,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
               <p>Memact lets apps use helpful info from your digital activity without giving them everything.</p>
               <div className="hero-points" aria-label="Memact principles">
                 <span>Choose what apps can remember.</span>
-                <span>Build with approved info.</span>
+                <span>Apps only access what you permit.</span>
                 <span>Keep memory permissioned.</span>
               </div>
             </>
@@ -29,7 +29,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
 
           {showAuth ? (
             <section className="panel auth-panel" aria-label="Memact login">
-              <p className="eyebrow">Secure portal</p>
+              <p className="eyebrow">Sign in</p>
               <p className="muted auth-support">Sign in to manage apps, permissions, and API keys.</p>
               {authNotice ? <p className="notice notice-success" role="status">{authNotice}</p> : null}
               <form className="form" onSubmit={onPasswordLogin}>
