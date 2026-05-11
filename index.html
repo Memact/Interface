@@ -49,22 +49,6 @@
     <meta name="twitter:image" content="https://www.memact.com/seo-logo.png" />
     <meta name="twitter:image:alt" content="Memact wordmark on a dark background" />
 
-    <script>
-      (() => {
-        const normalizeLoginTarget = (url) => {
-          if (url === "/login" || url === "login") return "/#sign-in"
-          return url
-        }
-        const replaceState = window.history.replaceState.bind(window.history)
-        const pushState = window.history.pushState.bind(window.history)
-        window.history.replaceState = (state, title, url) => replaceState(state, title, normalizeLoginTarget(url))
-        window.history.pushState = (state, title, url) => pushState(state, title, normalizeLoginTarget(url))
-        if (window.location.pathname === "/login") {
-          replaceState({}, "", "/#sign-in")
-        }
-      })()
-    </script>
-
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
