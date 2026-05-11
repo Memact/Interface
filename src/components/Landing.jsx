@@ -4,14 +4,26 @@ import "../ui-fixes.css"
 export function Landing({ isConnecting, showAuth, email, password, authLoading, authNotice, setEmail, setPassword, onEmailLogin, onPasswordLogin, onForgotPassword, onGithubLogin }) {
   return (
     <section className={showAuth ? "landing landing-with-auth" : "landing"}>
-      <div className="hero-copy hero-copy-compact">
+      <div className="auth-intro">
+        <div className="hero-copy hero-copy-compact">
+          {isConnecting ? (
+            <>
+              <h1>Review app access.</h1>
+              <p>Sign in to review the app, requested scopes, and activity categories before connecting.</p>
+            </>
+          ) : (
+            <>
+              <h1>Let apps remember only what you allow.</h1>
+              <p>Memact lets apps use helpful info from your digital activity without giving them everything.</p>
+              <div className="hero-points" aria-label="Memact principles">
+                <span>Choose what apps can remember.</span>
+                <span>Build with approved info.</span>
+                <span>Keep memory permissioned.</span>
+              </div>
+            </>
+          )}
+        </div>
         <img className="auth-logo-img" src="/logo.png" alt="Memact" />
-        {isConnecting ? <h1>Review app access.</h1> : null}
-        <p>
-          {isConnecting
-            ? "Sign in to review the app, requested scopes, and activity categories before connecting."
-            : "Sign in to manage apps, permissions, and API keys."}
-        </p>
       </div>
 
       {showAuth ? (
