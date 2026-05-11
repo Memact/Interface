@@ -70,27 +70,52 @@ body.portal-menu-open {
   transition: transform 160ms ease, opacity 160ms ease;
 }
 
-body[data-portal-section] .dashboard > :not(.portal-feature-panel) {
+body[data-platform-section] .dashboard > :not(.platform-runtime-panel) {
   display: none !important;
 }
 
-.portal-feature-panel {
-  display: none;
-}
-
-body[data-portal-section] .portal-feature-panel {
+.platform-runtime-panel {
   display: grid;
+  gap: 14px;
 }
 
-.portal-feature-panel .platform-panel {
-  margin-top: 0;
+.platform-runtime-panel[hidden] {
+  display: none !important;
 }
 
-.portal-feature-panel .platform-card {
+.runtime-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.runtime-card {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   background: var(--surface-2);
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.runtime-card span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.runtime-card strong {
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 900px) {
+  .runtime-grid {
+    grid-template-columns: 1fr;
+  }
+
   .page:not(.page-auth) .topbar {
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 10px;
@@ -131,7 +156,7 @@ body[data-portal-section] .portal-feature-panel {
     border-right: 1px solid var(--border) !important;
     border-radius: 0 !important;
     background: #00011b !important;
-    padding: max(24px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom)) !important;
+    padding: max(18px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom)) !important;
     transform: translateX(-105%) !important;
     opacity: 0 !important;
     pointer-events: none !important;
@@ -146,14 +171,20 @@ body[data-portal-section] .portal-feature-panel {
   }
 
   .page:not(.page-auth) .topbar .tabs::before {
-    content: "Dashboard";
-    display: block;
-    margin: 0 0 12px;
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    content: "←  Memact";
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    margin: 0 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface-1);
+    color: var(--text);
+    padding: 0 14px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   .page:not(.page-auth) .topbar .tab {
