@@ -65,6 +65,14 @@
   align-self: start;
 }
 
+.page-auth .auth-panel-logo {
+  display: block;
+  width: min(220px, 62%);
+  max-width: 220px;
+  height: auto;
+  margin: 0 0 14px;
+}
+
 /* Account: keep avatar styling away from email/meta text */
 .account-panel-head {
   display: flex;
@@ -294,6 +302,12 @@
 
   .page-auth .auth-panel {
     align-self: auto;
+  }
+
+  .page-auth .auth-panel-logo {
+    width: min(210px, 72%);
+    max-width: 210px;
+    margin-bottom: 12px;
   }
 
   .account-panel-head {
