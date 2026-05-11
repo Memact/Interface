@@ -1,0 +1,132 @@
+.page-auth .topbar {
+  display: none !important;
+}
+
+.page-auth .landing,
+.page-auth .landing-with-auth {
+  display: block !important;
+  width: 100% !important;
+  padding: 0 0 72px !important;
+}
+
+.page-auth .auth-intro {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.page-auth .auth-side {
+  display: contents !important;
+}
+
+.page-auth .auth-logo-img {
+  order: 1 !important;
+  display: block !important;
+  width: min(210px, 38vw) !important;
+  height: auto !important;
+  margin: 38px auto 0 !important;
+}
+
+.page-auth .hero-copy {
+  order: 2 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: min(100%, 620px) !important;
+  min-height: calc(100svh - 40px) !important;
+  padding: 44px 16px 68px !important;
+  text-align: center !important;
+}
+
+.page-auth .hero-copy h1 {
+  max-width: 620px !important;
+  margin: 0 auto !important;
+  font-size: clamp(42px, 5.1vw, 64px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -0.06em !important;
+}
+
+.page-auth .hero-copy p:not(.eyebrow) {
+  max-width: 520px !important;
+  margin: 24px auto 0 !important;
+  color: var(--muted) !important;
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+}
+
+.page-auth .auth-panel {
+  order: 3 !important;
+  width: min(100% - 32px, 420px) !important;
+  max-width: 420px !important;
+  margin: 64px auto 0 !important;
+  scroll-margin-top: 28px !important;
+}
+
+.scroll-to-auth {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: min(250px, 74vw) !important;
+  min-height: 56px !important;
+  margin: 28px auto 0 !important;
+  border-radius: 18px !important;
+  padding: 0 52px 0 24px !important;
+  color: #00011b !important;
+  background: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  text-decoration: none !important;
+}
+
+.scroll-to-auth::after {
+  content: "" !important;
+  position: absolute !important;
+  right: 13px !important;
+  top: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  border: 1px solid rgba(0, 1, 27, 0.18) !important;
+  border-radius: 999px !important;
+  transform: translateY(-50%) !important;
+}
+
+.scroll-to-auth::before {
+  content: "" !important;
+  position: absolute !important;
+  right: 25px !important;
+  top: 50% !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-right: 2px solid currentColor !important;
+  border-bottom: 2px solid currentColor !important;
+  transform: translateY(-58%) rotate(45deg) !important;
+  z-index: 1 !important;
+}
+
+@media (max-width: 900px) {
+  .page-auth .auth-logo-img {
+    width: min(178px, 52vw) !important;
+    margin-top: 34px !important;
+  }
+
+  .page-auth .hero-copy {
+    width: min(100%, 390px) !important;
+    min-height: calc(100svh - 36px) !important;
+    padding: 38px 12px 54px !important;
+  }
+
+  .page-auth .hero-copy h1 {
+    max-width: 370px !important;
+    font-size: clamp(34px, 9vw, 44px) !important;
+  }
+
+  .page-auth .hero-copy p:not(.eyebrow) {
+    max-width: 350px !important;
+    font-size: 14px !important;
+    line-height: 1.48 !important;
+  }
+}
