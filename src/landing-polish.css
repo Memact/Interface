@@ -1,100 +1,165 @@
+/* Auth landing reset: one clean centered flow, no desktop split layout. */
+.page-auth {
+  min-height: 100svh !important;
+  display: block !important;
+  overflow-x: hidden !important;
+}
+
+.page-auth .topbar {
+  display: none !important;
+}
+
 .page-auth .landing,
 .page-auth .landing-with-auth {
-  min-height: auto;
-  height: auto;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: start;
-  padding-bottom: 56px;
+  display: block !important;
+  width: 100% !important;
+  min-height: auto !important;
+  height: auto !important;
+  padding: 0 0 72px !important;
 }
 
 .page-auth .auth-intro {
-  max-width: 760px;
-  margin-inline: auto;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 auto !important;
+}
+
+.page-auth .auth-side {
+  display: contents !important;
+}
+
+.page-auth .auth-logo-img {
+  order: 1 !important;
+  display: block !important;
+  width: min(210px, 38vw) !important;
+  height: auto !important;
+  margin: max(38px, env(safe-area-inset-top)) auto 0 !important;
 }
 
 .page-auth .hero-copy {
-  min-height: calc(100svh - 96px);
-  width: min(100%, 620px);
-  max-width: 620px;
-  justify-content: center;
-  padding: 36px 0 56px;
+  order: 2 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: min(100%, 620px) !important;
+  max-width: 620px !important;
+  min-height: calc(100svh - 118px) !important;
+  padding: 44px 16px 68px !important;
+  text-align: center !important;
 }
 
 .page-auth .hero-copy h1 {
-  margin-bottom: 0;
+  max-width: 620px !important;
+  margin: 0 auto !important;
+  font-size: clamp(42px, 5.1vw, 64px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -0.06em !important;
 }
 
 .page-auth .hero-copy p:not(.eyebrow) {
-  margin-top: 22px;
+  max-width: 520px !important;
+  margin: 24px auto 0 !important;
+  color: var(--muted) !important;
+  font-size: 15px !important;
+  line-height: 1.55 !important;
 }
 
 .page-auth .auth-panel {
-  width: min(100%, 420px);
-  max-width: 420px;
-  margin-inline: auto;
-  scroll-margin-top: 24px;
+  order: 3 !important;
+  width: min(100% - 32px, 420px) !important;
+  max-width: 420px !important;
+  margin: 0 auto !important;
+  scroll-margin-top: 28px !important;
 }
 
 .scroll-to-auth {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 32px;
-  align-items: center;
-  justify-items: center;
-  gap: 12px;
-  min-height: 56px;
-  margin-top: 24px;
-  padding: 0 13px 0 24px;
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 32px !important;
+  align-items: center !important;
+  justify-items: center !important;
+  gap: 12px !important;
+  width: min(270px, 74vw) !important;
+  min-height: 56px !important;
+  margin: 28px auto 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.88) !important;
+  border-radius: 18px !important;
+  padding: 0 13px 0 24px !important;
+  color: #00011b !important;
+  background: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  text-decoration: none !important;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28) !important;
 }
 
 .scroll-to-auth::after {
-  grid-column: 2;
-  grid-row: 1;
-  width: 32px;
-  height: 32px;
+  content: "" !important;
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 32px !important;
+  height: 32px !important;
+  border: 1px solid rgba(0, 1, 27, 0.18) !important;
+  border-radius: 999px !important;
+  background: rgba(0, 1, 27, 0.06) !important;
 }
 
 .scroll-to-auth::before {
-  right: 25px;
-  top: 50%;
-  width: 8px;
-  height: 8px;
-  transform: translateY(-58%) rotate(45deg);
-}
-
-@media (min-width: 901px) {
-  .page-auth .hero-copy {
-    min-height: calc(100svh - 110px);
-  }
+  content: "" !important;
+  position: absolute !important;
+  right: 25px !important;
+  top: 50% !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-right: 2px solid currentColor !important;
+  border-bottom: 2px solid currentColor !important;
+  transform: translateY(-58%) rotate(45deg) !important;
+  transform-origin: center !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
 }
 
 @media (max-width: 900px) {
-  .page-auth .auth-intro {
-    max-width: 420px;
+  .page-auth .auth-logo-img {
+    width: min(178px, 52vw) !important;
+    margin-top: max(34px, env(safe-area-inset-top)) !important;
   }
 
   .page-auth .hero-copy {
-    min-height: calc(100svh - 92px);
-    width: min(100%, 390px);
-    max-width: 390px;
-    padding: 38px 0 42px;
+    width: min(100%, 390px) !important;
+    max-width: 390px !important;
+    min-height: calc(100svh - 104px) !important;
+    padding: 38px 12px 54px !important;
+  }
+
+  .page-auth .hero-copy h1 {
+    max-width: 370px !important;
+    font-size: clamp(34px, 9vw, 44px) !important;
   }
 
   .page-auth .hero-copy p:not(.eyebrow) {
-    margin-top: 24px;
+    max-width: 350px !important;
+    margin-top: 24px !important;
+    font-size: 14px !important;
+    line-height: 1.48 !important;
   }
 
   .scroll-to-auth {
-    width: min(250px, 74vw);
-    margin-top: 26px;
+    width: min(250px, 74vw) !important;
+    margin-top: 26px !important;
   }
 }
 
 @media (max-width: 420px) {
   .page-auth .hero-copy h1 {
-    max-width: 360px;
+    max-width: 360px !important;
   }
 
   .page-auth .hero-copy p:not(.eyebrow) {
-    max-width: 340px;
+    max-width: 340px !important;
   }
 }
