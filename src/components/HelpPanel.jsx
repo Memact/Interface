@@ -5,15 +5,15 @@ import "../faq-chevron.css"
 const BASIC_FAQS = [
   {
     question: "What is Memact?",
-    answer: "Infrastructure that lets apps create permissioned memory from your digital activity."
+    answer: "Infrastructure that lets apps create permissioned memory from a user's digital activity."
   },
   {
-    question: "Does an app get my whole memory graph?",
-    answer: "No. Apps only get the permissions and activity categories you approve. Raw graph access is separate and sensitive."
+    question: "Does an app get the user's whole memory graph?",
+    answer: "No. Apps only get the permissions and activity categories the user approves. Raw graph access is separate and sensitive."
   },
   {
     question: "What does Connect App do?",
-    answer: "It shows what an app wants before anything is connected. You approve or cancel."
+    answer: "It shows what an app wants before anything is connected. The user can approve or cancel."
   },
   {
     question: "What are activity categories?",
@@ -61,7 +61,7 @@ export function HelpPanel() {
         <p className="eyebrow">Help</p>
         <h2>Memact Access, explained</h2>
       </div>
-      <p className="muted help-intro">Apps ask for memory access. You choose what they get.</p>
+      <p className="muted help-intro">Apps ask for memory access. The user chooses what they get.</p>
 
       <div className="faq-section">
         <p className="faq-section-title">Basics</p>
