@@ -1,3 +1,9 @@
+.page-auth {
+  min-height: 100svh !important;
+  height: auto !important;
+  overflow-x: hidden !important;
+}
+
 .page-auth .topbar {
   display: none !important;
 }
@@ -6,14 +12,19 @@
 .page-auth .landing-with-auth {
   display: block !important;
   width: 100% !important;
+  min-height: auto !important;
+  height: auto !important;
   padding: 0 0 72px !important;
+  overflow: visible !important;
 }
 
 .page-auth .auth-intro {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
+  justify-content: flex-start !important;
   width: 100% !important;
+  max-width: none !important;
   margin: 0 auto !important;
 }
 
@@ -24,9 +35,9 @@
 .page-auth .auth-logo-img {
   order: 1 !important;
   display: block !important;
-  width: min(210px, 38vw) !important;
+  width: min(190px, 34vw) !important;
   height: auto !important;
-  margin: 38px auto 0 !important;
+  margin: 42px auto 0 !important;
 }
 
 .page-auth .hero-copy {
@@ -35,23 +46,26 @@
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  width: min(100%, 620px) !important;
-  min-height: calc(100svh - 40px) !important;
-  padding: 44px 16px 68px !important;
+  width: min(100% - 32px, 560px) !important;
+  max-width: 560px !important;
+  min-height: calc(100svh - 112px) !important;
+  padding: 34px 16px 58px !important;
+  margin: 0 auto !important;
   text-align: center !important;
+  transform: none !important;
 }
 
 .page-auth .hero-copy h1 {
-  max-width: 620px !important;
+  max-width: 560px !important;
   margin: 0 auto !important;
-  font-size: clamp(42px, 5.1vw, 64px) !important;
-  line-height: 1.02 !important;
-  letter-spacing: -0.06em !important;
+  font-size: clamp(40px, 4.6vw, 58px) !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.055em !important;
 }
 
 .page-auth .hero-copy p:not(.eyebrow) {
-  max-width: 520px !important;
-  margin: 24px auto 0 !important;
+  max-width: 480px !important;
+  margin: 22px auto 0 !important;
   color: var(--muted) !important;
   font-size: 15px !important;
   line-height: 1.55 !important;
@@ -61,7 +75,7 @@
   order: 3 !important;
   width: min(100% - 32px, 420px) !important;
   max-width: 420px !important;
-  margin: 64px auto 0 !important;
+  margin: 72px auto 0 !important;
   scroll-margin-top: 28px !important;
 }
 
@@ -114,7 +128,8 @@
   }
 
   .page-auth .hero-copy {
-    width: min(100%, 390px) !important;
+    width: min(100% - 24px, 390px) !important;
+    max-width: 390px !important;
     min-height: calc(100svh - 36px) !important;
     padding: 38px 12px 54px !important;
   }
