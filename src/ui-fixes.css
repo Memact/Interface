@@ -13,9 +13,9 @@
 
 .auth-logo-img {
   display: block;
-  width: min(280px, 76vw);
+  width: min(210px, 62vw);
   height: auto;
-  margin: 0 auto 18px;
+  margin: 0 auto 10px;
 }
 
 .page-auth .landing {
@@ -23,37 +23,38 @@
   min-height: 0;
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 440px);
+  grid-template-columns: minmax(0, 420px);
   justify-content: center;
   align-content: center;
   justify-items: stretch;
-  gap: 18px;
-  padding: 24px 0 24px;
+  gap: 12px;
+  padding: 18px 0;
   overflow: auto;
 }
 
 .page-auth .landing-with-auth {
-  grid-template-columns: minmax(0, 440px);
+  grid-template-columns: minmax(0, 420px);
 }
 
 .page-auth .hero-copy {
-  max-width: 440px;
+  max-width: 420px;
   text-align: center;
   align-self: end;
 }
 
 .page-auth .hero-copy h1 {
-  font-size: clamp(26px, 4.5vw, 34px);
+  font-size: clamp(24px, 4.5vw, 32px);
 }
 
 .page-auth .hero-copy p:not(.eyebrow) {
   margin-top: 0;
-  font-size: 15px;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .page-auth .auth-panel {
   width: 100%;
-  max-width: 440px;
+  max-width: 420px;
   justify-self: stretch;
   padding: 18px;
   align-self: start;
@@ -301,13 +302,13 @@
   .page-auth .landing {
     height: auto;
     align-content: start;
-    padding: 48px 0 28px;
+    padding: 28px 0 28px;
     overflow: visible;
   }
 
   .auth-logo-img {
-    width: min(250px, 72vw);
-    margin-bottom: 16px;
+    width: min(190px, 58vw);
+    margin-bottom: 8px;
   }
 
   .page-auth .hero-copy {
