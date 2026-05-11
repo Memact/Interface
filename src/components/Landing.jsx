@@ -39,6 +39,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
 
         {showAuth ? (
           <section id="sign-in" className="panel auth-panel" aria-label="Memact login">
+            <img className="auth-panel-logo" src="/logo.png" alt="Memact" />
             <p className="eyebrow">Sign in</p>
             <p className="muted auth-support">Sign in to manage apps, permissions, and API keys.</p>
             {authNotice ? <p className="notice notice-success" role="status">{authNotice}</p> : null}
