@@ -20,7 +20,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
                 <span>Apps only access what you permit.</span>
                 <span>Keep memory permissioned.</span>
               </div>
-              {showAuth ? <a className="scroll-to-auth" href="#sign-in">Scroll to sign in</a> : null}
+              {showAuth ? <a className="scroll-to-auth" href="#sign-in">Sign in</a> : null}
             </>
           )}
         </div>
