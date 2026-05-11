@@ -24,13 +24,13 @@
 .auth-side {
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: 14px;
   min-width: 0;
 }
 
 .auth-logo-img {
   display: block;
-  width: min(180px, 20vw);
+  width: min(190px, 22vw);
   height: auto;
   margin: 0;
 }
@@ -353,18 +353,18 @@ input[type="password"]::-ms-clear {
   .auth-intro {
     grid-template-columns: 1fr;
     justify-items: center;
-    gap: 12px;
+    gap: 14px;
     max-width: 420px;
   }
 
   .auth-side {
     width: 100%;
-    gap: 10px;
+    gap: 12px;
     order: 2;
   }
 
   .auth-logo-img {
-    width: min(158px, 46vw);
+    width: min(170px, 50vw);
     margin: 0;
     order: -1;
   }
