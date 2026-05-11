@@ -5,7 +5,6 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
   return (
     <section className={showAuth ? "landing landing-with-auth" : "landing"}>
       <div className="hero-copy hero-copy-compact">
-        <img className="auth-logo-img" src="/logo.png" alt="Memact" />
         {isConnecting ? <h1>Review app access.</h1> : null}
         <p>
           {isConnecting
