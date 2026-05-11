@@ -13,7 +13,7 @@
 
 .auth-logo-img {
   display: block;
-  width: min(220px, 62vw);
+  width: min(195px, 56vw);
   height: auto;
   margin: 0 auto 10px;
 }
@@ -308,7 +308,7 @@
   }
 
   .auth-logo-img {
-    width: min(200px, 58vw);
+    width: min(180px, 52vw);
     margin-bottom: 8px;
   }
 
