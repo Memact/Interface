@@ -20,6 +20,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
                 <span>Apps only access what you permit.</span>
                 <span>Keep memory permissioned.</span>
               </div>
+              {showAuth ? <a className="scroll-to-auth" href="#sign-in">Scroll to sign in</a> : null}
             </>
           )}
         </div>
@@ -28,7 +29,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
           <img className="auth-logo-img" src="/logo.png" alt="Memact" />
 
           {showAuth ? (
-            <section className="panel auth-panel" aria-label="Memact login">
+            <section id="sign-in" className="panel auth-panel" aria-label="Memact login">
               <p className="eyebrow">Sign in</p>
               <p className="muted auth-support">Sign in to manage apps, permissions, and API keys.</p>
               {authNotice ? <p className="notice notice-success" role="status">{authNotice}</p> : null}
