@@ -22,7 +22,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
           <form className="form" onSubmit={onPasswordLogin}>
             <label>
               Email
-              <input value={email} type="email" inputMode="email" autoComplete="email" onChange={(event) => setEmail(event.target.value)} required />
+              <input value={email} type="email" inputMode="email" autoComplete="email" placeholder="Enter your email" onChange={(event) => setEmail(event.target.value)} required />
             </label>
             <label>
               Password
