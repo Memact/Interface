@@ -59,6 +59,30 @@ function App() {
   const passwordState = useMemo(() => getPasswordState(setupPassword, setupPasswordConfirm), [setupPassword, setupPasswordConfirm])
   const needsPasswordSetup = Boolean(authUser && shouldOfferPasswordSetup(authUser))
 
+  function applySession(nextSession, detectedFlow = "default") {
+    setAuthSession(nextSession)
+    setAuthUser(nextSession?.user || null)
+    setAuthFlow(detectedFlow)
+
+    if (nextSession && isConnectPath()) {
+      setActiveTab("connect")
+      return
+    }
+
+    if (nextSession) {
+      setActiveTab(shouldOpenAccountTab(nextSession.user, detectedFlow === "recovery") ? "account" : "access")
+      if (window.location.pathname !== "/dashboard") {
+        window.history.replaceState({}, "", "/dashboard")
+      }
+      return
+    }
+
+    if (window.location.pathname === "/dashboard") {
+      window.history.replaceState({}, "", "/login")
+      setActiveTab("login")
+    }
+  }
+
   useEffect(() => {
     client.health()
       .then(() => setStatus(ACCESS_MODE === "supabase" ? "Access is running through Supabase." : "Memact is online."))
@@ -74,39 +98,43 @@ function App() {
     }
 
     let mounted = true
-    supabase.auth.getSession()
-      .then(({ data, error }) => {
+    const shouldCheckSession = shouldCheckSessionOnLoad()
+    let sessionCheckTimeout
+
+    if (!shouldCheckSession) {
+      setAuthChecking(false)
+    } else {
+      sessionCheckTimeout = window.setTimeout(() => {
         if (!mounted) return
-        if (error) {
-          setError(error.message)
-        }
-        const nextSession = data?.session || null
-        const detectedFlow = detectAuthFlowFromUrl()
-        setAuthSession(nextSession)
-        setAuthUser(nextSession?.user || null)
-        setAuthFlow(detectedFlow)
-        if (nextSession && isConnectPath()) {
-          setActiveTab("connect")
-        } else if (nextSession && window.location.pathname !== "/dashboard") {
-          window.history.replaceState({}, "", "/dashboard")
-        }
-        if (!nextSession && window.location.pathname === "/dashboard") {
+        setAuthChecking(false)
+        if (window.location.pathname === "/dashboard") {
           window.history.replaceState({}, "", "/login")
           setActiveTab("login")
         }
-      })
-      .catch((sessionError) => {
-        if (!mounted) return
-        setError(sessionError?.message || "Could not check login status.")
-      })
-      .finally(() => {
-        if (mounted) setAuthChecking(false)
-      })
+      }, 4500)
+
+      supabase.auth.getSession()
+        .then(({ data, error }) => {
+          if (!mounted) return
+          if (error) {
+            setError(error.message)
+          }
+          applySession(data?.session || null, detectAuthFlowFromUrl())
+        })
+        .catch((sessionError) => {
+          if (!mounted) return
+          setError(sessionError?.message || "Could not check login status.")
+        })
+        .finally(() => {
+          if (!mounted) return
+          window.clearTimeout(sessionCheckTimeout)
+          setAuthChecking(false)
+        })
+    }
 
     const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return
-      setAuthSession(nextSession)
-      setAuthUser(nextSession?.user || null)
+      setAuthChecking(false)
       if (event === "PASSWORD_RECOVERY") {
         setAuthFlow("recovery")
       } else if (event === "SIGNED_IN") {
@@ -114,18 +142,18 @@ function App() {
       } else if (event === "SIGNED_OUT") {
         setAuthFlow("default")
       }
-      if (nextSession) {
-        if (isConnectPath()) {
-          setActiveTab("connect")
-        } else {
-          setActiveTab(shouldOpenAccountTab(nextSession.user, event === "PASSWORD_RECOVERY" || detectAuthFlowFromUrl() === "recovery") ? "account" : "access")
-          window.history.replaceState({}, "", "/dashboard")
+      applySession(nextSession, event === "PASSWORD_RECOVERY" ? "recovery" : detectAuthFlowFromUrl())
+      if (!nextSession && event === "SIGNED_OUT") {
+        setActiveTab("login")
+        if (window.location.pathname === "/dashboard") {
+          window.history.replaceState({}, "", "/login")
         }
       }
     })
 
     return () => {
       mounted = false
+      window.clearTimeout(sessionCheckTimeout)
       subscription?.subscription?.unsubscribe()
     }
   }, [])
@@ -281,6 +309,13 @@ function App() {
         if (updated?.user) {
           setAuthUser(updated.user)
         }
+      }
+      if (data?.session) {
+        setAuthChecking(false)
+        setAuthSession(data.session)
+        setAuthUser(data.session.user || signedInUser || null)
+        setActiveTab(shouldOpenAccountTab(data.session.user || signedInUser, false) ? "account" : "access")
+        window.history.replaceState({}, "", "/dashboard")
       }
       setStatus("Signed in.")
     } catch (authError) {
@@ -708,7 +743,7 @@ function App() {
       </header>
 
       {error ? <p id="error-message" className="notice notice-danger" role="alert">{error} {canRetryDashboard ? <button type="button" className="inline-retry" onClick={handleRetryDashboard}>Retry</button> : null}</p> : null}
-      {authChecking ? <p className="status-line">Checking login.</p> : null}
+      {authChecking && !showAuth ? <p className="status-line">Checking login.</p> : null}
 
       {session && activeTab === "connect" ? (
         <ConnectPage
@@ -877,6 +912,18 @@ function detectAuthFlowFromUrl() {
   const query = `${window.location.search || ""}${window.location.hash || ""}`.toLowerCase()
   if (query.includes("type=recovery")) return "recovery"
   return "default"
+}
+
+function shouldCheckSessionOnLoad() {
+  if (typeof window === "undefined") return false
+  const path = window.location.pathname
+  const authPayload = `${window.location.search || ""}${window.location.hash || ""}`.toLowerCase()
+  return path === "/dashboard" ||
+    path === "/connect" ||
+    authPayload.includes("code=") ||
+    authPayload.includes("access_token=") ||
+    authPayload.includes("type=recovery") ||
+    authPayload.includes("type=magiclink")
 }
 
 function isConnectPath() {
