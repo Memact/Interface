@@ -23,11 +23,17 @@ export const supabase = isSupabaseConfigured
 
 if (supabase?.auth?.getSession) {
   const getSession = supabase.auth.getSession.bind(supabase.auth)
-  supabase.auth.getSession = () => withTimeout(
-    getSession(),
-    SESSION_CHECK_TIMEOUT_MS,
-    { data: { session: null }, error: null }
-  )
+  supabase.auth.getSession = async () => {
+    try {
+      return await withTimeout(
+        Promise.resolve().then(() => getSession()),
+        SESSION_CHECK_TIMEOUT_MS,
+        { data: { session: null }, error: null }
+      )
+    } catch (error) {
+      return { data: { session: null }, error }
+    }
+  }
 }
 
 export function requireSupabase() {
@@ -46,12 +52,18 @@ export function getAuthRedirectUrl(path = "/dashboard") {
 }
 
 function withTimeout(promise, timeoutMs, fallbackValue) {
+  const timeoutApi = globalThis?.setTimeout?.bind(globalThis)
+  const clearTimeoutApi = globalThis?.clearTimeout?.bind(globalThis)
+  if (!timeoutApi || !clearTimeoutApi) {
+    return promise
+  }
+
   let timeoutId
   const timeoutPromise = new Promise((resolve) => {
-    timeoutId = window.setTimeout(() => resolve(fallbackValue), timeoutMs)
+    timeoutId = timeoutApi(() => resolve(fallbackValue), timeoutMs)
   })
 
   return Promise.race([promise, timeoutPromise]).finally(() => {
-    window.clearTimeout(timeoutId)
+    clearTimeoutApi(timeoutId)
   })
 }
