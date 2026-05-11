@@ -1,0 +1,12 @@
+@media (min-width: 901px) {
+  .page-auth .auth-logo-img {
+    margin-top: max(28px, env(safe-area-inset-top)) !important;
+  }
+
+  .page-auth .hero-copy {
+    min-height: calc(100svh - 96px) !important;
+    padding-top: 24px !important;
+    padding-bottom: 52px !important;
+    transform: translateY(-28px) !important;
+  }
+}
