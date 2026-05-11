@@ -2,6 +2,14 @@ import React from "react"
 import "../ui-fixes.css"
 
 export function Landing({ isConnecting, showAuth, email, password, authLoading, authNotice, setEmail, setPassword, onEmailLogin, onPasswordLogin, onForgotPassword, onGithubLogin }) {
+  const handleSignInScroll = (event) => {
+    event.preventDefault()
+    const target = document.getElementById("sign-in")
+    if (!target) return
+
+    target.scrollIntoView({ behavior: "smooth", block: "center" })
+  }
+
   return (
     <section className={showAuth ? "landing landing-with-auth" : "landing"}>
       <div className="auth-intro">
@@ -24,7 +32,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
                 <span>Apps only access what you permit.</span>
                 <span>Keep memory permissioned.</span>
               </div>
-              {showAuth ? <a className="scroll-to-auth" href="#sign-in">Sign in</a> : null}
+              {showAuth ? <a className="scroll-to-auth" href="#sign-in" onClick={handleSignInScroll}>Sign in</a> : null}
             </>
           )}
         </div>
