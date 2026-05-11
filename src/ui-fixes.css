@@ -33,6 +33,13 @@
   order: 1;
 }
 
+.auth-panel-logo {
+  display: block;
+  width: min(160px, 48vw);
+  height: auto;
+  margin: 0 auto 18px;
+}
+
 .scroll-to-auth {
   display: inline-flex;
   align-items: center;
@@ -372,6 +379,11 @@ input[type="password"]::-ms-clear {
   .auth-logo-img {
     width: min(178px, 52vw);
     margin-bottom: 24px;
+  }
+
+  .auth-panel-logo {
+    width: min(148px, 44vw);
+    margin-bottom: 16px;
   }
 
   .page-auth .landing,
