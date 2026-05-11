@@ -1,6 +1,7 @@
 import React from "react"
 import "../ui-fixes.css"
 import "../faq-chevron.css"
+import { ProviderPlatform } from "./ProviderPlatform.jsx"
 
 const BASIC_FAQS = [
   {
@@ -68,6 +69,8 @@ export function HelpPanel() {
           <FaqItem faq={faq} key={faq.question} />
         ))}
       </div>
+
+      <ProviderPlatform />
     </section>
   )
 }
