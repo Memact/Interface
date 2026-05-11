@@ -74,27 +74,34 @@ function App() {
     }
 
     let mounted = true
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (!mounted) return
-      if (error) {
-        setError(error.message)
-      }
-      const nextSession = data?.session || null
-      const detectedFlow = detectAuthFlowFromUrl()
-      setAuthSession(nextSession)
-      setAuthUser(nextSession?.user || null)
-      setAuthFlow(detectedFlow)
-      setAuthChecking(false)
-      if (nextSession && isConnectPath()) {
-        setActiveTab("connect")
-      } else if (nextSession && window.location.pathname !== "/dashboard") {
-        window.history.replaceState({}, "", "/dashboard")
-      }
-      if (!nextSession && window.location.pathname === "/dashboard") {
-        window.history.replaceState({}, "", "/login")
-        setActiveTab("login")
-      }
-    })
+    supabase.auth.getSession()
+      .then(({ data, error }) => {
+        if (!mounted) return
+        if (error) {
+          setError(error.message)
+        }
+        const nextSession = data?.session || null
+        const detectedFlow = detectAuthFlowFromUrl()
+        setAuthSession(nextSession)
+        setAuthUser(nextSession?.user || null)
+        setAuthFlow(detectedFlow)
+        if (nextSession && isConnectPath()) {
+          setActiveTab("connect")
+        } else if (nextSession && window.location.pathname !== "/dashboard") {
+          window.history.replaceState({}, "", "/dashboard")
+        }
+        if (!nextSession && window.location.pathname === "/dashboard") {
+          window.history.replaceState({}, "", "/login")
+          setActiveTab("login")
+        }
+      })
+      .catch((sessionError) => {
+        if (!mounted) return
+        setError(sessionError?.message || "Could not check login status.")
+      })
+      .finally(() => {
+        if (mounted) setAuthChecking(false)
+      })
 
     const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return
