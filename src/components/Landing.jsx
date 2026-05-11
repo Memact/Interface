@@ -25,11 +25,11 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
             </>
           ) : (
             <>
-              <h1>Let apps remember<br />only what you allow.</h1>
-              <p>Memact lets apps use helpful info from your digital activity without giving them everything.</p>
+              <h1>Let apps remember<br />only what the user allows.</h1>
+              <p>Memact lets apps use helpful info from a user's digital activity without giving them everything.</p>
               <div className="hero-points" aria-label="Memact principles">
                 <span>Choose what apps can remember.</span>
-                <span>Apps only access what you permit.</span>
+                <span>Apps only access what the user permits.</span>
                 <span>Keep memory permissioned.</span>
               </div>
               {showAuth ? <a className="scroll-to-auth" href="#sign-in" onClick={handleSignInScroll}>Sign in</a> : null}
