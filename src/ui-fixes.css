@@ -4,24 +4,18 @@
   height: 100svh;
   overflow: hidden;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: 0 minmax(0, 1fr);
 }
 
 .page-auth .topbar {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 14px 0 4px;
-  margin: 0 auto;
-  width: 100%;
+  display: none;
 }
 
-.page-auth .logo,
-.page-auth .brand,
-.page-auth .wordmark,
-.page-auth .topbar > a,
-.page-auth .topbar > img {
-  margin-inline: auto;
+.auth-logo-img {
+  display: block;
+  width: min(280px, 76vw);
+  height: auto;
+  margin: 0 auto 18px;
 }
 
 .page-auth .landing {
@@ -33,8 +27,8 @@
   justify-content: center;
   align-content: center;
   justify-items: stretch;
-  gap: 14px;
-  padding: 10px 0 20px;
+  gap: 18px;
+  padding: 24px 0 24px;
   overflow: auto;
 }
 
@@ -53,7 +47,7 @@
 }
 
 .page-auth .hero-copy p:not(.eyebrow) {
-  margin-top: 8px;
+  margin-top: 0;
   font-size: 15px;
 }
 
@@ -307,8 +301,13 @@
   .page-auth .landing {
     height: auto;
     align-content: start;
-    padding: 14px 0 28px;
+    padding: 48px 0 28px;
     overflow: visible;
+  }
+
+  .auth-logo-img {
+    width: min(250px, 72vw);
+    margin-bottom: 16px;
   }
 
   .page-auth .hero-copy {
