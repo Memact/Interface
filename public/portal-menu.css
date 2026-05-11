@@ -43,7 +43,7 @@
   inset: 0;
   z-index: 998;
   border: 0;
-  background: rgba(0, 1, 27, 0.58);
+  background: rgba(0, 1, 27, 0.38);
   opacity: 0;
   pointer-events: none;
   transition: opacity 140ms ease;
@@ -171,18 +171,19 @@ body[data-platform-section] .dashboard > :not(.platform-runtime-panel) {
   }
 
   .page:not(.page-auth) .topbar .tabs::before {
-    content: "←  Memact";
-    display: flex;
-    align-items: center;
-    min-height: 42px;
-    margin: 0 0 10px;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    background: var(--surface-1);
+    content: "‹";
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    margin: 0 0 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: var(--surface-2);
     color: var(--text);
-    padding: 0 14px;
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1;
     letter-spacing: 0;
     text-transform: none;
   }
@@ -195,6 +196,12 @@ body[data-platform-section] .dashboard > :not(.platform-runtime-panel) {
     border-radius: 14px !important;
     padding-inline: 14px !important;
     text-align: left !important;
+    color: var(--text) !important;
+    opacity: 1 !important;
+  }
+
+  .page:not(.page-auth) .topbar .tab:not(.is-active) {
+    color: rgba(255, 255, 255, 0.74) !important;
   }
 }
 
@@ -247,5 +254,11 @@ body[data-platform-section] .dashboard > :not(.platform-runtime-panel) {
     width: 100% !important;
     min-height: 42px !important;
     text-align: left !important;
+    color: var(--text) !important;
+    opacity: 1 !important;
+  }
+
+  .page:not(.page-auth) .topbar .tab:not(.is-active) {
+    color: rgba(255, 255, 255, 0.74) !important;
   }
 }
