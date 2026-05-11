@@ -1,10 +1,11 @@
 /* Tight auth screen: centered, no forced document scroll on normal desktop */
 .page-auth {
   min-height: 100svh;
-  height: 100svh;
-  overflow: hidden;
+  height: auto;
+  overflow: visible;
   display: grid;
   grid-template-rows: minmax(0, 1fr);
+  scroll-behavior: smooth;
 }
 
 .page-auth .topbar {
@@ -12,74 +13,98 @@
 }
 
 .auth-intro {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 26px;
   width: 100%;
-  max-width: 900px;
+  max-width: 760px;
   justify-self: center;
 }
 
 .auth-side {
-  display: grid;
-  justify-items: center;
-  gap: 14px;
-  min-width: 0;
+  display: contents;
 }
 
 .auth-logo-img {
   display: block;
-  width: min(190px, 22vw);
+  width: min(210px, 34vw);
   height: auto;
-  margin: 0;
+  margin: 0 auto 26px;
+  order: 1;
 }
 
 .scroll-to-auth {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: min(220px, 70vw);
+  min-height: 52px;
+  margin: 30px auto 0;
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  border-radius: 18px;
+  padding: 0 20px;
+  color: #00011b;
+  background: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+.scroll-to-auth::after {
+  content: "↓";
+  margin-left: 8px;
+  color: rgba(0, 1, 27, 0.62);
 }
 
 .hero-points {
   display: grid;
-  gap: 6px;
-  margin-top: 14px;
+  gap: 7px;
+  margin: 16px auto 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.35;
 }
 
-.page-auth .landing {
-  width: 100%;
-  min-height: 0;
-  height: 100%;
-  display: grid;
-  grid-template-columns: minmax(0, 900px);
-  justify-content: center;
-  align-content: center;
-  justify-items: stretch;
-  gap: 18px;
-  padding: 20px 0;
-  overflow: auto;
-}
-
+.page-auth .landing,
 .page-auth .landing-with-auth {
-  grid-template-columns: minmax(0, 900px);
+  width: 100%;
+  min-height: 200svh;
+  height: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 760px);
+  justify-content: center;
+  align-content: start;
+  justify-items: stretch;
+  gap: 0;
+  padding: 0 0 32px;
+  overflow: visible;
 }
 
 .page-auth .hero-copy {
-  max-width: 460px;
-  text-align: left;
-  align-self: center;
+  min-height: 100svh;
+  width: min(100%, 620px);
+  max-width: 620px;
+  text-align: center;
+  align-self: auto;
+  order: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 34px 0 48px;
 }
 
 .page-auth .hero-copy h1 {
-  font-size: clamp(28px, 5vw, 42px);
+  max-width: 620px;
+  margin-inline: auto;
+  font-size: clamp(38px, 7vw, 64px);
   line-height: 1.02;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.06em;
 }
 
 .page-auth .hero-copy p:not(.eyebrow) {
-  margin-top: 10px;
+  max-width: 520px;
+  margin: 16px auto 0;
   font-size: 15px;
   line-height: 1.5;
 }
@@ -88,8 +113,10 @@
   width: 100%;
   max-width: 420px;
   justify-self: center;
-  padding: 18px;
-  align-self: start;
+  align-self: auto;
+  order: 3;
+  scroll-margin-top: 24px;
+  padding: 24px;
 }
 
 .page-auth .auth-panel .text-button {
@@ -338,109 +365,45 @@ input[type="password"]::-ms-clear {
 }
 
 @media (max-width: 900px) {
-  .page-auth {
-    height: auto;
-    min-height: 100svh;
-    overflow: visible;
-    scroll-behavior: smooth;
-  }
-
-  .page-auth .landing,
-  .page-auth .landing-with-auth {
-    height: auto;
-    min-height: 200svh;
-    grid-template-columns: minmax(0, 420px);
-    align-content: start;
-    padding: 0 0 28px;
-    overflow: visible;
-  }
-
   .auth-intro {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
     max-width: 420px;
-  }
-
-  .auth-side {
-    display: contents;
   }
 
   .auth-logo-img {
     width: min(178px, 52vw);
-    margin: 0 auto 24px;
-    order: 1;
+    margin-bottom: 24px;
+  }
+
+  .page-auth .landing,
+  .page-auth .landing-with-auth {
+    grid-template-columns: minmax(0, 420px);
   }
 
   .page-auth .hero-copy {
-    min-height: 100svh;
     width: min(100%, 390px);
     max-width: 390px;
-    text-align: center;
-    align-self: auto;
-    order: 2;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     padding: 28px 0 42px;
   }
 
   .page-auth .hero-copy h1 {
     max-width: 370px;
-    margin-inline: auto;
     font-size: clamp(34px, 9vw, 44px);
-    line-height: 1.02;
-    letter-spacing: -0.06em;
   }
 
   .page-auth .hero-copy p:not(.eyebrow) {
     max-width: 350px;
-    margin: 16px auto 0;
     font-size: 14px;
     line-height: 1.48;
   }
 
   .hero-points {
     max-width: 310px;
-    margin: 16px auto 0;
     gap: 8px;
-    font-size: 13px;
-    line-height: 1.35;
-  }
-
-  .scroll-to-auth {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: fit-content;
-    margin: 28px auto 0;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 10px 16px;
-    color: var(--text);
-    background: var(--surface-1);
-    font-size: 13px;
-    font-weight: 700;
-    text-decoration: none;
-  }
-
-  .scroll-to-auth::after {
-    content: "↓";
-    margin-left: 8px;
-    color: var(--muted);
   }
 
   .page-auth .auth-panel {
-    width: 100%;
     max-width: 420px;
-    min-height: calc(100svh - 56px);
-    align-self: auto;
-    order: 3;
-    scroll-margin-top: 24px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    padding: 24px;
   }
 
   .account-panel-head {
