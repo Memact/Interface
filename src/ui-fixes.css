@@ -46,7 +46,7 @@
   justify-content: center;
   width: min(220px, 70vw);
   min-height: 52px;
-  margin: 30px auto 0;
+  margin: 14px auto 0;
   border: 1px solid rgba(255, 255, 255, 0.88);
   border-radius: 18px;
   padding: 0 20px;
@@ -64,13 +64,12 @@
   color: rgba(0, 1, 27, 0.62);
 }
 
-.hero-points {
-  display: grid;
-  gap: 7px;
-  margin: 16px auto 0;
+.hero-permission-line {
+  margin: 14px auto 0 !important;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+  font-weight: 600;
 }
 
 .page-auth .landing,
@@ -408,9 +407,13 @@ input[type="password"]::-ms-clear {
     line-height: 1.48;
   }
 
-  .hero-points {
-    max-width: 310px;
-    gap: 8px;
+  .hero-permission-line {
+    margin-top: 14px !important;
+    font-size: 13px !important;
+  }
+
+  .scroll-to-auth {
+    margin-top: 14px;
   }
 
   .page-auth .auth-panel {
