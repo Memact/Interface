@@ -1,5 +1,6 @@
 (() => {
-  const tabsToAdd = [
+  const tabOrder = ["access", "usage", "logs", "connections", "help", "account"];
+  const platformTabs = [
     ["usage", "Usage"],
     ["logs", "Logs"],
     ["connections", "Connections"]
@@ -11,6 +12,20 @@
     el.textContent = value;
     parent.appendChild(el);
     return el;
+  }
+
+  function setActive(key) {
+    document.querySelectorAll(".topbar .tab").forEach((tab) => {
+      const normalKey = tab.textContent.trim().toLowerCase();
+      const platformKey = tab.dataset.platformTab || "";
+      tab.classList.toggle("is-active", platformKey === key || normalKey === key);
+    });
+  }
+
+  function closeMenu() {
+    document.body.classList.remove("portal-menu-open");
+    const button = document.getElementById("portal-menu-button");
+    if (button) button.setAttribute("aria-expanded", "false");
   }
 
   function makePanel(key, title, intro) {
@@ -52,15 +67,28 @@
     document.querySelectorAll(".platform-runtime-panel").forEach((panel) => {
       panel.hidden = panel.dataset.platformPanel !== key;
     });
-    document.body.classList.remove("portal-menu-open");
-    document.getElementById("portal-menu-button")?.setAttribute("aria-expanded", "false");
+    setActive(key);
+    closeMenu();
   }
 
-  function clearPanels() {
+  function clearPanels(key) {
     delete document.body.dataset.platformSection;
     document.querySelectorAll(".platform-runtime-panel").forEach((panel) => {
       panel.hidden = true;
     });
+    setActive(key);
+    closeMenu();
+  }
+
+  function sortTabs(tabs) {
+    const buttons = Array.from(tabs.querySelectorAll("button.tab"));
+    buttons
+      .sort((a, b) => {
+        const aKey = a.dataset.platformTab || a.textContent.trim().toLowerCase();
+        const bKey = b.dataset.platformTab || b.textContent.trim().toLowerCase();
+        return tabOrder.indexOf(aKey) - tabOrder.indexOf(bKey);
+      })
+      .forEach((button) => tabs.appendChild(button));
   }
 
   function init() {
@@ -71,7 +99,7 @@
     makePanel("logs", "Request logs", "Debug API calls by action, result, key prefix, and error reason.");
     makePanel("connections", "Connection management", "See connected apps, approved permissions, consent state, and revoked connections.");
 
-    tabsToAdd.forEach(([key, label]) => {
+    platformTabs.forEach(([key, label]) => {
       if (tabs.querySelector(`[data-platform-tab="${key}"]`)) return;
       const button = document.createElement("button");
       button.type = "button";
@@ -79,15 +107,16 @@
       button.dataset.platformTab = key;
       button.textContent = label;
       button.addEventListener("click", () => showPanel(key));
-      const help = Array.from(tabs.children).find((item) => item.textContent.trim() === "Help");
-      tabs.insertBefore(button, help || null);
+      tabs.appendChild(button);
     });
 
-    tabs.querySelectorAll("button:not([data-platform-tab])").forEach((button) => {
+    tabs.querySelectorAll("button.tab:not([data-platform-tab])").forEach((button) => {
       if (button.dataset.platformClear === "1") return;
       button.dataset.platformClear = "1";
-      button.addEventListener("click", clearPanels);
+      button.addEventListener("click", () => clearPanels(button.textContent.trim().toLowerCase()));
     });
+
+    sortTabs(tabs);
   }
 
   new MutationObserver(init).observe(document.documentElement, { childList: true, subtree: true });
