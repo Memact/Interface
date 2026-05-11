@@ -140,6 +140,9 @@ http://localhost:3000/connect
 https://www.memact.com/dashboard
 https://www.memact.com/connect
 https://www.memact.com/**
+https://memact.com/dashboard
+https://memact.com/connect
+https://memact.com/**
 ```
 
 In Supabase GitHub provider settings, connect the GitHub OAuth App there. The
@@ -150,7 +153,8 @@ For Render, set:
 ```text
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-public-anon-key
-# Optional: VITE_AUTH_REDIRECT_URL=https://www.memact.com/dashboard
+# Optional server/build fallback only. Browser auth redirects use the current origin.
+# VITE_AUTH_REDIRECT_URL=https://memact.com/dashboard
 ```
 
 ## Render and SEO
