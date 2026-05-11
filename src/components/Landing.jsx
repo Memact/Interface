@@ -29,7 +29,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
           ) : (
             <>
               <h1>Let apps remember<br />only what the user allows.</h1>
-              <p>Memact lets apps use helpful info from a user's<br className="mobile-subtitle-break" /> digital activity without giving them everything.</p>
+              <p>Memact lets apps use helpful info from a user's digital activity without giving them everything.</p>
               {showAuth ? <a className="scroll-to-auth" href="#sign-in" onClick={handleSignInScroll}>Sign in</a> : null}
             </>
           )}
