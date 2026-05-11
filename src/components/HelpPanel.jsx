@@ -32,6 +32,14 @@ const ADVANCED_FAQS = [
   }
 ]
 
+const QUICKSTART_STEPS = [
+  "Create an app in Access.",
+  "Choose activity categories and save permissions.",
+  "Create an API key and copy it once.",
+  "Send users through the Connect flow.",
+  "Verify the API key, connection, scopes, and categories before using memory."
+]
+
 function FaqItem({ faq, open = false }) {
   return (
     <details className="faq-item" open={open}>
@@ -67,6 +75,29 @@ export function HelpPanel() {
         {ADVANCED_FAQS.map((faq) => (
           <FaqItem faq={faq} key={faq.question} />
         ))}
+      </div>
+
+      <div className="docs-section">
+        <div>
+          <p className="eyebrow">Docs</p>
+          <h2>Developer quickstart</h2>
+          <p className="muted">The shortest path from app registration to a working Memact integration.</p>
+        </div>
+        <ol className="docs-steps-list">
+          {QUICKSTART_STEPS.map((step) => <li key={step}>{step}</li>)}
+        </ol>
+        <div className="docs-code-card">
+          <p className="eyebrow">Verify access</p>
+          <pre><code>{`const response = await fetch("/rest/v1/rpc/memact_verify_api_key", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    api_key_input: "mka_...",
+    required_scopes_input: ["memory:read_summary"],
+    consent_id_input: "connection_id"
+  })
+});`}</code></pre>
+        </div>
       </div>
     </section>
   )
