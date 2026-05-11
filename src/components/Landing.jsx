@@ -8,7 +8,8 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
     const target = document.getElementById("sign-in")
     if (!target) return
 
-    target.scrollIntoView({ behavior: "smooth", block: "center" })
+    target.scrollIntoView({ behavior: "auto", block: "center" })
+    target.querySelector("input")?.focus({ preventScroll: true })
   }
 
   return (

@@ -28,9 +28,9 @@ export function requireSupabase() {
 }
 
 export function getAuthRedirectUrl(path = "/dashboard") {
-  if (authRedirectUrl) return authRedirectUrl
   if (typeof window !== "undefined" && window.location?.origin) {
     return new URL(path, window.location.origin).toString()
   }
+  if (authRedirectUrl) return authRedirectUrl
   return new URL(path, "https://www.memact.com").toString()
 }

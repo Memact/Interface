@@ -16,6 +16,10 @@ import { Landing } from "./components/Landing.jsx"
 import { refreshDashboard, useDashboardState } from "./hooks/useDashboardState.js"
 import { getDisplayName } from "./user-display.js"
 
+const AUTH_INIT_TIMEOUT_MS = 12000
+const AUTH_CODE_EXCHANGE_TIMEOUT_MS = 9000
+const AUTH_SESSION_CHECK_TIMEOUT_MS = 9000
+
 function App() {
   const client = useMemo(() => new AccessClient(ACCESS_URL), [])
   const [authSession, setAuthSession] = useState(null)
@@ -107,11 +111,12 @@ function App() {
       sessionCheckTimeout = window.setTimeout(() => {
         if (!mounted) return
         setAuthChecking(false)
+        setAuthNotice("Sign-in took too long. Try GitHub again from this page.")
         if (window.location.pathname === "/dashboard") {
           window.history.replaceState({}, "", "/login")
           setActiveTab("login")
         }
-      }, 4500)
+      }, AUTH_INIT_TIMEOUT_MS)
 
       resolveInitialSession(supabase)
         .then(({ data, error }) => {
@@ -119,7 +124,11 @@ function App() {
           if (error) {
             setError(error.message)
           }
-          applySession(data?.session || null, detectAuthFlowFromUrl())
+          const nextSession = data?.session || null
+          if (!nextSession && window.location.pathname === "/dashboard") {
+            setAuthNotice("Sign-in did not finish in this browser. Try GitHub again from this page.")
+          }
+          applySession(nextSession, detectAuthFlowFromUrl())
         })
         .catch((sessionError) => {
           if (!mounted) return
@@ -925,18 +934,18 @@ async function resolveInitialSession(authClient) {
   const authCode = getAuthCodeFromUrl()
   if (authCode && typeof authClient?.auth?.exchangeCodeForSession === "function") {
     try {
-      const exchanged = await withAuthTimeout(authClient.auth.exchangeCodeForSession(authCode), 6500)
+      const exchanged = await withAuthTimeout(authClient.auth.exchangeCodeForSession(authCode), AUTH_CODE_EXCHANGE_TIMEOUT_MS)
       if (exchanged?.data?.session || exchanged?.error) {
         return exchanged
       }
     } catch (exchangeError) {
-      const fallback = await authClient.auth.getSession()
+      const fallback = await withAuthTimeout(authClient.auth.getSession(), AUTH_SESSION_CHECK_TIMEOUT_MS)
       if (fallback?.data?.session) return fallback
       return { data: { session: null }, error: exchangeError }
     }
   }
 
-  return authClient.auth.getSession()
+  return withAuthTimeout(authClient.auth.getSession(), AUTH_SESSION_CHECK_TIMEOUT_MS)
 }
 
 function getAuthCodeFromUrl() {

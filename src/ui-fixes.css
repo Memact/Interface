@@ -5,7 +5,7 @@
   overflow: visible;
   display: grid;
   grid-template-rows: minmax(0, 1fr);
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 .page-auth .topbar {
@@ -13,16 +13,18 @@
 }
 
 .auth-intro {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 520px) minmax(320px, 420px);
   align-items: center;
+  gap: clamp(30px, 6vw, 92px);
   width: 100%;
-  max-width: 760px;
+  max-width: 1120px;
   justify-self: center;
 }
 
 .auth-side {
-  display: contents;
+  display: block;
+  grid-column: 1 / -1;
 }
 
 .auth-logo-img {
@@ -90,29 +92,29 @@
 .page-auth .landing,
 .page-auth .landing-with-auth {
   width: 100%;
-  min-height: 200svh;
+  min-height: 100svh;
   height: auto;
   display: grid;
-  grid-template-columns: minmax(0, 760px);
+  grid-template-columns: minmax(0, 1120px);
   justify-content: center;
-  align-content: start;
+  align-content: center;
   justify-items: stretch;
   gap: 0;
-  padding: 0 0 32px;
+  padding: 24px 0 32px;
   overflow: visible;
 }
 
 .page-auth .hero-copy {
-  min-height: 100svh;
+  min-height: auto;
   width: min(100%, 620px);
   max-width: 620px;
-  text-align: center;
+  text-align: left;
   align-self: auto;
   order: 2;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 34px 0 48px;
+  padding: 0;
 }
 
 .page-auth .hero-copy h1 {
@@ -387,7 +389,10 @@ input[type="password"]::-ms-clear {
 
 @media (max-width: 900px) {
   .auth-intro {
+    display: flex;
+    flex-direction: column;
     max-width: 420px;
+    gap: 0;
   }
 
   .auth-logo-img {
@@ -403,12 +408,16 @@ input[type="password"]::-ms-clear {
   .page-auth .landing,
   .page-auth .landing-with-auth {
     grid-template-columns: minmax(0, 420px);
+    align-content: start;
+    padding-top: 18px;
   }
 
   .page-auth .hero-copy {
+    min-height: auto;
     width: min(100%, 390px);
     max-width: 390px;
-    padding: 28px 0 42px;
+    text-align: center;
+    padding: 22px 0 28px;
   }
 
   .page-auth .hero-copy h1 {
