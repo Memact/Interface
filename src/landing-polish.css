@@ -1,9 +1,38 @@
+.page-auth .landing,
+.page-auth .landing-with-auth {
+  min-height: auto;
+  height: auto;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  padding-bottom: 56px;
+}
+
+.page-auth .auth-intro {
+  max-width: 760px;
+  margin-inline: auto;
+}
+
+.page-auth .hero-copy {
+  min-height: calc(100svh - 96px);
+  width: min(100%, 620px);
+  max-width: 620px;
+  justify-content: center;
+  padding: 36px 0 56px;
+}
+
 .page-auth .hero-copy h1 {
   margin-bottom: 0;
 }
 
 .page-auth .hero-copy p:not(.eyebrow) {
   margin-top: 22px;
+}
+
+.page-auth .auth-panel {
+  width: min(100%, 420px);
+  max-width: 420px;
+  margin-inline: auto;
+  scroll-margin-top: 24px;
 }
 
 .scroll-to-auth {
@@ -32,9 +61,22 @@
   transform: translateY(-58%) rotate(45deg);
 }
 
-@media (max-width: 900px) {
+@media (min-width: 901px) {
   .page-auth .hero-copy {
-    padding-top: 38px;
+    min-height: calc(100svh - 110px);
+  }
+}
+
+@media (max-width: 900px) {
+  .page-auth .auth-intro {
+    max-width: 420px;
+  }
+
+  .page-auth .hero-copy {
+    min-height: calc(100svh - 92px);
+    width: min(100%, 390px);
+    max-width: 390px;
+    padding: 38px 0 42px;
   }
 
   .page-auth .hero-copy p:not(.eyebrow) {
