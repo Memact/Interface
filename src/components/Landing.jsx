@@ -17,7 +17,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
             </>
           ) : (
             <>
-              <h1>Let apps remember only what you allow.</h1>
+              <h1>Let apps remember<br />only what you allow.</h1>
               <p>Memact lets apps use helpful info from your digital activity without giving them everything.</p>
               <div className="hero-points" aria-label="Memact principles">
                 <span>Choose what apps can remember.</span>
