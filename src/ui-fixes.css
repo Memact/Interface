@@ -226,16 +226,19 @@
   padding: 0;
 }
 
-/* API key rows: title, key prefix, then compact pills inside the card */
+/* API key rows: desktop-style controls inside the card on all viewports */
 .api-key-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 6px;
   overflow: hidden;
 }
 
 .api-key-row > span:first-child {
+  grid-column: 1;
+  grid-row: 1 / span 2;
   min-width: 0;
   display: grid;
   gap: 5px;
@@ -253,19 +256,39 @@
   white-space: nowrap;
 }
 
-.api-key-row > .badge-success,
-.api-key-row > button {
-  justify-self: start;
+.api-key-row > .badge-success {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: end;
   width: fit-content;
 }
 
 .api-key-row > button {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: end;
+  width: fit-content;
   min-height: 30px;
   max-width: 100%;
+  margin: 0;
   padding: 5px 12px;
   font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;
+}
+
+.revoked-key-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.revoked-key-row > .badge-danger {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: end;
+  width: fit-content;
 }
 
 .badge-success {
@@ -331,5 +354,13 @@
 
   .faq-answer {
     padding-right: 50px;
+  }
+
+  .api-key-row {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .revoked-key-row {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 }
