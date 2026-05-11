@@ -246,7 +246,7 @@ function App() {
       setAuthNotice("Check your email for the login link.")
       setStatus("Login link sent.")
     } catch (authError) {
-      setError(authError.message)
+      setError(formatAuthErrorMessage(authError))
       setStatus(authStatusMessage(authError))
     } finally {
       setAuthLoading("")
@@ -309,7 +309,7 @@ function App() {
       setAuthNotice("Check your email for the password reset link.")
       setStatus("Password reset link sent.")
     } catch (resetError) {
-      setError(String(resetError?.message || "Could not send the password reset link."))
+      setError(formatAuthErrorMessage(resetError, "Could not send the password reset link."))
       setStatus(authStatusMessage(resetError))
     } finally {
       setAuthLoading("")
@@ -330,7 +330,7 @@ function App() {
       })
       if (oauthError) throw oauthError
     } catch (authError) {
-      setError(authError.message)
+      setError(formatAuthErrorMessage(authError))
       setStatus(authStatusMessage(authError))
       setAuthLoading("")
     }
@@ -401,7 +401,7 @@ function App() {
       setEmailChangeSuccess("Check both email inboxes to confirm the change, based on your Supabase email settings.")
       setStatus("Email change started.")
     } catch (emailError) {
-      setError(String(emailError?.message || "Email change did not finish."))
+      setError(formatAuthErrorMessage(emailError, "Email change did not finish."))
       setStatus(authStatusMessage(emailError))
     } finally {
       setAuthLoading("")
@@ -436,7 +436,7 @@ function App() {
       setDisplayNameSuccess("Display name saved.")
       setStatus("Display name saved.")
     } catch (displayNameError) {
-      setError(String(displayNameError?.message || "Display name did not save."))
+      setError(formatAuthErrorMessage(displayNameError, "Display name did not save."))
       setStatus(authStatusMessage(displayNameError))
       scrollElementIntoView("error-message")
     } finally {
@@ -817,6 +817,24 @@ function statusForAccessError(error) {
 }
 
 
+
+function formatAuthErrorMessage(error, fallback = "Login did not finish.") {
+  const baseMessage = String(error?.message || "").trim()
+  if (/invalid login credentials/i.test(baseMessage)) {
+    return "Email or password did not match. You can use the email link if this is your first login."
+  }
+  if (/email not confirmed/i.test(baseMessage)) {
+    return "Confirm your email first, then sign in again."
+  }
+  const code = String(error?.code || "").trim()
+  const status = Number.isFinite(error?.status) ? `status ${error.status}` : ""
+  const details = String(error?.details || error?.hint || "").trim()
+  const suffix = [code, status, details].filter(Boolean).join(" · ")
+  if (baseMessage && suffix) return `${baseMessage} (${suffix})`
+  if (baseMessage) return baseMessage
+  return suffix || fallback
+}
+
 function authStatusMessage(error) {
   const message = String(error?.message || "").toLowerCase()
   if (message.includes("failed to fetch") || message.includes("networkerror")) {
@@ -829,11 +847,7 @@ function authStatusMessage(error) {
 }
 
 function passwordLoginErrorMessage(error) {
-  const message = String(error?.message || "")
-  if (/invalid login credentials/i.test(message)) {
-    return "Email or password did not match. You can use the email link if this is your first login."
-  }
-  return message || "Password login did not finish."
+  return formatAuthErrorMessage(error, "Password login did not finish.")
 }
 
 function passwordSetupErrorMessage(error) {
