@@ -369,65 +369,95 @@
   }
 }
 
-/* Memact learn-more + auth CTA alignment (kept in main UI bundle) */
+/* Centralized CTA styles for landing + connect surfaces */
 .landing-actions {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 22px;
+  flex-wrap: nowrap;
+  gap: 14px;
+  margin-top: 26px;
 }
 
 .landing-actions .scroll-to-auth,
 .landing-actions .learn-more-link {
-  width: 186px !important;
-  min-width: 186px !important;
-  min-height: 48px !important;
-  height: 48px !important;
-  border-radius: 12px !important;
-  font-size: 16px !important;
-  font-weight: 750 !important;
+  width: 236px !important;
+  min-width: 236px !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  border-radius: 16px !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
 }
 
 .landing-actions .scroll-to-auth {
-  padding: 0 40px 0 18px !important;
+  padding: 0 54px 0 24px !important;
 }
 
 .landing-actions .scroll-to-auth::after {
-  width: 28px !important;
-  height: 28px !important;
-  right: 10px !important;
+  width: 32px !important;
+  height: 32px !important;
+  right: 13px !important;
 }
 
 .landing-actions .scroll-to-auth::before {
-  right: 20px !important;
+  right: 25px !important;
 }
 
 .learn-more-link {
-  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   border: 1px solid var(--border-strong);
-  border-radius: 12px;
-  padding: 10px 16px;
+  border-radius: 16px;
+  padding: 10px 18px;
   color: var(--text);
   background: transparent;
   font-size: 14px;
-  font-weight: 680;
+  font-weight: 700;
   line-height: 1;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease;
 }
 
 .learn-more-link:hover,
 .learn-more-link:focus-visible,
 .landing-actions .scroll-to-auth:hover,
 .landing-actions .scroll-to-auth:focus-visible {
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.06);
   transform: none;
+  outline: none;
 }
 
 .landing-actions .learn-more-link {
-  padding: 0 16px;
-  box-shadow: none;
+  padding: 0 24px;
+}
+
+@media (max-width: 720px) {
+  .landing-actions {
+    flex-wrap: wrap;
+  }
+
+  .landing-actions .scroll-to-auth,
+  .landing-actions .learn-more-link {
+    width: min(236px, calc(50vw - 18px)) !important;
+    min-width: 190px !important;
+  }
+}
+
+@media (max-width: 460px) {
+  .landing-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .landing-actions .scroll-to-auth,
+  .landing-actions .learn-more-link {
+    width: min(236px, 78vw) !important;
+    min-width: 0 !important;
+  }
 }
 
 .connect-learn-more {
