@@ -3,12 +3,25 @@
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
   margin-top: 26px;
 }
 
 .landing-actions .scroll-to-auth {
   margin-top: 0 !important;
+}
+
+.landing-actions .learn-more-link {
+  min-width: min(315px, 44vw);
+  min-height: 72px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 34px;
+  color: #00011B;
+  background: #ffffff;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.34);
+  font-size: 18px;
+  font-weight: 800;
 }
 
 .learn-more-link {
@@ -26,7 +39,7 @@
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
-  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
 }
 
 .learn-more-link:hover,
@@ -35,6 +48,13 @@
   background: rgba(255, 255, 255, 0.07);
   transform: translateY(-1px);
   outline: none;
+}
+
+.landing-actions .learn-more-link:hover,
+.landing-actions .learn-more-link:focus-visible {
+  background: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
 }
 
 .connect-learn-more {
@@ -169,7 +189,8 @@
 
   .landing-actions .scroll-to-auth,
   .landing-actions .learn-more-link {
-    width: min(250px, 74vw);
+    width: min(315px, 74vw);
+    min-width: 0;
   }
 
   .memact-learn-more-panel {
