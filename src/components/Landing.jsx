@@ -1,5 +1,5 @@
 import React from "react"
-import "../ui-fixes.css"
+import "../memact-ui.css"
 import "../landing-polish.css"
 import "../desktop-landing-lift.css"
 import "../mobile-wide-auth.css"

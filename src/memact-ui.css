@@ -379,15 +379,19 @@
   margin-top: 22px;
 }
 
-.landing-actions .scroll-to-auth {
+.landing-actions .scroll-to-auth,
+.landing-actions .learn-more-link {
   width: 186px !important;
   min-width: 186px !important;
   min-height: 48px !important;
   height: 48px !important;
   border-radius: 12px !important;
-  padding: 0 40px 0 18px !important;
   font-size: 16px !important;
   font-weight: 750 !important;
+}
+
+.landing-actions .scroll-to-auth {
+  padding: 0 40px 0 18px !important;
 }
 
 .landing-actions .scroll-to-auth::after {
@@ -413,21 +417,16 @@
 }
 
 .learn-more-link:hover,
-.learn-more-link:focus-visible {
+.learn-more-link:focus-visible,
+.landing-actions .scroll-to-auth:hover,
+.landing-actions .scroll-to-auth:focus-visible {
   border-color: rgba(255, 255, 255, 0.4);
   background: rgba(255, 255, 255, 0.05);
   transform: none;
 }
 
 .landing-actions .learn-more-link {
-  width: 186px;
-  min-width: 186px;
-  min-height: 48px;
-  height: 48px;
-  border-radius: 12px;
   padding: 0 16px;
-  font-size: 16px;
-  font-weight: 750;
   box-shadow: none;
 }
 

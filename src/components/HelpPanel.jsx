@@ -1,5 +1,5 @@
 import React from "react"
-import "../ui-fixes.css"
+import "../memact-ui.css"
 import "../faq-chevron.css"
 
 const BASIC_FAQS = [
