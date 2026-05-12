@@ -35,7 +35,7 @@ const ADVANCED_FAQS = [
 const LEGAL_FAQS = [
   {
     question: "Who runs Memact Access?",
-    answer: "Memact Access is part of the Memact project by Keeps Loading. Some code may be viewable for transparency, but it remains proprietary. You may not edit, redistribute, or modify it without permission."
+    answer: "Memact Access is part of the Memact project by Keeps Loading. Developer profile: https://github.com/keepsloading. Some code may be viewable through the Memact GitHub organization at https://github.com/Memact, but it remains proprietary. You may not edit, redistribute, or modify it without permission."
   },
   {
     question: "How can I contact Memact?",
@@ -62,7 +62,7 @@ export function HelpPanel() {
     <section className="panel help-panel">
       <div>
         <p className="eyebrow">Help</p>
-        <h2>Memact Access, explained</h2>
+        <h2>Access notes</h2>
       </div>
       <p className="muted help-intro">Apps ask for memory access. You choose what they get.</p>
 
