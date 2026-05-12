@@ -270,9 +270,9 @@
   grid-column: 2;
   grid-row: 1;
   justify-self: end;
-  align-self: center;
+  align-self: start;
   width: fit-content;
-  transform: translateY(9px);
+  transform: none;
 }
 
 .api-key-row > button {
@@ -287,10 +287,6 @@
   font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;
-}
-
-.revoked-key-row > .badge {
-  transform: none;
 }
 
 .revoked-key-row > span:first-child {
