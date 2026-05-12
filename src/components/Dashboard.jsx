@@ -69,6 +69,7 @@ export function Dashboard({
   const selectedKeys = apiKeys.filter((key) => key.app_id === selectedAppId)
   const activeKeys = selectedKeys.filter((key) => !key.revoked_at)
   const revokedKeys = selectedKeys.filter((key) => key.revoked_at)
+  const latestUsedKey = getLatestUsedKey(selectedKeys)
   const selectedConsent = consents.find((consent) => consent.app_id === selectedAppId && !consent.revoked_at)
   const scopesChanged = selectedConsent ? !sameValues(selectedScopes, selectedConsent.scopes) : true
   const categoriesChanged = selectedConsent ? !sameValues(selectedAppCategories, selectedConsent.categories || []) : true
@@ -386,6 +387,32 @@ export function Dashboard({
                       </div>
                     )) : <p className="muted">No active API keys for this app.</p>}
 
+                    <section className="usage-overview" aria-label="API key usage">
+                      <div className="usage-overview-head">
+                        <p className="eyebrow">Usage</p>
+                        <h3>Real key activity for this app.</h3>
+                      </div>
+                      <div className="usage-kpis" role="list">
+                        <article className="usage-kpi" role="listitem">
+                          <p>Active keys</p>
+                          <strong>{activeKeys.length}</strong>
+                        </article>
+                        <article className="usage-kpi" role="listitem">
+                          <p>Revoked keys</p>
+                          <strong>{revokedKeys.length}</strong>
+                        </article>
+                        <article className="usage-kpi" role="listitem">
+                          <p>Last used</p>
+                          <strong>{latestUsedKey ? formatUsageDate(latestUsedKey.last_used_at) : "No usage yet"}</strong>
+                        </article>
+                      </div>
+                      {!latestUsedKey ? (
+                        <p className="muted usage-empty-state">
+                          No usage recorded yet. Usage appears after an API key is verified by the Access layer.
+                        </p>
+                      ) : null}
+                    </section>
+
                     {revokedKeys.length ? (
                       <details className="revoked-history">
                         <summary>Revoked history ({revokedKeys.length})</summary>
@@ -402,36 +429,6 @@ export function Dashboard({
                         </div>
                       </details>
                     ) : null}
-
-                    <section className="usage-overview" aria-label="API usage statistics">
-                      <div className="usage-overview-head">
-                        <h3>Usage overview</h3>
-                        <span className="badge">Last 30 days</span>
-                      </div>
-                      <div className="usage-kpis" role="list">
-                        <article className="usage-kpi" role="listitem">
-                          <p>Total requests</p>
-                          <strong>{(selectedScopes.length * 2400 + activeKeys.length * 1800 + revokedKeys.length * 450).toLocaleString()}</strong>
-                          <small>↑ 12% vs prior period</small>
-                        </article>
-                        <article className="usage-kpi" role="listitem">
-                          <p>Success rate</p>
-                          <strong>{Math.max(97, 99 - revokedKeys.length * 0.2).toFixed(1)}%</strong>
-                          <small>Stable reliability</small>
-                        </article>
-                        <article className="usage-kpi" role="listitem">
-                          <p>Median latency</p>
-                          <strong>{Math.max(120, 240 - activeKeys.length * 16)}ms</strong>
-                          <small>p50 across endpoints</small>
-                        </article>
-                      </div>
-                      <div className="usage-bars" aria-hidden="true">
-                        {[64, 78, 52, 88, 71, 93, 81].map((height, index) => (
-                          <span key={`usage-day-${index}`} style={{ height: `${height}%` }} />
-                        ))}
-                      </div>
-                      <p className="muted usage-footnote">Daily request volume by key, inspired by common API dashboard patterns.</p>
-                    </section>
                   </>
                 ) : <p className="muted">Select an app to view API keys and usage.</p>}
               </div>
@@ -550,4 +547,17 @@ function buildPortalConnectUrl(appId, scopes = [], categories = [], redirectUrl 
   if (categories.length) url.searchParams.set("categories", categories.join(","))
   if (redirectUrl) url.searchParams.set("redirect_uri", redirectUrl)
   return url.toString()
+}
+
+function getLatestUsedKey(keys = []) {
+  return [...keys]
+    .filter((key) => key?.last_used_at)
+    .sort((first, second) => new Date(second.last_used_at).getTime() - new Date(first.last_used_at).getTime())[0] || null
+}
+
+function formatUsageDate(value) {
+  if (!value) return "Unknown"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "Unknown"
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" })
 }
