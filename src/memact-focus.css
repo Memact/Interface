@@ -1,0 +1,54 @@
+/* Universal Memact focus styles: keep keyboard navigation visible without browser-default chaos. */
+:where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus {
+  outline: none;
+}
+
+:where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.78) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.12) !important;
+}
+
+:where(input, textarea, select):focus-visible {
+  border-color: rgba(255, 255, 255, 0.48) !important;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1) !important;
+}
+
+:where(button, a, summary, [role="button"]):focus-visible {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.landing-actions .scroll-to-auth:focus-visible,
+button:not(.ghost):focus-visible,
+.form button[type="submit"]:focus-visible {
+  outline: 2px solid #00011b !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.38) !important;
+}
+
+.ghost:focus-visible,
+.learn-more-link:focus-visible,
+.tab:focus-visible,
+.app-chip:focus-visible,
+.scope-card:focus-within,
+.category-card:focus-within,
+.faq-trigger:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.72) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.1) !important;
+}
+
+.scope-card:focus-within,
+.category-card:focus-within {
+  border-color: rgba(255, 255, 255, 0.46) !important;
+}
+
+@media (forced-colors: active) {
+  :where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus-visible,
+  .scope-card:focus-within,
+  .category-card:focus-within {
+    outline: 2px solid CanvasText !important;
+    outline-offset: 3px !important;
+    box-shadow: none !important;
+  }
+}
