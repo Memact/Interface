@@ -32,6 +32,17 @@ const ADVANCED_FAQS = [
   }
 ]
 
+const LEGAL_FAQS = [
+  {
+    question: "Who runs Memact Access?",
+    answer: "Memact Access is part of the Memact project by Keeps Loading. It is source-available infrastructure for permissioned memory access."
+  },
+  {
+    question: "How can I contact Memact?",
+    answer: "For access, security, or project questions, contact keepsloading@gmail.com. Do not send secrets, raw memory exports, or API keys by email."
+  }
+]
+
 function FaqItem({ faq, open = false }) {
   return (
     <details className="faq-item" open={open}>
@@ -65,6 +76,13 @@ export function HelpPanel() {
       <div className="faq-section faq-section-advanced">
         <p className="faq-section-title">Advanced</p>
         {ADVANCED_FAQS.map((faq) => (
+          <FaqItem faq={faq} key={faq.question} />
+        ))}
+      </div>
+
+      <div className="faq-section faq-section-advanced">
+        <p className="faq-section-title">Legal and contact</p>
+        {LEGAL_FAQS.map((faq) => (
           <FaqItem faq={faq} key={faq.question} />
         ))}
       </div>
