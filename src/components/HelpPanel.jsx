@@ -35,7 +35,7 @@ const ADVANCED_FAQS = [
 const LEGAL_FAQS = [
   {
     question: "Who runs Memact Access?",
-    answer: "Memact Access is part of the Memact project by Keeps Loading. It is source-available infrastructure for permissioned memory access."
+    answer: "Memact Access is part of the Memact project by Keeps Loading. It is proprietary infrastructure for permissioned memory access."
   },
   {
     question: "How can I contact Memact?",
