@@ -1,0 +1,44 @@
+.api-keys-panel .api-key-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) max-content !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 14px !important;
+  row-gap: 10px !important;
+  align-items: start !important;
+}
+
+.api-keys-panel .api-key-row > span:first-child {
+  grid-column: 1 !important;
+  grid-row: 1 / span 2 !important;
+  min-width: 0 !important;
+}
+
+.api-keys-panel .api-key-row > .badge {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  justify-self: end !important;
+  align-self: start !important;
+  min-width: 68px !important;
+  justify-content: center !important;
+  transform: none !important;
+}
+
+.api-keys-panel .api-key-row > button {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  justify-self: end !important;
+  align-self: end !important;
+}
+
+.api-keys-panel .revoked-key-row {
+  grid-template-columns: minmax(0, 1fr) max-content !important;
+}
+
+.api-keys-panel .revoked-key-row > span:first-child {
+  grid-row: 1 !important;
+}
+
+.api-keys-panel .revoked-key-row > .badge {
+  min-width: 68px !important;
+  justify-content: center !important;
+}
