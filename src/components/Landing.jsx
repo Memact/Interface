@@ -4,7 +4,7 @@ import "../landing-polish.css"
 import "../desktop-landing-lift.css"
 import "../mobile-wide-auth.css"
 
-export function Landing({ isConnecting, showAuth, email, password, authLoading, authNotice, setEmail, setPassword, onEmailLogin, onPasswordLogin, onForgotPassword, onGithubLogin }) {
+export function Landing({ isConnecting, showAuth, email, password, authLoading, authNotice, setEmail, setPassword, onEmailLogin, onPasswordLogin, onForgotPassword, onGithubLogin, onLearnMore }) {
   const handleSignInScroll = (event) => {
     event.preventDefault()
     const target = document.getElementById("sign-in")
@@ -26,12 +26,18 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
             <>
               <h1>Review app access.</h1>
               <p>Sign in to review the app, requested scopes, and activity categories before connecting.</p>
+              <button type="button" className="learn-more-link" onClick={onLearnMore}>Learn More</button>
             </>
           ) : (
             <>
               <h1>Let apps remember<br />only what the user allows.</h1>
               <p>Memact lets apps use helpful info from a user's digital activity without giving them everything.</p>
-              {showAuth ? <a className="scroll-to-auth" href="#sign-in" onClick={handleSignInScroll}>Sign in</a> : null}
+              {showAuth ? (
+                <div className="landing-actions">
+                  <a className="scroll-to-auth" href="#sign-in" onClick={handleSignInScroll}>Sign in</a>
+                  <button type="button" className="learn-more-link" onClick={onLearnMore}>Learn More</button>
+                </div>
+              ) : null}
             </>
           )}
         </div>
