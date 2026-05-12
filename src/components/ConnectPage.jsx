@@ -1,6 +1,6 @@
 import React from "react"
 
-export function ConnectPage({ connectRequest, connectDetails, loading, notice, onApprove, onCancel }) {
+export function ConnectPage({ connectRequest, connectDetails, loading, notice, onApprove, onCancel, onLearnMore }) {
   const app = connectDetails?.app
   const scopes = connectDetails?.scopes || {}
   const categories = connectDetails?.activity_categories || {}
@@ -25,6 +25,7 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
         <p className="muted">
           Review the exact permissions and activity categories before approving. You can disconnect this app later from Memact Access.
         </p>
+        <button type="button" className="learn-more-link connect-learn-more" onClick={onLearnMore}>Learn More</button>
 
         {loading === "loading" ? <p className="status-line">Loading app details.</p> : null}
         {notice ? <p className="notice notice-success" role="status">{notice}</p> : null}
