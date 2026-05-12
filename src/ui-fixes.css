@@ -237,7 +237,7 @@
 /* API key rows: content left, status/action right */
 .api-key-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) max-content;
+  grid-template-columns: minmax(0, 1fr) 76px;
   grid-template-rows: auto auto;
   align-items: start;
   column-gap: 14px;
@@ -287,6 +287,10 @@
   font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;
+}
+
+.revoked-key-row {
+  grid-template-columns: minmax(0, 1fr) 76px;
 }
 
 .revoked-key-row > span:first-child {
