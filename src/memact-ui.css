@@ -429,27 +429,21 @@
 }
 
 .learn-more-link:hover,
-.learn-more-link:focus-visible,
 .connect-learn-more .learn-more-link:hover,
-.connect-learn-more .learn-more-link:focus-visible,
-.connect-learn-more button:hover,
-.connect-learn-more button:focus-visible {
+.connect-learn-more button:hover {
   border-color: rgba(255, 255, 255, 0.42) !important;
   color: var(--text) !important;
   background: rgba(255, 255, 255, 0.06) !important;
   box-shadow: none !important;
   transform: none !important;
-  outline: none;
 }
 
-.landing-actions .scroll-to-auth:hover,
-.landing-actions .scroll-to-auth:focus-visible {
+.landing-actions .scroll-to-auth:hover {
   border-color: rgba(255, 255, 255, 0.95) !important;
   color: #00011b !important;
   background: #ffffff !important;
   box-shadow: none !important;
   transform: none !important;
-  outline: none;
 }
 
 .landing-actions .learn-more-link {
@@ -474,4 +468,43 @@
 
 .connect-learn-more {
   margin: 4px 0 16px;
+}
+
+/* Universal Memact keyboard focus language */
+:where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus {
+  outline: none;
+}
+
+:where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.78);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.12);
+}
+
+:where(input, textarea, select):focus-visible {
+  border-color: rgba(255, 255, 255, 0.52);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.11);
+}
+
+.landing-actions .scroll-to-auth:focus-visible,
+button:not(.ghost):focus-visible,
+.form button[type="submit"]:focus-visible {
+  outline: 2px solid rgba(0, 1, 27, 0.9);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.32);
+}
+
+.ghost:focus-visible,
+.learn-more-link:focus-visible,
+.connect-learn-more .learn-more-link:focus-visible,
+.connect-learn-more button:focus-visible,
+.tab-button:focus-visible,
+.faq-trigger:focus-visible {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+:where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
 }
