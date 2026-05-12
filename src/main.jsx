@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
 import "./styles.css"
 import {
@@ -11,12 +11,64 @@ import { getAuthRedirectUrl, isSupabaseConfigured, requireSupabase, supabase, SU
 import { hasDuplicateAppName } from "./app-name.js"
 import { defaultCategoriesForPolicy, defaultScopesForPolicy, normalizeSelectedCategories, normalizeSelectedScopes } from "./access-policy.js"
 
+const ACCESS_ROUTE = "/Access"
+const ACCOUNT_ROUTE = "/Account"
+const HELP_ROUTE = "/Help"
+const CONNECT_ROUTE = "/connect"
+const KNOWN_PORTAL_ROUTES = new Set(["/", ACCESS_ROUTE, ACCOUNT_ROUTE, HELP_ROUTE, CONNECT_ROUTE])
+
+function resolvePortalPathname(raw) {
+  if (!raw || raw === "/") return "/"
+  if (raw === "/dashboard") return ACCESS_ROUTE
+  if (raw === "/login") return "/"
+  const lower = raw.toLowerCase()
+  if (lower === "/access") return ACCESS_ROUTE
+  if (lower === "/account") return ACCOUNT_ROUTE
+  if (lower === "/help") return HELP_ROUTE
+  if (raw === CONNECT_ROUTE) return CONNECT_ROUTE
+  return raw
+}
+
 function App() {
   const client = useMemo(() => new AccessClient(ACCESS_URL), [])
   const [authSession, setAuthSession] = useState(null)
   const [authUser, setAuthUser] = useState(null)
   const [authChecking, setAuthChecking] = useState(true)
-  const [activeTab, setActiveTab] = useState(window.location.pathname === "/dashboard" ? "access" : "login")
+  const [, setRouteVersion] = useState(0)
+  const pathname = typeof window !== "undefined" ? resolvePortalPathname(window.location.pathname) : "/"
+
+  const portalNavigate = useCallback((to, { replace = false } = {}) => {
+    if (typeof window === "undefined") return
+    const method = replace ? "replaceState" : "pushState"
+    window.history[method]({}, "", to)
+    setRouteVersion((v) => v + 1)
+    if (String(to).includes("#sign-in")) {
+      requestAnimationFrame(() => scrollElementIntoView("sign-in"))
+    }
+  }, [])
+
+  const portalNavigateRef = useRef(portalNavigate)
+  portalNavigateRef.current = portalNavigate
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return
+    const raw = window.location.pathname
+    if (raw === "/dashboard") {
+      window.history.replaceState({}, "", `${ACCESS_ROUTE}${window.location.search}${window.location.hash}`)
+      setRouteVersion((v) => v + 1)
+      return
+    }
+    if (raw === "/login") {
+      window.history.replaceState({}, "", `/${window.location.search}${window.location.hash}`)
+      setRouteVersion((v) => v + 1)
+    }
+  }, [])
+
+  useEffect(() => {
+    const onPopState = () => setRouteVersion((v) => v + 1)
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [])
   const [user, setUser] = useState(null)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -58,10 +110,34 @@ function App() {
   const needsPasswordSetup = Boolean(authUser && shouldOfferPasswordSetup(authUser))
 
   useEffect(() => {
+    if (authChecking) return
+    if (!KNOWN_PORTAL_ROUTES.has(pathname)) {
+      portalNavigate(session ? ACCESS_ROUTE : "/", { replace: true })
+    }
+  }, [authChecking, session, pathname, portalNavigate])
+
+  useEffect(() => {
+    if (authChecking) return
+    if (session && pathname === "/") {
+      const openAccount = shouldOpenAccountTab(authUser, authFlow === "recovery" || detectAuthFlowFromUrl() === "recovery")
+      portalNavigate(openAccount ? ACCOUNT_ROUTE : ACCESS_ROUTE, { replace: true })
+    }
+  }, [authChecking, session, pathname, portalNavigate, authUser, authFlow])
+
+  useEffect(() => {
+    if (authChecking) return
+    if (session) return
+    if (typeof window === "undefined" || window.location.hash !== "#sign-in") return
+    const path = resolvePortalPathname(window.location.pathname)
+    if (path !== "/" && path !== CONNECT_ROUTE) return
+    scrollElementIntoView("sign-in")
+  }, [authChecking, session, pathname])
+
+  useEffect(() => {
     client.health()
       .then(() => setStatus(ACCESS_MODE === "supabase" ? "Access is running through Supabase." : "Memact is online."))
       .catch(() => setStatus(ACCESS_MODE === "supabase" ? "Apply the Access Supabase migration to use the portal." : "Start Memact locally to use the portal."))
-    client.policy().then(setPolicy).catch(() => {})
+    client.policy().then(setPolicy).catch(() => { })
   }, [client])
 
   useEffect(() => {
@@ -83,14 +159,25 @@ function App() {
       setAuthUser(nextSession?.user || null)
       setAuthFlow(detectedFlow)
       setAuthChecking(false)
+      const path = resolvePortalPathname(window.location.pathname)
+      const openAccount = nextSession ? shouldOpenAccountTab(nextSession.user, detectedFlow === "recovery") : false
       if (nextSession && isConnectPath()) {
-        setActiveTab("connect")
-      } else if (nextSession && window.location.pathname !== "/dashboard") {
-        window.history.replaceState({}, "", "/dashboard")
+        /* keep /connect */
+      } else if (nextSession) {
+        if (path === HELP_ROUTE) {
+          /* public help while signed in */
+        } else if (path === "/") {
+          portalNavigateRef.current(openAccount ? ACCOUNT_ROUTE : ACCESS_ROUTE, { replace: true })
+        } else if (path === ACCESS_ROUTE || path === ACCOUNT_ROUTE) {
+          if (openAccount && path === ACCESS_ROUTE) {
+            portalNavigateRef.current(ACCOUNT_ROUTE, { replace: true })
+          }
+        } else if (!KNOWN_PORTAL_ROUTES.has(path)) {
+          portalNavigateRef.current(openAccount ? ACCOUNT_ROUTE : ACCESS_ROUTE, { replace: true })
+        }
       }
-      if (!nextSession && window.location.pathname === "/dashboard") {
-        window.history.replaceState({}, "", "/login")
-        setActiveTab("login")
+      if (!nextSession && (path === ACCESS_ROUTE || path === ACCOUNT_ROUTE)) {
+        portalNavigateRef.current("/#sign-in", { replace: true })
       }
     })
 
@@ -107,10 +194,20 @@ function App() {
       }
       if (nextSession) {
         if (isConnectPath()) {
-          setActiveTab("connect")
+          /* URL already /connect */
         } else {
-          setActiveTab(shouldOpenAccountTab(nextSession.user, event === "PASSWORD_RECOVERY" || detectAuthFlowFromUrl() === "recovery") ? "account" : "access")
-          window.history.replaceState({}, "", "/dashboard")
+          if (event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+            return
+          }
+          const path = resolvePortalPathname(window.location.pathname)
+          if (path === HELP_ROUTE) {
+            /* stay on Help */
+          } else {
+            const dest = shouldOpenAccountTab(nextSession.user, event === "PASSWORD_RECOVERY" || detectAuthFlowFromUrl() === "recovery") ? ACCOUNT_ROUTE : ACCESS_ROUTE
+            if (path !== dest) {
+              portalNavigateRef.current(dest, { replace: true })
+            }
+          }
         }
       }
     })
@@ -124,21 +221,28 @@ function App() {
   useEffect(() => {
     if (!session) return
     if (authFlow === "recovery") {
-      setActiveTab("account")
+      portalNavigate(ACCOUNT_ROUTE, { replace: true })
       setStatus("Reset your password.")
       setAuthNotice("Choose a new password for your Memact account.")
       return
     }
     if (needsPasswordSetup) {
-      setActiveTab("account")
+      portalNavigate(ACCOUNT_ROUTE, { replace: true })
       setStatus("Set a password to make your next login faster.")
     }
-  }, [authFlow, needsPasswordSetup, session])
+  }, [authFlow, needsPasswordSetup, session, portalNavigate])
 
   useEffect(() => {
-    const tabName = activeTab === "account" ? "Account" : activeTab === "help" ? "Help" : activeTab === "connect" ? "Connect" : activeTab === "access" ? "API Keys" : "Login"
+    const path = typeof window !== "undefined" ? resolvePortalPathname(window.location.pathname) : "/"
+    let tabName = "Memact"
+    if (path === HELP_ROUTE) tabName = "Help"
+    else if (path === CONNECT_ROUTE) tabName = "Connect"
+    else if (path === ACCESS_ROUTE) tabName = "API Keys"
+    else if (path === ACCOUNT_ROUTE) tabName = "Account"
+    else if (!session) tabName = "Login"
+    else tabName = "API Keys"
     document.title = `Memact | ${tabName}`
-  }, [activeTab])
+  }, [session, pathname])
 
   useEffect(() => {
     if (authChecking || !session) return
@@ -149,7 +253,6 @@ function App() {
     if (!isConnectPath()) return
     const request = parseConnectRequest()
     setConnectRequest(request)
-    setActiveTab("connect")
     if (!session || !request.app_id) return
 
     let cancelled = false
@@ -599,8 +702,7 @@ function App() {
       })
       return
     }
-    window.history.replaceState({}, "", "/dashboard")
-    setActiveTab("access")
+    portalNavigate(ACCESS_ROUTE, { replace: true })
   }
 
   async function signOut() {
@@ -625,13 +727,13 @@ function App() {
     setOneTimeKeyScopes([])
     setOneTimeKeyCategories([])
     setApiTestResult("")
-    setActiveTab("login")
     setStatus("Signed out.")
-    window.history.replaceState({}, "", "/login")
+    portalNavigate("/", { replace: true })
   }
 
   const scopes = policy?.scopes || {}
-  const showAuth = !session
+  const showAuth = !session && pathname !== HELP_ROUTE
+  const dashboardTab = pathname === ACCOUNT_ROUTE ? "account" : "access"
 
   return (
     <main className={showAuth ? "page page-auth" : "page"}>
@@ -641,9 +743,13 @@ function App() {
         </a>
         {session ? (
           <nav className="tabs" aria-label="Memact portal tabs">
-            <button type="button" className={activeTab === "access" ? "tab is-active" : "tab"} onClick={() => setActiveTab("access")}>API Keys</button>
-            <button type="button" className={activeTab === "account" ? "tab is-active" : "tab"} onClick={() => setActiveTab("account")}>Account</button>
-            <button type="button" className={activeTab === "help" ? "tab is-active" : "tab"} onClick={() => setActiveTab("help")}>Help</button>
+            <button type="button" className={pathname === ACCESS_ROUTE ? "tab is-active" : "tab"} onClick={() => portalNavigate(ACCESS_ROUTE)}>API Keys</button>
+            <button type="button" className={pathname === ACCOUNT_ROUTE ? "tab is-active" : "tab"} onClick={() => portalNavigate(ACCOUNT_ROUTE)}>Account</button>
+            <button type="button" className={pathname === HELP_ROUTE ? "tab is-active" : "tab"} onClick={() => portalNavigate(HELP_ROUTE)}>Help</button>
+          </nav>
+        ) : pathname === HELP_ROUTE ? (
+          <nav className="tabs" aria-label="Sign in">
+            <button type="button" className="tab" onClick={() => portalNavigate("/#sign-in")}>Sign in</button>
           </nav>
         ) : null}
         <span className="status-pill">{status}</span>
@@ -652,7 +758,9 @@ function App() {
       {error ? <p id="error-message" className="error" role="alert">{error} {canRetryDashboard ? <button type="button" className="inline-retry" onClick={handleRetryDashboard}>Retry</button> : null}</p> : null}
       {authChecking ? <p className="status-line">Checking login.</p> : null}
 
-      {session && activeTab === "connect" ? (
+      {pathname === HELP_ROUTE ? (
+        <HelpPanel />
+      ) : session && pathname === CONNECT_ROUTE ? (
         <ConnectPage
           connectRequest={connectRequest}
           connectDetails={connectDetails}
@@ -663,7 +771,7 @@ function App() {
         />
       ) : session ? (
         <Dashboard
-          activeTab={activeTab}
+          activeTab={dashboardTab}
           user={user}
           authUser={authUser}
           apps={apps}
@@ -719,6 +827,7 @@ function App() {
         <Landing
           connectRequest={connectRequest}
           showAuth={showAuth}
+          portalNavigate={portalNavigate}
           email={email}
           password={password}
           authLoading={authLoading}
@@ -735,7 +844,7 @@ function App() {
   )
 }
 
-function Landing({ connectRequest, showAuth, email, password, authLoading, authNotice, setEmail, setPassword, onEmailLogin, onPasswordLogin, onForgotPassword, onGithubLogin }) {
+function Landing({ connectRequest, showAuth, portalNavigate, email, password, authLoading, authNotice, setEmail, setPassword, onEmailLogin, onPasswordLogin, onForgotPassword, onGithubLogin }) {
   const isConnecting = Boolean(connectRequest?.app_id && isConnectPath())
   return (
     <section className={showAuth ? "landing landing-with-auth" : "landing"}>
@@ -746,10 +855,14 @@ function Landing({ connectRequest, showAuth, email, password, authLoading, authN
             ? "Memact will show the app name, exact permissions, and activity categories before anything is connected."
             : "Sign in, register apps, save permissions, and create scoped API keys. Apps can use Memact through clear permissions while your memory data stays protected by default."}
         </p>
+        <div className="actions">
+          <button type="button" onClick={() => portalNavigate("/#sign-in")}>Sign in</button>
+          <button type="button" className="ghost" onClick={() => portalNavigate(HELP_ROUTE)}>Learn more</button>
+        </div>
       </div>
 
       {showAuth ? (
-        <section className="panel auth-panel" aria-label="Memact login">
+        <section id="sign-in" className="panel auth-panel" aria-label="Memact login">
           <p className="eyebrow">Login</p>
           <h2>Login.</h2>
           <p className="muted">
@@ -867,12 +980,10 @@ function Dashboard({
   const appDescription = !isCreatingApp && selectedApp
     ? selectedApp.description || "No description added."
     : "Each app gets its own permissions and API keys."
-  const dashboardLabel = activeTab === "account" ? "Account" : activeTab === "help" ? "Help" : "API keys"
+  const dashboardLabel = activeTab === "account" ? "Account" : "API keys"
   const dashboardSubtitle = activeTab === "account"
     ? "Manage your account and session."
-    : activeTab === "help"
-      ? "Plain-English help for Memact Access."
-      : "Create app-specific keys with clear permission scopes."
+    : "Create app-specific keys with clear permission scopes."
 
   const provider = user?.provider || authUser?.app_metadata?.provider || authUser?.identities?.[0]?.provider || "email"
   const avatar = user?.avatar_url || authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || ""
@@ -889,9 +1000,7 @@ function Dashboard({
         <button type="button" className="ghost" onClick={onSignOut}>Sign out</button>
       </div>
 
-      {activeTab === "help" ? (
-        <HelpPanel />
-      ) : activeTab === "account" ? (
+      {activeTab === "account" ? (
         <section className="panel account-panel">
           <p className="eyebrow">Account</p>
           <div className="identity-card">
@@ -927,8 +1036,8 @@ function Dashboard({
                   {authFlow === "recovery"
                     ? "Your recovery link worked. Choose a new password to finish getting back into Memact."
                     : needsPasswordSetup
-                    ? "You are signed in through the email link. Set a strong password now so the next login is faster."
-                    : "Keep a strong password on this account so you can sign in without requesting a new link."}
+                      ? "You are signed in through the email link. Set a strong password now so the next login is faster."
+                      : "Keep a strong password on this account so you can sign in without requesting a new link."}
                 </p>
               </div>
               {passwordSuccess ? <p className="success" role="status">{passwordSuccess}</p> : null}
@@ -1423,7 +1532,7 @@ function buildConnectRedirect(redirectUri, values) {
     })
     return url.toString()
   } catch {
-    return "/dashboard"
+    return ACCESS_ROUTE
   }
 }
 
