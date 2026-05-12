@@ -35,7 +35,15 @@ const ADVANCED_FAQS = [
 const LEGAL_FAQS = [
   {
     question: "Who runs Memact Access?",
-    answer: "Memact Access is part of the Memact project by Keeps Loading. Developer profile: https://github.com/keepsloading. Some code may be viewable through the Memact GitHub organization at https://github.com/Memact, but it remains proprietary. You may not edit, redistribute, or modify it without permission."
+    answer: (
+      <>
+        Memact Access is part of the Memact project by{" "}
+        <a className="inline-help-link" href="https://github.com/keepsloading" target="_blank" rel="noreferrer">Keeps Loading</a>.
+        Some code may be viewable through the{" "}
+        <a className="inline-help-link" href="https://github.com/Memact" target="_blank" rel="noreferrer">Memact GitHub organization</a>,
+        but it remains proprietary. You may not edit, redistribute, or modify it without permission.
+      </>
+    )
   },
   {
     question: "How can I contact Memact?",
