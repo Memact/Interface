@@ -47,7 +47,13 @@ const LEGAL_FAQS = [
   },
   {
     question: "How can I contact Memact?",
-    answer: "For access, security, or project questions, contact keepsloading@gmail.com. Do not send secrets, raw memory exports, or API keys by email."
+    answer: (
+      <>
+        For access, security, or project questions, contact{" "}
+        <a className="inline-help-link" href="mailto:keepsloading@gmail.com">keepsloading@gmail.com</a>.
+        Do not send secrets, raw memory exports, or API keys by email.
+      </>
+    )
   }
 ]
 
