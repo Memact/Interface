@@ -41,7 +41,7 @@
   justify-content: center;
   min-height: 44px;
   border: 1px solid var(--border-strong);
-  border-radius: 999px;
+  border-radius: 16px;
   padding: 10px 18px;
   color: var(--text);
   background: rgba(255, 255, 255, 0.035);
@@ -50,15 +50,13 @@
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
-  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+  transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
 }
 
 .learn-more-link:hover,
 .learn-more-link:focus-visible {
   border-color: rgba(255, 255, 255, 0.42);
   background: rgba(255, 255, 255, 0.07);
-  transform: translateY(-1px);
-  outline: none;
 }
 
 .landing-actions .learn-more-link:hover,
@@ -113,7 +111,7 @@
   min-width: 40px;
   min-height: 40px;
   border: 1px solid var(--border-strong);
-  border-radius: 999px;
+  border-radius: 16px;
   color: var(--text);
   background: rgba(255, 255, 255, 0.045);
   cursor: pointer;
@@ -154,16 +152,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  margin: 0 0 14px;
-  background: rgba(255, 255, 255, 0.028);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg, 22px);
+  padding: 16px;
+  margin: 0 0 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.022)), var(--surface, #08091f);
 }
 
 .memact-help-nudge strong {
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
+  color: var(--text);
 }
 
 .memact-help-nudge p {
@@ -176,21 +175,49 @@
 .memact-help-nudge-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
 .memact-help-nudge-actions button {
-  min-height: 34px;
-  border-radius: 999px;
-  padding: 7px 12px;
-  font-size: 12px;
+  min-height: 44px;
+  border-radius: 16px;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.memact-help-nudge-actions .learn-more-link {
+  min-height: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: none;
+}
+
+.memact-help-nudge-actions .learn-more-link:hover,
+.memact-help-nudge-actions .learn-more-link:focus-visible {
+  border-color: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: none;
 }
 
 .memact-help-nudge-dismiss {
-  border: 1px solid var(--border);
-  color: var(--muted);
-  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  color: #00011B;
+  background: #ffffff;
+}
+
+.memact-help-nudge-dismiss:hover,
+.memact-help-nudge-dismiss:focus-visible {
+  color: #00011B;
+  background: #ffffff;
+  border-color: #ffffff;
 }
 
 @media (max-width: 720px) {
@@ -230,7 +257,8 @@
     width: 100%;
   }
 
-  .memact-help-nudge-actions button {
+  .memact-help-nudge-actions button,
+  .memact-help-nudge-actions .learn-more-link {
     flex: 1;
   }
 }
