@@ -67,8 +67,8 @@
 
 .page-auth .auth-panel-logo {
   display: block;
-  width: min(176px, 50%);
-  max-width: 176px;
+  width: min(168px, 48%);
+  max-width: 168px;
   height: auto;
   margin: 0 auto 16px;
 }
@@ -321,8 +321,8 @@
   }
 
   .page-auth .auth-panel-logo {
-    width: min(166px, 60%);
-    max-width: 166px;
+    width: min(160px, 58%);
+    max-width: 160px;
     margin: 0 auto 14px;
   }
 
