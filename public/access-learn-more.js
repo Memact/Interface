@@ -26,7 +26,7 @@
     nudge.innerHTML = `
       <div>
         <strong>New to Memact?</strong>
-        <p>Read how Capture, scopes, and app permissions work before creating keys.</p>
+        <p>See what apps can access before you create keys.</p>
       </div>
       <div class="memact-help-nudge-actions">
         <button type="button" class="learn-more-link">Learn More</button>
