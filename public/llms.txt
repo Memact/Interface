@@ -12,6 +12,7 @@ Apps use Memact when they need user-approved context such as summaries, evidence
 
 - https://www.memact.com/
 - https://www.memact.com/learn/
+- https://www.memact.com/llms.txt
 - https://www.memact.com/connect
 - https://www.memact.com/DataTransparency
 - https://github.com/Memact
@@ -34,6 +35,17 @@ Apps use Memact when they need user-approved context such as summaries, evidence
 - Keep the raw Memact API key on the server.
 - Verify `api_key + connection_id + required_scopes` before using Memact output.
 - Use only the scopes and categories returned by verification.
+
+## For AI Coding Agents
+
+If a developer asks an agent to "use Memact", build the same integration a human developer would build:
+
+- Add a Connect Memact action that sends the user to `https://www.memact.com/connect` with the app id, requested scopes, activity categories, and redirect URL.
+- Add the matching Data Transparency link so the user can inspect actual captured fields, evidence, summaries, graph packets, retention, and revocation before and after consent.
+- Handle the redirect from Memact and store the returned `connection_id` for that user and app.
+- Keep the raw Memact API key in a server environment variable or secret manager. Do not place it in browser JavaScript, mobile bundles, public repos, logs, screenshots, or emails.
+- Before reading Memact output, verify the API key, connection id, and required scopes server-side.
+- Treat scopes and activity categories as hard limits. If access is missing, send the user back through consent instead of silently widening data use.
 
 ## Short Definition
 

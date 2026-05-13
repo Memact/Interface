@@ -171,19 +171,6 @@ export function Dashboard({
               </form>
             </section>
           ) : null}
-          <div className="account-grid">
-            <div className="metric-card">
-              <span>Registered apps</span>
-              <strong>{apps.length}</strong>
-            </div>
-            <div className="metric-card">
-              <span>Active API keys</span>
-              <strong>{apiKeys.filter((key) => !key.revoked_at).length}</strong>
-            </div>
-          </div>
-          <p className="muted">
-            Permissions mean you choose exactly which actions a registered app can ask Memact to perform. If a scope is not saved for that app, its API key cannot use that permission.
-          </p>
           {displayEmail && showPasswordEditor ? (
             <section className="password-panel account-editor-panel">
               <div>
@@ -238,6 +225,19 @@ export function Dashboard({
               </form>
             </section>
           ) : null}
+          <div className="account-grid">
+            <div className="metric-card">
+              <span>Registered apps</span>
+              <strong>{apps.length}</strong>
+            </div>
+            <div className="metric-card">
+              <span>Active API keys</span>
+              <strong>{apiKeys.filter((key) => !key.revoked_at).length}</strong>
+            </div>
+          </div>
+          <p className="muted">
+            Permissions mean you choose exactly which actions a registered app can ask Memact to perform. If a scope is not saved for that app, its API key cannot use that permission.
+          </p>
           {provider === "email" ? (
             <section className="password-panel">
               <div>
