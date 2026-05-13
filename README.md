@@ -21,10 +21,10 @@ Website owns the public and authenticated interface for:
 - Connect App consent flow
 - account management
 - plain-English help
-- public SEO/AI-search explanation pages
+- public pages that explain Memact for search and sharing
 
 Website does not capture activity and does not read memory graphs. It talks to
-Memact's Access layer inside Supabase, which protects the permission boundary.
+the Supabase-backed access layer that protects app permissions.
 
 The old demo/query website has been archived outside this repo at:
 
@@ -34,18 +34,19 @@ The old demo/query website has been archived outside this repo at:
 
 ## Product Definition
 
-Memact is infrastructure that lets apps create permissioned memory from your
-digital activity.
+Memact lets apps remember useful context from your activity, but only inside
+the permissions a user approves.
 
-Website is not the memory engine. It is the access console.
+Website is not the memory engine. It is the account, app, permission, and API
+key console.
 
 ```text
-Website -> Supabase Access layer -> scoped API key -> Capture / Inference / Schema / Memory
+Website -> access layer -> scoped API key -> local activity capture -> filtering -> memory objects
 ```
 
-Apps use Memact to capture allowed activity and form schemas. Apps do not get a
-blanket dump of a user's private graph. Each app can be restricted to activity
-categories such as news, research pages, media context, AI conversations,
+Apps use Memact to work with approved activity and useful memory objects. They
+do not get a blanket dump of a user's private graph. Each app can be limited to
+activity categories such as research pages, news, media, AI conversations,
 developer work, or documents.
 
 ## Current UI
@@ -55,11 +56,11 @@ compact cards, rounded controls, and consistent button hierarchy.
 
 Authenticated dashboard:
 
-- mobile uses a compact top row with logo left and tabs right
-- desktop uses a fixed left rail with Access, Account, and Help tabs
-- Access tab shows account/app context, registered app rail, permissions, API keys, and one-time key copy/test flow
-- Account tab shows identity, session, email/password actions, and account metrics
-- Help tab gives short expandable explanations instead of a long FAQ wall
+- mobile uses a compact top row with the logo and tabs kept close
+- desktop uses a fixed left rail with Access, Account, and Help
+- Access shows app registration, permissions, API keys, and the one-time key flow
+- Account shows identity, email/password actions, and account metrics
+- Help uses short FAQs for users and developers
 
 Button hierarchy:
 
@@ -70,9 +71,8 @@ Danger: Delete app / Revoke / Sign out
 Utility: Copy key / copy tutorial code
 ```
 
-The UI avoids generic SaaS clutter, random gradients, and fake AI marketing
-language. It should feel like infrastructure with clarity, not a landing-page
-billboard.
+The UI should stay direct and calm. Avoid generic SaaS filler, fake AI claims,
+and decorative copy that does not help someone complete the task.
 
 ## Public Pages and Discovery
 
@@ -126,7 +126,7 @@ VITE_SUPABASE_ANON_KEY=your-public-anon-key
 Only use the Supabase anon key in Website. Never put a service role key, GitHub
 OAuth client secret, or private database secret in frontend code.
 
-Before the portal works, apply the Access SQL migration from:
+Before the portal works, apply the access-layer SQL migration from:
 
 ```text
 ../Access/supabase/migrations/20260507120000_memact_access.sql
@@ -193,8 +193,8 @@ If Blueprint setup fails, use the direct Dashboard path in
 - Scopes and saved permissions are required before apps can use Memact.
 - Activity categories are required before apps can use Memact.
 - Connect App creates user-specific consent, like an app authorization page.
-- Graph read access is separate from capture/schema write access.
-- Supabase is the primary Access backend. The old HTTP Access service is only a fallback for local development.
+- Graph read access is separate from activity capture and schema writes.
+- Supabase is the primary access backend. The old HTTP service is only a fallback for local development.
 
 ## App Embed / Connect Tutorial
 
@@ -231,9 +231,9 @@ developer creates app
 API keys identify the app. `connection_id` identifies the specific user consent.
 Verification must pass both.
 
-The API key is verified by Memact before an app can use allowed capture, schema,
-graph, or memory permissions. The app receives only the scopes the user approved
-for that app, inside the activity categories the user approved.
+Memact verifies the API key before an app can use approved capture, schema,
+graph, or memory permissions. The app receives only the scopes and activity
+categories the user approved for that app.
 
 ## Help Tab
 
@@ -255,7 +255,7 @@ Frontend polish is mostly current. Backend issues are intentionally parked for
 now.
 
 The main future backend task is alignment between Website and the Supabase
-Access RPC layer, especially functions such as:
+access RPC layer, especially functions such as:
 
 ```text
 memact_create_app

@@ -5,11 +5,11 @@ import "../faq-chevron.css"
 const BASIC_FAQS = [
   {
     question: "What is Memact?",
-    answer: "Infrastructure that lets apps create permissioned memory from your digital activity."
+    answer: "Memact lets apps remember useful context from your activity, but only inside the permissions you approve."
   },
   {
     question: "Where does Memact run?",
-    answer: "Apps use a small Memact client SDK. Capture runs locally through the Memact browser extension and, when enabled, an optional local helper. The extension captures allowed activity; apps only consume the memory output you approved."
+    answer: "Apps use a small Memact client SDK. Activity capture happens locally through the browser extension and, if you enable it, a local helper. Apps only receive the approved output, not a blanket feed of your activity."
   },
   {
     question: "Does an app get my whole memory graph?",
@@ -25,14 +25,14 @@ const BASIC_FAQS = [
   }
 ]
 
-const CAPTURE_FAQS = [
+const ACTIVITY_FAQS = [
   {
-    question: "What does Capture collect?",
-    answer: "Capture records useful activity evidence such as page titles, URLs, domains, timestamps, navigation events, selected text, useful webpage text, PDF text, captions or transcripts when available, image alt text or nearby context, and optional active app/window context from the local helper. It does not give apps raw browsing history by default."
+    question: "What activity can be used?",
+    answer: "Memact can use useful evidence like page titles, URLs, domains, timestamps, selected text, page text, PDF text, captions, transcripts, image context, and optional app/window context from the local helper. Sensitive pages and raw browsing history are not handed to apps by default."
   },
   {
-    question: "What does Memact turn captured activity into?",
-    answer: "Capture records evidence. Inference filters it. Schema finds repeated patterns. Memory stores what survives. In practice, allowed activity can become events, sessions, content units, graph packets, schema packet candidates, retained evidence, schema memories, and retrievable memory."
+    question: "What does Memact turn activity into?",
+    answer: "Memact turns approved activity into smaller memory objects: events, sessions, evidence cards, summaries, graph links, and patterns that can be retrieved later. The important part is the boundary: an app only sees what its saved permissions allow."
   },
   {
     question: "What does an app receive?",
@@ -111,8 +111,8 @@ export function HelpPanel() {
       </div>
 
       <div className="faq-section faq-section-advanced">
-        <p className="faq-section-title">Capture and memory</p>
-        {CAPTURE_FAQS.map((faq) => (
+        <p className="faq-section-title">Activity and memory</p>
+        {ACTIVITY_FAQS.map((faq) => (
           <FaqItem faq={faq} key={faq.question} />
         ))}
       </div>

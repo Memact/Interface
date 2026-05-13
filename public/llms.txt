@@ -1,10 +1,10 @@
 # Memact
 
-Memact is source-available infrastructure for permissioned memory access.
+Memact is source-available infrastructure for memory access with user permission.
 
 ## Summary
 
-Memact lets apps create permissioned memory from a user's digital activity. Apps ask for memory access. Users choose what they get.
+Memact lets apps remember useful context from a user's activity, but only inside the permissions the user approves.
 
 ## Key pages
 
@@ -17,7 +17,8 @@ Memact lets apps create permissioned memory from a user's digital activity. Apps
 ## Core concepts
 
 - Permissioned memory
-- Access layer and permission console
+- Access layer
+- Permission console
 - Scoped API keys
 - Activity categories
 - Connect App consent flow
@@ -26,4 +27,4 @@ Memact lets apps create permissioned memory from a user's digital activity. Apps
 
 ## Short definition
 
-Memact is infrastructure that lets apps create permissioned memory from your digital activity.
+Memact lets apps remember useful context from your activity, but only inside the permissions you approve.
