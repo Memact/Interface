@@ -51,6 +51,7 @@
         --bg: #00011b;
         --surface-1: rgba(255, 255, 255, 0.035);
         --surface-2: rgba(255, 255, 255, 0.055);
+        --surface-3: rgba(255, 255, 255, 0.08);
         --border: rgba(255, 255, 255, 0.09);
         --border-strong: rgba(255, 255, 255, 0.16);
         --text: #ffffff;
@@ -86,7 +87,7 @@
       }
 
       .page {
-        width: min(960px, calc(100% - 32px));
+        width: min(1240px, calc(100% - 32px));
         margin: 0 auto;
         padding: max(18px, env(safe-area-inset-top)) 0 56px;
       }
@@ -96,7 +97,11 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        padding: 10px 0 28px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        margin-bottom: 20px;
+        padding: 18px;
+        background: rgba(255, 255, 255, 0.018);
       }
 
       .logo {
@@ -117,10 +122,10 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        min-height: 40px;
+        min-height: 52px;
         border: 1px solid var(--border-strong);
-        border-radius: 10px;
-        padding: 8px 12px;
+        border-radius: 14px;
+        padding: 10px 14px;
         color: var(--text);
         background: var(--surface-2);
         font-size: 14px;
@@ -129,34 +134,67 @@
       }
 
       .back-button {
-        padding-inline: 10px 14px;
+        padding-inline: 12px 16px;
       }
 
-      .chevron {
-        display: inline-grid;
+      .faq-chevron {
+        position: relative;
+        display: grid;
         place-items: center;
-        width: 26px;
-        height: 26px;
+        width: 38px;
+        height: 38px;
         border: 1px solid var(--border-strong);
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.055);
-        color: var(--text);
-        line-height: 1;
+        padding: 0;
+        justify-self: end;
+        color: var(--muted);
+        background: var(--surface-2);
+        font-size: 0;
+        line-height: 0;
+        transform: none;
+        transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+      }
+
+      .faq-chevron::before,
+      .faq-chevron::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 10px;
+        height: 2px;
+        border: 0;
+        border-radius: 999px;
+        background: currentColor;
+        transform-origin: center;
+        transition: transform 140ms ease;
+      }
+
+      .faq-chevron::before {
+        transform: translate(calc(-50% - 3px), -50%) rotate(45deg);
+      }
+
+      .faq-chevron::after {
+        transform: translate(calc(-50% + 3px), -50%) rotate(-45deg);
+      }
+
+      .back-chevron {
+        flex: 0 0 auto;
         transform: rotate(90deg);
       }
 
-      .hero,
-      .card,
-      details {
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        background: var(--surface-1);
+      details[open] .faq-chevron {
+        border-color: rgba(255, 255, 255, 0.36);
+        color: var(--text);
+        background: var(--surface-3);
       }
 
-      .hero {
-        display: grid;
-        gap: 14px;
-        padding: clamp(22px, 4vw, 34px);
+      details[open] .faq-chevron::before {
+        transform: translate(calc(-50% - 3px), -50%) rotate(-45deg);
+      }
+
+      details[open] .faq-chevron::after {
+        transform: translate(calc(-50% + 3px), -50%) rotate(45deg);
       }
 
       .eyebrow,
@@ -177,12 +215,16 @@
         overflow-wrap: anywhere;
       }
 
+      h1,
+      h2 {
+        margin: 0;
+        line-height: 1.08;
+        letter-spacing: -0.04em;
+      }
+
       h1 {
         max-width: 780px;
-        margin: 0;
-        font-size: clamp(34px, 7vw, 64px);
-        line-height: 0.98;
-        letter-spacing: -0.055em;
+        font-size: clamp(34px, 7vw, 58px);
       }
 
       .lead {
@@ -192,48 +234,78 @@
         font-size: clamp(17px, 2.2vw, 22px);
       }
 
-      .grid {
+      .panel {
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: clamp(24px, 5vw, 40px);
+        background: var(--surface-1);
+      }
+
+      .hero-panel {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        margin-top: 18px;
+        gap: 18px;
+        margin-bottom: 18px;
       }
 
-      .card {
-        padding: 16px;
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
       }
 
-      .card h2,
-      .card h3 {
-        margin: 0 0 8px;
-        font-size: 19px;
-        line-height: 1.18;
-        letter-spacing: -0.02em;
+      .help-panel {
+        display: grid;
+        gap: 28px;
       }
 
-      .card p,
-      details p {
+      .help-intro {
+        max-width: 760px;
         margin: 0;
         color: var(--muted);
+        font-size: clamp(17px, 2vw, 21px);
       }
 
-      .section {
+      .faq-section {
         display: grid;
         gap: 12px;
-        margin-top: 18px;
       }
 
-      .section-title {
-        margin-top: 12px;
+      .faq-section-title {
+        margin: 0 0 2px;
+        color: var(--soft);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      details {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--surface-1);
+      }
+
+      summary::-webkit-details-marker {
+        display: none;
       }
 
       summary {
-        min-height: 44px;
-        padding: 12px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 16px;
+        min-height: 84px;
+        padding: 18px;
         color: var(--text);
         cursor: pointer;
+        list-style: none;
         font-weight: 700;
-        list-style-position: inside;
+      }
+
+      .faq-question {
+        display: block;
+        font-size: clamp(18px, 2.5vw, 21px);
+        line-height: 1.25;
       }
 
       details[open] {
@@ -241,14 +313,19 @@
         background: var(--surface-2);
       }
 
-      details p,
-      details ol {
-        padding: 0 12px 12px;
+      .faq-answer {
+        padding: 0 18px 22px;
+        color: var(--muted);
+        font-size: clamp(16px, 2.3vw, 20px);
       }
 
-      details ol {
+      .faq-answer p,
+      .faq-answer ol {
         margin: 0;
-        color: var(--muted);
+      }
+
+      .faq-answer ol {
+        padding-left: 24px;
       }
 
       footer {
@@ -259,10 +336,35 @@
 
       @media (max-width: 720px) {
         .page { width: min(100% - 24px, 720px); }
-        .topbar { align-items: flex-start; flex-direction: column; padding-bottom: 18px; }
-        .logo { width: 120px; }
-        .nav { justify-content: flex-start; }
-        .grid { grid-template-columns: 1fr; }
+        .topbar {
+          align-items: center;
+          padding: 14px;
+        }
+        .logo { width: 136px; }
+        .button {
+          min-height: 46px;
+          padding: 8px 10px;
+          font-size: 13px;
+        }
+        .button[href*="github"] { display: none; }
+        .faq-chevron {
+          width: 36px;
+          height: 36px;
+        }
+        .faq-chevron::before,
+        .faq-chevron::after {
+          width: 9px;
+        }
+        .panel {
+          padding: 22px;
+        }
+        summary {
+          min-height: 76px;
+          padding: 16px;
+        }
+        .faq-answer {
+          padding: 0 16px 18px;
+        }
       }
     </style>
   </head>
@@ -271,78 +373,85 @@
       <header class="topbar">
         <a href="/" aria-label="Go to Memact"><img class="logo" src="/logo.png" alt="Memact" /></a>
         <nav class="nav" aria-label="Public navigation">
-          <a class="button back-button" href="/"><span class="chevron" aria-hidden="true">v</span><span>Back to Memact</span></a>
+          <a class="button back-button" href="/"><span class="faq-chevron back-chevron" aria-hidden="true">v</span><span>Back to Memact</span></a>
           <a class="button" href="https://github.com/Memact" rel="noreferrer">GitHub</a>
         </nav>
       </header>
 
-      <section class="hero">
+      <section class="panel hero-panel">
         <p class="eyebrow">Memact</p>
         <h1>Apps can remember only what the user approves.</h1>
         <p class="lead">Memact gives developers a consent-first way to use helpful memory. Users see the app, scopes, activity categories, and data disclosure before access is allowed.</p>
+        <div class="hero-actions">
+          <a class="button" href="/#sign-up">Get started</a>
+          <a class="button" href="/#sign-in">Sign in</a>
+        </div>
       </section>
 
-      <section class="grid" aria-label="Memact overview">
-        <article class="card">
-          <h2>For users</h2>
-          <p>You approve or cancel each app. Data Transparency explains what the app plans to use, including captured fields, evidence, summaries, graph packets, retention, and revocation.</p>
-        </article>
-        <article class="card">
-          <h2>For developers</h2>
-          <p>Register an app, choose narrow scopes and categories, send users through consent, keep the raw API key in server environment config, and verify access before using Memact output.</p>
-        </article>
-        <article class="card">
-          <h2>No blanket graph dump</h2>
-          <p>Apps receive only approved output. Raw graph access is separate, sensitive, and must be explicitly allowed.</p>
-        </article>
-        <article class="card">
-          <h2>Categories are boundaries</h2>
-          <p>Activity categories limit where an app can work, such as research, news, AI conversations, developer work, media, or documents.</p>
-        </article>
-      </section>
+      <section class="panel help-panel" aria-label="Memact FAQ">
+        <div>
+          <p class="eyebrow">Help</p>
+          <h2>Frequently asked questions</h2>
+        </div>
+        <p class="help-intro">Built to clear your doubts with transparent, user-controlled answers.</p>
 
-      <section class="section" aria-label="Memact FAQ">
-        <p class="section-title">Basics</p>
-        <details open>
-          <summary>What is Memact?</summary>
-          <p>Memact lets apps remember useful context from user-approved activity without giving them blanket access.</p>
-        </details>
-        <details>
-          <summary>What is the consent flow?</summary>
-          <p>The consent flow shows the app, requested scopes, activity categories, safety boundaries, and a Data Transparency link before the user approves.</p>
-        </details>
-        <details>
-          <summary>What is Data Transparency?</summary>
-          <p>Data Transparency is the page beside consent that explains actual captured fields, evidence cards, summaries, graph packets, retention, and how to revoke future access.</p>
-        </details>
-        <details>
-          <summary>What does an API key do?</summary>
-          <p>An API key identifies the app. It is the private `mka_...` key created in the Memact portal and belongs in `.env` locally or a production secret manager, never in a user-facing settings panel. Developers do not configure Supabase keys. The app backend calls Memact's verification endpoint with the API key, a user connection id, required scopes, and activity categories before Memact allows access.</p>
-        </details>
-      </section>
+        <div class="faq-section">
+          <p class="faq-section-title">Basics</p>
+          <details open>
+            <summary><span class="faq-question">What is Memact?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>Memact lets apps remember useful context from your activity, but only inside the permissions you approve.</p></div>
+          </details>
+          <details>
+            <summary><span class="faq-question">Where does Memact run?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>Apps use a small Memact client SDK. Activity capture happens locally through the browser extension and, if you enable it, a local helper. Apps only receive the approved output, not a blanket feed of your activity.</p></div>
+          </details>
+          <details>
+            <summary><span class="faq-question">Does an app get my whole memory graph?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>No. Apps only get the permissions and activity categories you approve. Raw graph access is separate and sensitive.</p></div>
+          </details>
+          <details>
+            <summary><span class="faq-question">How does consent work?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>It shows what an app wants before anything is connected. You approve or cancel. Apps should link Data Transparency beside consent so you can review the actual data and memory objects they plan to use.</p></div>
+          </details>
+          <details>
+            <summary><span class="faq-question">What are activity categories?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>They limit where an app can work, like research pages, news, AI conversations, developer activity, or media.</p></div>
+          </details>
+        </div>
 
-      <section class="section" aria-label="Developer flow">
-        <p class="section-title">Developer flow</p>
-        <details open>
-          <summary>How do I use Memact in an app?</summary>
-          <ol>
-            <li>Register the app in the Memact portal.</li>
-            <li>Choose the smallest scopes and activity categories needed.</li>
-            <li>Add a Connect Memact button that opens `/connect` with app context.</li>
-            <li>Link `/DataTransparency` with the same app context beside consent.</li>
-            <li>Store the returned `connection_id` for the signed-in user.</li>
-            <li>Keep the raw API key in server environment config, such as `MEMACT_API_KEY` in `.env` locally and a secret manager in production.</li>
-            <li>Verify the API key, connection id, required scopes, and activity categories through the Memact verification endpoint before using Memact output.</li>
-          </ol>
-        </details>
-        <details>
-          <summary>What is a schema packet?</summary>
-          <p>A schema packet is a memory object that can include evidence, content units, nodes, edges, and a summary.</p>
-        </details>
-        <details>
-          <summary>What should apps avoid?</summary>
-          <p>Apps should not request more access than they need, hide collection, sell raw memory, use Memact for manipulation, or use it for sensitive eligibility decisions.</p>
-        </details>
+        <div class="faq-section">
+          <p class="faq-section-title">Developers</p>
+          <details>
+            <summary><span class="faq-question">How do I use the Memact API in an app?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer">
+              <ol>
+                <li>Register your app in Memact and choose the smallest scopes and activity categories your feature needs.</li>
+                <li>Add a Connect Memact button in your app. Send users to `/connect` with app id, scopes, categories, and redirect URL.</li>
+                <li>Put a Data Transparency link beside that consent flow. Explain the actual captured fields, evidence cards, summaries, graph packets, retention, and revocation path.</li>
+                <li>After approval, Memact redirects back with a `connection_id`. Store that id for the signed-in user in your app.</li>
+                <li>Keep the raw Memact API key in server environment config, such as `MEMACT_API_KEY` in `.env` locally and a secret manager in production.</li>
+                <li>Your backend calls Memact's verification endpoint with the API key, stored connection id, required scopes, and activity categories.</li>
+                <li>Use only the approved result returned by Memact.</li>
+              </ol>
+            </div>
+          </details>
+          <details>
+            <summary><span class="faq-question">Where should the Memact API key live in code?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>Treat the raw Memact API key like a server-side secret. This is the private app key that starts with `mka_` and is created in the Memact portal. Do not hard-code it into browser bundles, mobile apps, public repos, logs, shared prompts, or user-facing settings panels.</p></div>
+          </details>
+          <details>
+            <summary><span class="faq-question">Do I need a Supabase public key?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>No. App developers configure only the private Memact app key on their own backend. Supabase keys belong to Memact's access infrastructure, not customer apps.</p></div>
+          </details>
+          <details>
+            <summary><span class="faq-question">Is a Data Transparency page required?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>Yes. Any app asking users to consent through Memact should expose Data Transparency next to the consent flow. It must explain the actual captured fields, evidence cards, summaries, graph packets, retention, and revocation path. Categories alone are not enough.</p></div>
+          </details>
+          <details>
+            <summary><span class="faq-question">What is not allowed?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>Apps should only request what they need. Hidden monitoring, selling raw memory, manipulation, and sensitive decision-making are not allowed.</p></div>
+          </details>
+        </div>
       </section>
 
       <footer>

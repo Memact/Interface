@@ -108,12 +108,6 @@ export function Landing({
 
         {showAuth ? (
           <section id={isSignIn ? "sign-in" : "sign-up"} className="panel auth-panel" aria-label={isSignIn ? "Memact sign in" : "Memact sign up"}>
-            {!isSignIn ? (
-              <button type="button" className="auth-step-next" onClick={signupStep === "identity" ? goToSignupPassword : handleSignupSubmit} disabled={authLoading === "signup"} aria-label={signupStep === "identity" ? "Continue to password" : "Create account"}>
-                <span>{signupStep === "identity" ? "Next" : "Create"}</span>
-                <span className="faq-chevron auth-step-chevron" aria-hidden="true">v</span>
-              </button>
-            ) : null}
             <img className="auth-panel-logo" src="/logo.png" alt="Memact" />
             <p className="eyebrow">{isSignIn ? "Sign in" : "Get started"}</p>
             <p className="muted auth-support">
@@ -163,9 +157,10 @@ export function Landing({
                 </>
               ) : null}
               <button type="submit" disabled={authLoading === "password" || authLoading === "signup"}>
-                {authLoading === "password" || authLoading === "signup"
+                <span>{authLoading === "password" || authLoading === "signup"
                   ? isSignIn ? "Signing in..." : "Creating account..."
-                  : isSignIn ? "Sign in" : signupStep === "identity" ? "Continue" : "Create account"}
+                  : isSignIn ? "Sign in" : signupStep === "identity" ? "Continue" : "Create account"}</span>
+                {!isSignIn ? <span className="auth-native-chevron auth-submit-chevron" aria-hidden="true" /> : null}
               </button>
               {!isSignIn && signupStep === "password" ? (
                 <button type="button" className="text-button" onClick={goBackToSignupIdentity}>Back to name and email</button>
