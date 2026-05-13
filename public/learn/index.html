@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>What is Memact? | Memory access with user permission</title>
-    <meta name="description" content="Memact lets apps remember useful context from your activity, but only inside the permissions you approve. Learn how scoped permissions, activity categories, API keys, and memory objects work." />
+    <title>What is Memact? | User-approved memory for apps</title>
+    <meta name="description" content="Memact lets apps use helpful memory only after users approve the app, scopes, activity categories, and data transparency. Learn the user and developer flow." />
     <meta name="robots" content="index,follow" />
     <meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
@@ -14,8 +14,8 @@
     <link rel="apple-touch-icon" href="/icon.png" />
     <meta property="og:site_name" content="Memact" />
     <meta property="og:locale" content="en_US" />
-    <meta property="og:title" content="What is Memact? | Memory access with user permission" />
-    <meta property="og:description" content="Memact lets apps remember useful context from your activity, but only inside the permissions you approve." />
+    <meta property="og:title" content="What is Memact? | User-approved memory for apps" />
+    <meta property="og:description" content="Memact lets apps use helpful memory only after users approve the app, scopes, activity categories, and data transparency." />
     <meta property="og:type" content="article" />
     <meta property="og:url" content="https://www.memact.com/learn/" />
     <meta property="og:image" content="https://www.memact.com/seo-logo.png" />
@@ -25,8 +25,8 @@
     <meta property="og:image:height" content="282" />
     <meta property="og:image:alt" content="Memact wordmark on a dark background" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="What is Memact? | Memory access with user permission" />
-    <meta name="twitter:description" content="Memact lets apps remember useful context from your activity, but only inside the permissions you approve." />
+    <meta name="twitter:title" content="What is Memact? | User-approved memory for apps" />
+    <meta name="twitter:description" content="Memact lets apps use helpful memory only after users approve the app, scopes, activity categories, and data transparency." />
     <meta name="twitter:image" content="https://www.memact.com/seo-logo.png" />
     <meta name="twitter:image:alt" content="Memact wordmark on a dark background" />
     <script type="application/ld+json">
@@ -34,47 +34,298 @@
         "@context": "https://schema.org",
         "@type": "FAQPage",
         "mainEntity": [
-          {"@type":"Question","name":"What is Memact?","acceptedAnswer":{"@type":"Answer","text":"Memact lets apps remember useful context from your activity, but only inside the permissions you approve."}},
-          {"@type":"Question","name":"Does an app get my whole memory graph?","acceptedAnswer":{"@type":"Answer","text":"No. Apps only get the permissions and activity categories you approve. Raw graph access is separate and sensitive."}},
-          {"@type":"Question","name":"What does Connect App do?","acceptedAnswer":{"@type":"Answer","text":"Connect App shows what an app wants before anything is connected. You approve or cancel."}},
-          {"@type":"Question","name":"What are activity categories?","acceptedAnswer":{"@type":"Answer","text":"Activity categories limit where an app can work, such as research pages, news, AI conversations, or developer activity."}},
-          {"@type":"Question","name":"What is a schema packet?","acceptedAnswer":{"@type":"Answer","text":"A schema packet is Memact's internal memory unit: evidence, content, nodes, edges, and a short summary."}}
+          {"@type":"Question","name":"What is Memact?","acceptedAnswer":{"@type":"Answer","text":"Memact lets apps remember useful context from user-approved activity without giving them blanket access."}},
+          {"@type":"Question","name":"Does an app get my whole memory graph?","acceptedAnswer":{"@type":"Answer","text":"No. Apps only get the permissions, activity categories, and output the user approved for that app."}},
+          {"@type":"Question","name":"What is Data Transparency?","acceptedAnswer":{"@type":"Answer","text":"Data Transparency is the consent-companion page where an app explains actual captured fields, evidence, graph packets, retention, and revocation."}},
+          {"@type":"Question","name":"How does a developer use the Memact API?","acceptedAnswer":{"@type":"Answer","text":"Register an app, choose scopes and categories, send the user through consent, link the matching Data Transparency page, store the returned connection_id, keep the API key server-side, and verify access before using Memact output."}},
+          {"@type":"Question","name":"What is a schema packet?","acceptedAnswer":{"@type":"Answer","text":"A schema packet is a memory object that can include evidence, content units, nodes, edges, and a summary."}}
         ]
       }
     </script>
     <style>
-      :root{--bg:#00011b;--surface-1:rgba(255,255,255,.035);--surface-2:rgba(255,255,255,.055);--border:rgba(255,255,255,.09);--border-strong:rgba(255,255,255,.16);--text:#fff;--muted:rgba(255,255,255,.64);--soft:rgba(255,255,255,.42);--radius-md:14px;--radius-lg:18px;color:var(--text);background:var(--bg);font-family:"IBM Plex Sans","Segoe UI",system-ui,sans-serif}*{box-sizing:border-box}html,body{min-width:320px;min-height:100%;margin:0;overflow-x:hidden;background:var(--bg);color:var(--text)}body{font-size:16px;line-height:1.55}a{color:var(--text);text-underline-offset:.18em}.page{width:min(920px,calc(100% - 32px));margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 0 56px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0 28px}.logo{display:block;width:132px;height:auto}.nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}.button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;border:1px solid var(--border-strong);border-radius:10px;padding:8px 12px;color:var(--text);background:var(--surface-2);font-size:14px;font-weight:700;text-decoration:none}.hero{display:grid;gap:14px;border:1px solid var(--border);border-radius:var(--radius-lg);padding:clamp(22px,4vw,34px);background:var(--surface-1)}.eyebrow{margin:0;color:var(--soft);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}h1,h2,h3,p{overflow-wrap:anywhere}h1{max-width:760px;margin:0;font-size:clamp(34px,7vw,64px);line-height:.98;letter-spacing:-.055em}.lead{max-width:720px;margin:0;color:var(--muted);font-size:clamp(17px,2.2vw,22px)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}.card,details{border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-1)}.card{padding:16px}.card h2,.card h3{margin:0 0 8px;font-size:19px;line-height:1.18;letter-spacing:-.02em}.card p,details p{margin:0;color:var(--muted)}.section{display:grid;gap:12px;margin-top:18px}.section-title{margin:12px 0 0;color:var(--soft);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}summary{min-height:44px;padding:12px;color:var(--text);cursor:pointer;font-weight:700;list-style-position:inside}details[open]{border-color:var(--border-strong);background:var(--surface-2)}details p{padding:0 12px 12px}footer{margin-top:24px;color:var(--soft);font-size:14px}@media(max-width:720px){.page{width:min(100% - 24px,720px)}.topbar{align-items:flex-start;flex-direction:column;padding-bottom:18px}.logo{width:120px}.nav{justify-content:flex-start}.grid{grid-template-columns:1fr}}
+      :root {
+        --bg: #00011b;
+        --surface-1: rgba(255, 255, 255, 0.035);
+        --surface-2: rgba(255, 255, 255, 0.055);
+        --border: rgba(255, 255, 255, 0.09);
+        --border-strong: rgba(255, 255, 255, 0.16);
+        --text: #ffffff;
+        --muted: rgba(255, 255, 255, 0.64);
+        --soft: rgba(255, 255, 255, 0.42);
+        --radius-md: 14px;
+        --radius-lg: 18px;
+        color: var(--text);
+        background: var(--bg);
+        font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      html,
+      body {
+        min-width: 320px;
+        min-height: 100%;
+        margin: 0;
+        overflow-x: hidden;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      body {
+        font-size: 16px;
+        line-height: 1.55;
+      }
+
+      a {
+        color: var(--text);
+        text-underline-offset: 0.18em;
+      }
+
+      .page {
+        width: min(960px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: max(18px, env(safe-area-inset-top)) 0 56px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 0 28px;
+      }
+
+      .logo {
+        display: block;
+        width: 132px;
+        height: auto;
+      }
+
+      .nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        border: 1px solid var(--border-strong);
+        border-radius: 10px;
+        padding: 8px 12px;
+        color: var(--text);
+        background: var(--surface-2);
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .hero,
+      .card,
+      details {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--surface-1);
+      }
+
+      .hero {
+        display: grid;
+        gap: 14px;
+        padding: clamp(22px, 4vw, 34px);
+      }
+
+      .eyebrow,
+      .section-title {
+        margin: 0;
+        color: var(--soft);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p,
+      li {
+        overflow-wrap: anywhere;
+      }
+
+      h1 {
+        max-width: 780px;
+        margin: 0;
+        font-size: clamp(34px, 7vw, 64px);
+        line-height: 0.98;
+        letter-spacing: -0.055em;
+      }
+
+      .lead {
+        max-width: 760px;
+        margin: 0;
+        color: var(--muted);
+        font-size: clamp(17px, 2.2vw, 22px);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .card h2,
+      .card h3 {
+        margin: 0 0 8px;
+        font-size: 19px;
+        line-height: 1.18;
+        letter-spacing: -0.02em;
+      }
+
+      .card p,
+      details p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .section {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .section-title {
+        margin-top: 12px;
+      }
+
+      summary {
+        min-height: 44px;
+        padding: 12px;
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 700;
+        list-style-position: inside;
+      }
+
+      details[open] {
+        border-color: var(--border-strong);
+        background: var(--surface-2);
+      }
+
+      details p,
+      details ol {
+        padding: 0 12px 12px;
+      }
+
+      details ol {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      footer {
+        margin-top: 24px;
+        color: var(--soft);
+        font-size: 14px;
+      }
+
+      @media (max-width: 720px) {
+        .page { width: min(100% - 24px, 720px); }
+        .topbar { align-items: flex-start; flex-direction: column; padding-bottom: 18px; }
+        .logo { width: 120px; }
+        .nav { justify-content: flex-start; }
+        .grid { grid-template-columns: 1fr; }
+      }
     </style>
   </head>
   <body>
     <main class="page">
       <header class="topbar">
         <a href="/" aria-label="Go to Memact"><img class="logo" src="/logo.png" alt="Memact" /></a>
-        <nav class="nav" aria-label="Public navigation"><a class="button" href="/">Access portal</a><a class="button" href="https://github.com/Memact" rel="noreferrer">GitHub</a></nav>
+        <nav class="nav" aria-label="Public navigation">
+          <a class="button" href="/">Access portal</a>
+          <a class="button" href="https://github.com/Memact" rel="noreferrer">GitHub</a>
+        </nav>
       </header>
+
       <section class="hero">
         <p class="eyebrow">Memact</p>
-        <h1>Memory access that stays within user permission.</h1>
-        <p class="lead">Apps ask for memory access. You choose what they get.</p>
+        <h1>Apps can remember only what the user approves.</h1>
+        <p class="lead">Memact gives developers a consent-first way to use helpful memory. Users see the app, scopes, activity categories, and data disclosure before access is allowed.</p>
       </section>
+
       <section class="grid" aria-label="Memact overview">
-        <article class="card"><h2>What is Memact?</h2><p>Memact lets apps remember useful context from your activity, but only inside the permissions you approve.</p></article>
-        <article class="card"><h2>How does app access work?</h2><p>Developers register apps, choose activity categories, request scoped permissions, and create API keys. Users approve the access before an app connects.</p></article>
-        <article class="card"><h2>Does an app get my whole memory graph?</h2><p>No. Apps only get the permissions and activity categories you approve. Raw graph access is separate and sensitive.</p></article>
-        <article class="card"><h2>What are activity categories?</h2><p>Activity categories limit where an app can work, such as research pages, news, AI conversations, or developer activity.</p></article>
+        <article class="card">
+          <h2>For users</h2>
+          <p>You approve or cancel each app. Data Transparency explains what the app plans to use, including captured fields, evidence, summaries, graph packets, retention, and revocation.</p>
+        </article>
+        <article class="card">
+          <h2>For developers</h2>
+          <p>Register an app, choose narrow scopes and categories, send users through consent, keep the raw API key on your server, and verify access before using Memact output.</p>
+        </article>
+        <article class="card">
+          <h2>No blanket graph dump</h2>
+          <p>Apps receive only approved output. Raw graph access is separate, sensitive, and must be explicitly allowed.</p>
+        </article>
+        <article class="card">
+          <h2>Categories are boundaries</h2>
+          <p>Activity categories limit where an app can work, such as research, news, AI conversations, developer work, media, or documents.</p>
+        </article>
       </section>
+
       <section class="section" aria-label="Memact FAQ">
         <p class="section-title">Basics</p>
-        <details open><summary>What is permissioned memory?</summary><p>Permissioned memory means an app can only use the memory capabilities approved for that app.</p></details>
-        <details><summary>What does Connect App do?</summary><p>Connect App shows what an app wants before anything is connected. You approve or cancel.</p></details>
-        <details><summary>What does an API key do?</summary><p>An API key identifies an app. Memact checks the key against the user's approved scopes and categories before access is allowed.</p></details>
+        <details open>
+          <summary>What is Memact?</summary>
+          <p>Memact lets apps remember useful context from user-approved activity without giving them blanket access.</p>
+        </details>
+        <details>
+          <summary>What is the consent flow?</summary>
+          <p>The consent flow shows the app, requested scopes, activity categories, safety boundaries, and a Data Transparency link before the user approves.</p>
+        </details>
+        <details>
+          <summary>What is Data Transparency?</summary>
+          <p>Data Transparency is the page beside consent that explains actual captured fields, evidence cards, summaries, graph packets, retention, and how to revoke future access.</p>
+        </details>
+        <details>
+          <summary>What does an API key do?</summary>
+          <p>An API key identifies the app. The app still needs a user connection id and approved scopes before Memact allows access.</p>
+        </details>
       </section>
-      <section class="section" aria-label="Advanced Memact concepts">
-        <p class="section-title">Advanced</p>
-        <details><summary>What is a schema packet?</summary><p>A schema packet is Memact's internal memory unit: evidence, content, nodes, edges, and a short summary.</p></details>
-        <details><summary>What should apps avoid?</summary><p>Apps should request only what they need, explain their access clearly, and avoid using Memact outside the approved scopes and categories.</p></details>
+
+      <section class="section" aria-label="Developer flow">
+        <p class="section-title">Developer flow</p>
+        <details open>
+          <summary>How do I use Memact in an app?</summary>
+          <ol>
+            <li>Register the app in the Memact portal.</li>
+            <li>Choose the smallest scopes and activity categories needed.</li>
+            <li>Add a Connect Memact button that opens `/connect` with app context.</li>
+            <li>Link `/DataTransparency` with the same app context beside consent.</li>
+            <li>Store the returned `connection_id` for the signed-in user.</li>
+            <li>Keep the raw API key on your server, not in client code.</li>
+            <li>Verify the API key, connection id, and required scopes before using Memact output.</li>
+          </ol>
+        </details>
+        <details>
+          <summary>What is a schema packet?</summary>
+          <p>A schema packet is a memory object that can include evidence, content units, nodes, edges, and a summary.</p>
+        </details>
+        <details>
+          <summary>What should apps avoid?</summary>
+          <p>Apps should not request more access than they need, hide collection, sell raw memory, use Memact for manipulation, or use it for sensitive eligibility decisions.</p>
+        </details>
       </section>
-      <footer><p>Memact is source-available infrastructure for memory access with user permission. This page explains the public concept; the portal handles app registration, permissions, and API keys.</p></footer>
+
+      <footer>
+        <p>Memact is source-available. This page explains the public concept; the portal handles app registration, permissions, consent, API keys, and data transparency.</p>
+      </footer>
     </main>
   </body>
 </html>

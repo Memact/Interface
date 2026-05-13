@@ -59,14 +59,6 @@ function enhanceEmbedCode() {
   })
 }
 
-function simplifyDashboardLabel() {
-  document.querySelectorAll(".dashboard-head .eyebrow").forEach((label) => {
-    if (label.textContent.trim() === "Access / API Keys") {
-      label.textContent = "Access"
-    }
-  })
-}
-
 function showSignOutOnlyOnAccount() {
   document.querySelectorAll(".dashboard-head").forEach((head) => {
     const label = head.querySelector(".eyebrow")?.textContent.trim().toLowerCase()
@@ -122,7 +114,7 @@ function splitEmbedSteps(code) {
 
 function titleForStep(title, index) {
   const titles = [
-    "Send the user to Connect App",
+    "Send the user to the consent page",
     "Show the Data Transparency page",
     "Read the connection id after approval",
     "Verify access before doing work",
@@ -144,7 +136,6 @@ function describeStep(title, index) {
 
 function enhanceMemactUi() {
   enhanceEmbedCode()
-  simplifyDashboardLabel()
   showSignOutOnlyOnAccount()
 }
 

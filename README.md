@@ -2,7 +2,7 @@
 
 Version: `v0.0`
 
-Website is the Memact web UI.
+Website is the Memact web UI for users and developers.
 
 Memact lets apps request scoped memory permissions while users choose
 what each app can access.
@@ -11,44 +11,33 @@ what each app can access.
 Apps ask for memory access. Users choose what they get.
 ```
 
-Website owns the public and authenticated interface for:
+This repo owns the public site and the authenticated portal for:
 
 - sign in with email, password, magic link, or GitHub
 - app registration
 - scoped permission selection
 - activity category selection
 - API key creation, testing, and revocation
-- Connect App consent flow
+- app consent flow
 - Data Transparency controls for reviewing and revoking app access
 - account management
 - plain-English help
 - public pages that explain Memact for search and sharing
 
-Website does not capture activity and does not read memory graphs. It talks to
-the Supabase-backed access layer that protects app permissions.
-
-The old demo/query website has been archived outside this repo at:
-
-```text
-../oldwebsite
-```
+Website does not capture activity and does not read memory graphs directly. It talks to the Supabase-backed access layer that stores apps, permissions, consent records, and API key metadata.
 
 ## Product Definition
 
 Memact lets apps remember useful context from your activity, but only inside
 the permissions a user approves.
 
-Website is not the memory engine. It is the account, app, permission, and API
-key console.
+Website is not the memory engine. It is the account, app, permission, consent, and API key console.
 
 ```text
-Website -> access layer -> scoped API key -> local activity capture -> filtering -> memory objects
+Website -> access layer -> scoped API key -> user consent -> local capture/filtering -> approved memory output
 ```
 
-Apps use Memact to work with approved activity and useful memory objects. They
-do not get a blanket dump of a user's private graph. Each app can be limited to
-activity categories such as research pages, news, media, AI conversations,
-developer work, or documents.
+Apps use Memact to work with approved activity and useful memory objects. They do not get a blanket dump of a user's private graph. Each app must stay inside the scopes, categories, consent, and Data Transparency disclosure attached to that app.
 
 ## Current UI
 
@@ -190,19 +179,19 @@ If Blueprint setup fails, use the direct Dashboard path in
 
 - Source-available project wording. Do not call core Memact repos open-source unless that repo license says so.
 - Free access for now.
-- API keys are shown once.
+- API keys are shown once and should be stored server-side by the app developer.
 - App names are unique per account.
 - Deleting an app revokes its active API keys and permissions.
 - Data Transparency must stay available alongside the consent flow so users can review actual captured data, graph packet use, retention, and revocation before approval.
 - Revoked keys remain visible as history.
 - Scopes and saved permissions are required before apps can use Memact.
 - Activity categories are required before apps can use Memact.
-- Connect App creates user-specific consent, like an app authorization page.
+- The consent flow creates user-specific permission for one app.
 - Graph read access is separate from activity capture and schema writes.
 - Redirect URLs and developer URLs must use `http://` or `https://`; unsafe schemes are rejected or ignored.
-- Supabase is the primary access backend. The old HTTP service is only a fallback for local development.
+- Supabase is the primary access backend. The local HTTP client is only a development fallback.
 
-## App Embed / Connect Tutorial
+## App Integration Tutorial
 
 After creating an API key, Website shows:
 
@@ -212,11 +201,10 @@ After creating an API key, Website shows:
 - a beginner-style Connect tutorial
 - copy buttons for each tutorial code section
 
-The tutorial is intentionally split into numbered steps instead of one giant
-code dump:
+The tutorial is intentionally split into numbered steps instead of one giant code dump:
 
 ```text
-1. Send the user to Connect App
+1. Send the user to the consent page
 2. Link the matching Data Transparency page
 3. Read the connection id after approval
 4. Verify access before doing work
@@ -238,9 +226,7 @@ developer creates app
 API keys identify the app. `connection_id` identifies the specific user consent.
 Verification must pass both.
 
-Memact verifies the API key before an app can use approved capture, schema,
-graph, or memory permissions. The app receives only the scopes and activity
-categories the user approved for that app.
+Memact verifies the API key before an app can use approved capture, schema, graph, or memory permissions. The app receives only the scopes and activity categories the user approved for that app.
 
 For developer docs and generated coding guidance, keep the integration
 explanation practical:
@@ -248,10 +234,11 @@ explanation practical:
 ```text
 1. Put a "Connect Memact" button in the app.
 2. Send users to /connect with app_id, scopes, categories, redirect_uri, and optional state.
-3. Store the returned connection_id for that user.
-4. Keep the raw Memact API key on the server.
-5. Verify api_key + connection_id + required_scopes before calling Memact.
-6. Use only the approved scopes and categories returned by verification.
+3. Link /DataTransparency with the same app_id, scopes, categories, and redirect_uri.
+4. Store the returned connection_id for that user.
+5. Keep the raw Memact API key on the server.
+6. Verify api_key + connection_id + required_scopes before calling Memact.
+7. Use only the approved scopes and categories returned by verification.
 ```
 
 Do not describe repository names as separate brands. Memact is the brand; access,
@@ -281,7 +268,7 @@ Website includes a Help tab for non-technical users. It explains:
 
 - what Memact is
 - whether apps get the whole memory graph
-- what Connect App does
+- how consent works
 - what activity categories are
 - how developers should embed the API safely
 - what schema packets are
@@ -290,13 +277,9 @@ Website includes a Help tab for non-technical users. It explains:
 The Help tab should stay short. Long docs belong in `/learn/` or future docs,
 not inside the dashboard.
 
-## Known Backend Hold Items
+## Backend Notes
 
-Frontend polish is mostly current. Backend issues are intentionally parked for
-now.
-
-The main future backend task is alignment between Website and the Supabase
-access RPC layer, especially functions such as:
+Website expects the Supabase access layer to provide these functions:
 
 ```text
 memact_create_app
@@ -306,8 +289,7 @@ memact_verify_api_key
 memact_revoke_api_key
 ```
 
-Supabase RPC names and argument names must match exactly, otherwise the
-schema-cache error returns.
+Supabase RPC names and argument names must match exactly. If the schema cache is stale or a function signature changes, Website falls back to browser-safe table paths where possible and shows a clear error where it cannot.
 
 ## License
 

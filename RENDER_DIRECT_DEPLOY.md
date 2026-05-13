@@ -1,15 +1,12 @@
 # Render Direct Deploy
 
-Use this if Render Blueprint setup fails.
+Use this when the Render Blueprint path is not available. The result is still the same Memact Website: a static React app served from Render's CDN.
 
-This keeps Website as a Render Static Site on Render's CDN. It is not a downgrade from the Blueprint path.
+## 1. Create the Static Site
 
-## 1. Create The Static Site
-
-In Render:
+In Render, create a new Static Site:
 
 ```text
-New -> Static Site
 Repository: https://github.com/Memact/Website
 Branch: main
 Name: memact-website
@@ -19,17 +16,19 @@ Publish Directory: dist
 
 ## 2. Environment Variables
 
-Add:
+Add the public Supabase values used by the browser app:
 
 ```text
 VITE_SUPABASE_URL=<your Supabase project URL>
 VITE_SUPABASE_ANON_KEY=<your Supabase anon key>
-VITE_AUTH_REDIRECT_URL=https://memact.com/dashboard
+VITE_AUTH_REDIRECT_URL=https://www.memact.com/Access
 ```
+
+Never put a Supabase service role key, GitHub OAuth secret, or database secret in Render environment variables for this static site.
 
 ## 3. Rewrite Rule
 
-In the Static Site settings, add:
+Add one rewrite rule so direct visits to `/Access`, `/Account`, `/Help`, `/connect`, and `/DataTransparency` all load the React app:
 
 ```text
 Action: Rewrite
@@ -37,11 +36,7 @@ Source: /*
 Destination: /index.html
 ```
 
-This keeps `/dashboard` working after refresh.
-
-## 4. Headers
-
-Add these headers in the Static Site settings.
+## 4. Security and Cache Headers
 
 For path `/*`:
 
@@ -60,16 +55,16 @@ For path `/assets/*`:
 Cache-Control: public, max-age=31536000, immutable
 ```
 
-For path `/logo.png`:
-
-```text
-Cache-Control: public, max-age=86400
-```
-
 For path `/index.html`:
 
 ```text
 Cache-Control: public, max-age=0, must-revalidate
+```
+
+For logo and icon files:
+
+```text
+Cache-Control: public, max-age=86400
 ```
 
 ## 5. Domains
@@ -85,25 +80,25 @@ Then copy the DNS records Render gives you into your domain provider.
 
 ## 6. Supabase Redirects
 
-In Supabase Auth URL settings, allow:
+In Supabase Auth URL settings, allow these local and production URLs:
 
 ```text
-http://localhost:3000/dashboard
-https://memact.com/dashboard
-https://www.memact.com/dashboard
-https://memact-website.onrender.com/dashboard
+http://localhost:3000/Access
+http://localhost:3000/Account
+http://localhost:3000/connect
+http://localhost:3000/DataTransparency
+https://memact.com/Access
+https://memact.com/Account
+https://memact.com/connect
+https://memact.com/DataTransparency
+https://www.memact.com/Access
+https://www.memact.com/Account
+https://www.memact.com/connect
+https://www.memact.com/DataTransparency
+https://www.memact.com/**
 ```
 
-If Render gives the Website a different `.onrender.com` URL, add that exact dashboard URL too.
-
-Before testing the portal, apply the Access SQL migration from:
-
-```text
-../Access/supabase/migrations/20260507120000_memact_access.sql
-```
-
-That migration turns Supabase into the Access backend, so Website no longer
-needs a separate hosted Access service.
+If Render gives the Website a `.onrender.com` URL for previews, add the matching `/Access`, `/Account`, `/connect`, and `/DataTransparency` URLs too.
 
 For GitHub OAuth, the GitHub callback URL belongs to Supabase:
 
@@ -111,13 +106,29 @@ For GitHub OAuth, the GitHub callback URL belongs to Supabase:
 https://<your-project>.supabase.co/auth/v1/callback
 ```
 
-## 7. Verify
+## 7. Access Backend
+
+Before testing app registration, permissions, consent, or API keys, apply the access-layer SQL migration:
+
+```text
+../Access/supabase/migrations/20260507120000_memact_access.sql
+```
+
+That migration gives the Website the Supabase tables and RPCs it needs for app permissions, API keys, consent verification, and connection checks.
+
+## 8. Verify
 
 Open:
 
 ```text
-https://memact.com
-https://memact.com/dashboard
+https://www.memact.com/
+https://www.memact.com/Access
+https://www.memact.com/Help
 ```
 
-Both should load the Website. Login should redirect back to `/dashboard`.
+Expected behavior:
+
+- `/` loads the public landing page.
+- `/Access` asks the user to sign in, then opens the app and API key console.
+- `/connect?...` opens the consent flow for a real app request.
+- `/DataTransparency?...` only shows meaningful content when the URL includes a real app consent context.

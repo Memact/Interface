@@ -16,7 +16,7 @@ const BASIC_FAQS = [
     answer: "No. Apps only get the permissions and activity categories you approve. Raw graph access is separate and sensitive."
   },
   {
-    question: "What does Connect App do?",
+    question: "How does consent work?",
     answer: "It shows what an app wants before anything is connected. You approve or cancel. Apps should link Data Transparency beside consent so you can review the actual data and memory objects they plan to use."
   },
   {
@@ -66,7 +66,7 @@ const ADVANCED_FAQS = [
     question: "Where should the Memact API key live in code?",
     answer: (
       <>
-        Treat the raw Memact API key like a server-side secret. Do not hard-code it into browser bundles, mobile apps, public repos, README examples, or client-side AI agent prompts. Frontend code should open the Connect URL; backend code should verify access and call Memact.
+        Treat the raw Memact API key like a server-side secret. Do not hard-code it into browser bundles, mobile apps, public repos, README examples, logs, or shared prompts. Frontend code should open the Connect URL; backend code should verify access and call Memact.
       </>
     )
   },

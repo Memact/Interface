@@ -1,30 +1,40 @@
 # Memact
 
-Memact is source-available infrastructure for memory access with user permission.
+Memact lets apps use helpful memory only after a user approves the app, scopes, activity categories, and data transparency.
 
-## Summary
+## What Memact Is
 
-Memact lets apps remember useful context from a user's activity, but only inside the permissions the user approves.
+Memact is the product name. Access, capture, schema, and memory are functions or layers, not separate brands.
 
-## Key pages
+Apps use Memact when they need user-approved context such as summaries, evidence snippets, activity categories, graph objects, or schema packets. Apps should not receive a blanket dump of a user's private memory graph.
+
+## Key Pages
 
 - https://www.memact.com/
 - https://www.memact.com/learn/
+- https://www.memact.com/connect
+- https://www.memact.com/DataTransparency
 - https://github.com/Memact
 - https://github.com/Memact/Website
-- https://github.com/Memact/Access
 
-## Core concepts
+## User Concepts
 
-- Permissioned memory
-- Access layer
-- Permission console
-- Scoped API keys
-- Activity categories
-- Connect App consent flow
-- Schema packets
-- Memory graph permissions
+- Users approve or cancel an app before it connects.
+- Users should see Data Transparency beside the consent flow.
+- Data Transparency should explain the actual captured fields, evidence cards, summaries, graph packets, retention, and revocation path.
+- Categories and scopes are boundaries, not full disclosure.
 
-## Short definition
+## Developer Concepts
 
-Memact lets apps remember useful context from your activity, but only inside the permissions you approve.
+- Register an app.
+- Choose the smallest scopes and activity categories needed.
+- Put a Connect Memact button in the app.
+- Link the matching Data Transparency page beside consent.
+- Store the returned `connection_id` for that user.
+- Keep the raw Memact API key on the server.
+- Verify `api_key + connection_id + required_scopes` before using Memact output.
+- Use only the scopes and categories returned by verification.
+
+## Short Definition
+
+Memact lets apps remember useful context from user-approved activity without giving them blanket access.
