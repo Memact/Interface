@@ -1,7 +1,7 @@
 {
   "name": "Memact",
   "short_name": "Memact",
-  "description": "Manage access to Memact.",
+  "description": "Manage app permissions, consent, and API keys in Memact.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#00011B",

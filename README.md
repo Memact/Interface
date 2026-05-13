@@ -2,12 +2,12 @@
 
 Version: `v0.0`
 
-Website is now the Memact Access portal.
+Website is Memact's access and consent console.
 
 It owns one job:
 
 ```text
-let a developer or user sign in, register an app, grant permissions, create API keys, and send users through a Connect App consent page
+let a developer or user sign in, register an app, grant permissions, create API keys, and send users through the connect consent flow
 ```
 
 Website does not capture activity and does not read memory graphs. It talks to
@@ -19,10 +19,27 @@ The old demo/query website has been archived outside this repo at:
 ../oldwebsite
 ```
 
+## Repo Map
+
+This workspace contains several sibling repos. The main ones are:
+
+- `.` -> `https://github.com/Memact/Memact_Website.git`
+- `interface/` -> `https://github.com/Memact/Website.git`
+- `Access/` -> `https://github.com/Memact/Access.git`
+- `capture/` -> `https://github.com/Memact/Capture.git`
+- `inference/` -> `https://github.com/Memact/Inference.git`
+- `schema/` -> `https://github.com/Memact/Schema.git`
+- `memory/` -> `https://github.com/Memact/Memory.git`
+- `LandingPage/` -> `https://github.com/Memact/LandingPage.git`
+- `Memact/` -> `https://github.com/Memact/Memact.git`
+
+This repo owns the website shell, SEO surface, auth flow, permission UI, and
+API key experience. Access logic itself lives in `Access/`.
+
 ## Flow
 
 ```text
-Website -> Supabase Access layer -> scoped API key -> Capture / Inference / Schema / Memory
+Website -> Supabase access layer -> scoped API key -> Capture / Inference / Schema / Memory
 ```
 
 Apps use Memact to capture allowed activity and form schemas. Apps do not get a
@@ -35,7 +52,6 @@ conversations, or developer work.
 Start Website:
 
 ```powershell
-cd ../interface
 npm install
 npm run dev
 ```
@@ -60,7 +76,7 @@ Create `.env`:
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-public-anon-key
 # Optional override for non-standard deploy domains. Defaults to the current origin.
-# VITE_AUTH_REDIRECT_URL=http://localhost:3000/dashboard
+# VITE_AUTH_REDIRECT_URL=http://localhost:3000/Access
 ```
 
 Only use the Supabase anon key in the Website. Never put a service role key,
@@ -75,9 +91,9 @@ Before the portal works, apply the Access SQL migration from:
 In Supabase Auth URL settings, allow:
 
 ```text
-http://localhost:3000/dashboard
+http://localhost:3000/Access
 http://localhost:3000/connect
-https://memact.com/dashboard
+https://www.memact.com/Access
 https://memact.com/connect
 ```
 
@@ -89,7 +105,7 @@ For Render, set:
 ```text
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-public-anon-key
-# Optional: VITE_AUTH_REDIRECT_URL=https://memact.com/dashboard
+# Optional: VITE_AUTH_REDIRECT_URL=https://www.memact.com/Access
 ```
 
 ## Render and SEO
@@ -114,7 +130,7 @@ If Blueprint setup fails, use the direct Dashboard path in
 - Deleting an app revokes its active API keys and permissions.
 - Scopes and saved permissions are required before apps can use Memact.
 - Activity categories are required before apps can use Memact.
-- Connect App creates user-specific consent, like a Discord authorization page.
+- The connect consent flow creates user-specific consent, like an authorization page.
 - Graph read access is separate from capture/schema write access.
 - Supabase is the primary Access backend. The old HTTP Access service is only a fallback for local development.
 
@@ -177,12 +193,12 @@ approved for that app, inside the activity categories the user approved.
 
 ## Help Tab
 
-Website includes a Help tab for non-technical users. It explains:
+Website includes a public Help page for non-technical users. It explains:
 
 - what Memact is
 - what permissions mean
 - why activity categories exist
-- what Connect App does
+- what the connect flow does
 - what schema packets are
 - what apps are not allowed to do
 

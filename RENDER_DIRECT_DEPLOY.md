@@ -24,7 +24,7 @@ Add:
 ```text
 VITE_SUPABASE_URL=<your Supabase project URL>
 VITE_SUPABASE_ANON_KEY=<your Supabase anon key>
-VITE_AUTH_REDIRECT_URL=https://memact.com/dashboard
+VITE_AUTH_REDIRECT_URL=https://www.memact.com/Access
 ```
 
 ## 3. Rewrite Rule
@@ -37,7 +37,7 @@ Source: /*
 Destination: /index.html
 ```
 
-This keeps `/dashboard` working after refresh.
+This keeps `/Access`, `/Account`, and `/Help` working after refresh.
 
 ## 4. Headers
 
@@ -88,13 +88,17 @@ Then copy the DNS records Render gives you into your domain provider.
 In Supabase Auth URL settings, allow:
 
 ```text
-http://localhost:3000/dashboard
-https://memact.com/dashboard
-https://www.memact.com/dashboard
-https://memact-website.onrender.com/dashboard
+http://localhost:3000/Access
+https://memact.com/Access
+https://www.memact.com/Access
+https://memact-website.onrender.com/Access
+http://localhost:3000/connect
+https://memact.com/connect
+https://www.memact.com/connect
+https://memact-website.onrender.com/connect
 ```
 
-If Render gives the Website a different `.onrender.com` URL, add that exact dashboard URL too.
+If Render gives the Website a different `.onrender.com` URL, add those exact callback URLs too.
 
 Before testing the portal, apply the Access SQL migration from:
 
@@ -117,7 +121,8 @@ Open:
 
 ```text
 https://memact.com
-https://memact.com/dashboard
+https://memact.com/Access
+https://memact.com/Help
 ```
 
-Both should load the Website. Login should redirect back to `/dashboard`.
+The site should load on each route, and login should return to `/Access`.

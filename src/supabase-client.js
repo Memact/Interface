@@ -26,10 +26,16 @@ export function requireSupabase() {
   return supabase
 }
 
-export function getAuthRedirectUrl() {
-  if (authRedirectUrl) return authRedirectUrl
-  if (typeof window !== "undefined" && window.location?.origin) {
-    return new URL("/Access", window.location.origin).toString()
+export function getAuthRedirectUrl(path = "/Access") {
+  if (authRedirectUrl) {
+    try {
+      return new URL(path, authRedirectUrl).toString()
+    } catch {
+      return authRedirectUrl
+    }
   }
-  return "https://memact.com/Access"
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return new URL(path, window.location.origin).toString()
+  }
+  return new URL(path, "https://www.memact.com").toString()
 }
