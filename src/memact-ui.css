@@ -192,6 +192,10 @@
   display: none;
 }
 
+.faq-item summary.faq-trigger::marker {
+  content: "";
+}
+
 .faq-question {
   display: block;
   min-width: 0;
