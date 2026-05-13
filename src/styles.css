@@ -484,6 +484,16 @@ p { margin-top: 0; }
   gap: 8px;
 }
 
+.account-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.account-quick-actions button {
+  min-height: 46px;
+}
+
 .section-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -1442,6 +1452,10 @@ input:-webkit-autofill:focus {
     justify-content: stretch;
   }
 
+  .account-quick-actions {
+    grid-template-columns: 1fr;
+  }
+
   .section-toolbar > *,
   .actions > *,
   .actions button,
@@ -1580,6 +1594,15 @@ input:-webkit-autofill:focus {
   .app-actions button {
     min-height: 40px;
     padding: 8px 11px;
+  }
+
+  .account-quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .account-quick-actions button {
+    min-height: 48px;
+    padding: 9px 10px;
   }
 
   .section-actions {

@@ -33,9 +33,11 @@ function App() {
   const [activeTab, setActiveTab] = useState(initialPage === "home" ? "login" : initialPage)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [passwordConfirm, setPasswordConfirm] = useState("")
   const [authLoading, setAuthLoading] = useState("")
   const [authNotice, setAuthNotice] = useState("")
   const [authFlow, setAuthFlow] = useState(() => detectAuthFlowFromUrl())
+  const [authMode, setAuthMode] = useState(() => authModeFromLocation())
   const [dashboard, dashboardActions] = useDashboardState()
   const [policy, setPolicy] = useState(null)
   const [newAppName, setNewAppName] = useState("")
@@ -74,6 +76,17 @@ function App() {
     window.history[historyMethod]({}, "", nextPath)
     setCurrentPage(page)
     setActiveTab(page === "home" ? "login" : page)
+    if (page === "home" && hash) {
+      setAuthMode(hash.toLowerCase().includes("sign-in") ? "sign-in" : "sign-up")
+    }
+  }
+
+  function setLandingAuthMode(mode, { pushHash = true } = {}) {
+    const nextMode = mode === "sign-in" ? "sign-in" : "sign-up"
+    setAuthMode(nextMode)
+    if (pushHash && typeof window !== "undefined") {
+      window.history.pushState({}, "", `${routeForPage("home")}#${nextMode}`)
+    }
   }
 
   function applySession(nextSession, detectedFlow = "default") {
@@ -94,7 +107,7 @@ function App() {
     }
 
     if (isProtectedPage(page)) {
-      navigateToPage("home", { replace: true, hash: "#sign-in" })
+      navigateToPage("home", { replace: true, hash: "#sign-up" })
     }
   }
 
@@ -132,7 +145,7 @@ function App() {
         setAuthChecking(false)
         setAuthNotice("Sign-in took too long. Try GitHub again from this page.")
         if (isProtectedPage(pageFromLocation())) {
-          navigateToPage("home", { replace: true, hash: "#sign-in" })
+          navigateToPage("home", { replace: true, hash: "#sign-up" })
         }
       }, AUTH_INIT_TIMEOUT_MS)
 
@@ -162,6 +175,13 @@ function App() {
     const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return
       setAuthChecking(false)
+
+      if (event === "USER_UPDATED" || event === "TOKEN_REFRESHED") {
+        setAuthSession(nextSession)
+        setAuthUser(nextSession?.user || null)
+        return
+      }
+
       if (event === "PASSWORD_RECOVERY") {
         setAuthFlow("recovery")
       } else if (event === "SIGNED_IN") {
@@ -172,7 +192,7 @@ function App() {
       applySession(nextSession, event === "PASSWORD_RECOVERY" ? "recovery" : detectAuthFlowFromUrl())
       if (!nextSession && event === "SIGNED_OUT") {
         if (isProtectedPage(pageFromLocation())) {
-          navigateToPage("home", { replace: true, hash: "#sign-in" })
+          navigateToPage("home", { replace: true, hash: "#sign-up" })
         }
       }
     })
@@ -189,6 +209,9 @@ function App() {
       const page = pageFromLocation()
       setCurrentPage(page)
       setActiveTab(page === "home" ? "login" : page)
+      if (page === "home") {
+        setAuthMode(authModeFromLocation())
+      }
     }
 
     window.addEventListener("popstate", handlePopState)
@@ -318,6 +341,49 @@ function App() {
     }
   }
 
+  async function handleEmailSignup(event) {
+    event.preventDefault()
+    setError("")
+    setAuthNotice("")
+    setPasswordSuccess("")
+    const validation = getPasswordState(password, passwordConfirm)
+    if (validation.errors.length) {
+      setError(validation.errors[0])
+      return
+    }
+    setAuthLoading("signup")
+    setStatus("Creating account.")
+    try {
+      const { data, error: signUpError } = await requireSupabase().auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: getAuthRedirectTarget(),
+          data: {
+            memact_password_ready: true,
+            memact_password_updated_at: new Date().toISOString()
+          }
+        }
+      })
+      if (signUpError) throw signUpError
+      setPassword("")
+      setPasswordConfirm("")
+      if (data?.session) {
+        setAuthChecking(false)
+        applySession(data.session, "default")
+        setStatus("Account created.")
+      } else {
+        setAuthNotice("Check your email to confirm your Memact account.")
+        setStatus("Confirmation email sent.")
+      }
+    } catch (authError) {
+      setError(formatAuthErrorMessage(authError, "Account creation did not finish."))
+      setStatus(authStatusMessage(authError))
+    } finally {
+      setAuthLoading("")
+    }
+  }
+
   async function handlePasswordLogin(event) {
     event.preventDefault()
     setError("")
@@ -333,6 +399,7 @@ function App() {
       })
       if (signInError) throw signInError
       setPassword("")
+      setPasswordConfirm("")
       let signedInSession = data?.session || null
       const signedInUser = signedInSession?.user || data?.user || null
 
@@ -770,6 +837,7 @@ function App() {
     setApiTestResult("")
     setDisplayNameDraft("")
     setDisplayNameSuccess("")
+    setAuthMode("sign-up")
     setStatus("Signed out.")
     navigateToPage("home", { replace: true })
   }
@@ -904,10 +972,15 @@ function App() {
           showAuth={showAuth}
           email={email}
           password={password}
+          passwordConfirm={passwordConfirm}
+          authMode={authMode}
           authLoading={authLoading}
           authNotice={authNotice}
           setEmail={setEmail}
           setPassword={setPassword}
+          setPasswordConfirm={setPasswordConfirm}
+          setAuthMode={setLandingAuthMode}
+          onEmailSignup={handleEmailSignup}
           onEmailLogin={handleEmailLogin}
           onPasswordLogin={handlePasswordLogin}
           onForgotPassword={handleForgotPassword}
@@ -999,6 +1072,11 @@ function detectAuthFlowFromUrl() {
   const query = `${window.location.search || ""}${window.location.hash || ""}`.toLowerCase()
   if (query.includes("type=recovery")) return "recovery"
   return "default"
+}
+
+function authModeFromLocation() {
+  if (typeof window === "undefined") return "sign-up"
+  return String(window.location.hash || "").toLowerCase().includes("sign-in") ? "sign-in" : "sign-up"
 }
 
 function shouldCheckSessionOnLoad() {

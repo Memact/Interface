@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { ACCESS_MODE, ACCESS_URL } from "../memact-access-client.js"
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../supabase-client.js"
 import { CategoryGrid } from "./CategoryGrid.jsx"
@@ -101,6 +101,9 @@ export function Dashboard({
   const avatar = getAvatarUrl(user, authUser)
   const displayEmail = getUserEmail(user, authUser)
   const initials = getInitials(displayName, displayEmail)
+  const [accountEditor, setAccountEditor] = useState(authFlow === "recovery" || needsPasswordSetup ? "password" : "")
+  const showDisplayNameEditor = accountEditor === "display-name"
+  const showPasswordEditor = accountEditor === "password"
 
   return (
     <section className="dashboard">
@@ -131,31 +134,41 @@ export function Dashboard({
               </p>
             </div>
           </div>
-          <section className="password-panel display-name-panel">
-            <div>
-              <p className="eyebrow">Display name</p>
-              <h2>Set your display name.</h2>
-              <p className="muted">This is the name shown across your dashboard.</p>
-            </div>
-            {displayNameSuccess ? <p className="notice notice-success" role="status">{displayNameSuccess}</p> : null}
-            <form className="form compact-form" onSubmit={onUpdateDisplayName}>
-              <label>
-                Display name
-                <input
-                  value={displayNameDraft}
-                  type="text"
-                  autoComplete="name"
-                  placeholder="Example: Sujay"
-                  maxLength={80}
-                  onChange={(event) => setDisplayNameDraft(event.target.value)}
-                  required
-                />
-              </label>
-              <button type="submit" disabled={authLoading === "display-name"}>
-                {authLoading === "display-name" ? "Saving name..." : "Save display name"}
-              </button>
-            </form>
-          </section>
+          <div className="account-quick-actions" aria-label="Account settings">
+            <button type="button" className={showDisplayNameEditor ? "" : "ghost"} onClick={() => setAccountEditor(showDisplayNameEditor ? "" : "display-name")}>
+              Set display name
+            </button>
+            <button type="button" className={showPasswordEditor ? "" : "ghost"} onClick={() => setAccountEditor(showPasswordEditor ? "" : "password")}>
+              {needsPasswordSetup ? "Set password" : "Change password"}
+            </button>
+          </div>
+          {showDisplayNameEditor ? (
+            <section className="password-panel display-name-panel">
+              <div>
+                <p className="eyebrow">Display name</p>
+                <h2>Set your display name.</h2>
+                <p className="muted">This is the name shown across your dashboard.</p>
+              </div>
+              {displayNameSuccess ? <p className="notice notice-success" role="status">{displayNameSuccess}</p> : null}
+              <form className="form compact-form" onSubmit={onUpdateDisplayName}>
+                <label>
+                  Display name
+                  <input
+                    value={displayNameDraft}
+                    type="text"
+                    autoComplete="name"
+                    placeholder="Example: Sujay"
+                    maxLength={80}
+                    onChange={(event) => setDisplayNameDraft(event.target.value)}
+                    required
+                  />
+                </label>
+                <button type="submit" disabled={authLoading === "display-name"}>
+                  {authLoading === "display-name" ? "Saving name..." : "Save name"}
+                </button>
+              </form>
+            </section>
+          ) : null}
           <div className="account-grid">
             <div className="metric-card">
               <span>Registered apps</span>
@@ -169,7 +182,7 @@ export function Dashboard({
           <p className="muted">
             Permissions mean you choose exactly which actions a registered app can ask Memact to perform. If a scope is not saved for that app, its API key cannot use that permission.
           </p>
-          {provider === "email" ? (
+          {displayEmail && showPasswordEditor ? (
             <section className="password-panel">
               <div>
                 <p className="eyebrow">Password</p>
@@ -485,7 +498,11 @@ function getUsageStats(selectedApp, selectedKeys = [], apps = []) {
   const exposedKey = activeKeys.find((key) => key.public_exposure_detected || key.exposure_status === "exposed")
   const unknownExposure = activeKeys.length && !activeKeys.some((key) => key.exposure_status || key.public_exposure_detected === false)
   const lastUsedAt = activeKeys
-    .map((key) => key.last_used_at)
+    .map((key) => {
+      const lastUsed = String(key.last_used_at || "")
+      const created = String(key.created_at || "")
+      return lastUsed && lastUsed !== created ? lastUsed : ""
+    })
     .filter(Boolean)
     .sort()
     .at(-1)
