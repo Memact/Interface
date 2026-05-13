@@ -256,6 +256,22 @@
   line-height: 1.45;
 }
 
+.faq-answer-content {
+  display: grid;
+  gap: 10px;
+}
+
+.faq-answer-content ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.faq-answer-content li {
+  padding-left: 2px;
+}
+
 .faq-answer-content code {
   color: var(--text);
   font-size: 0.95em;

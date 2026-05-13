@@ -46,10 +46,19 @@ const ACTIVITY_FAQS = [
 
 const ADVANCED_FAQS = [
   {
-    question: "If an AI coding agent is told to use Memact, what should it build?",
+    question: "How do I use the Memact API in an app?",
     answer: (
       <>
-        Build the normal app flow: register an app, choose narrow scopes and activity categories, send the user to Memact Connect, store the returned <code>connection_id</code>, and verify <code>api_key + connection_id + required_scopes</code> before using any Memact output.
+        <p>Use Memact as a permissioned memory layer, not as a raw data feed.</p>
+        <ol>
+          <li>Register your app in Memact and choose the smallest scopes and activity categories your feature needs.</li>
+          <li>Add a <strong>Connect Memact</strong> button in your app. Send users to <code>/connect?app_id=...&amp;scopes=...&amp;categories=...&amp;redirect_uri=...</code>.</li>
+          <li>Put a Data Transparency link beside that consent flow. Explain the actual captured fields, evidence cards, summaries, graph packets, retention, and revocation path.</li>
+          <li>After approval, Memact redirects back to your <code>redirect_uri</code> with a <code>connection_id</code>. Store that id for the signed-in user in your app.</li>
+          <li>Keep the raw Memact API key on your server. Do not ship it in browser JavaScript, mobile apps, public repos, docs, logs, or prompts.</li>
+          <li>Before using Memact output, your backend verifies <code>api_key + connection_id + required_scopes</code>. If verification fails, do not collect or read anything.</li>
+          <li>Use only the approved result: summaries, evidence snippets, graph objects, schema writes, or capture status that match the returned scopes and categories.</li>
+        </ol>
       </>
     )
   },
@@ -62,10 +71,10 @@ const ADVANCED_FAQS = [
     )
   },
   {
-    question: "What should a developer embed?",
+    question: "What code should I embed?",
     answer: (
       <>
-        Embed a Connect button and a server endpoint. The button sends users to <code>/connect?app_id=...&amp;scopes=...&amp;categories=...&amp;redirect_uri=...</code>. The server receives the returned <code>connection_id</code>, verifies it with the app API key, then requests only the approved capture, schema, or memory output needed for that feature.
+        Embed only the user-facing connection pieces in the client: the Connect button, the Data Transparency link, and your callback handling. Put verification and Memact API calls on your server. A typical server step is: receive <code>connection_id</code>, load the app's Memact API key from server secrets, call the verification endpoint with required scopes, then run the feature only with the approved scopes and categories returned by Memact.
       </>
     )
   },

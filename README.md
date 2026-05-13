@@ -62,7 +62,7 @@ Authenticated dashboard:
 - Access shows app registration, permissions, API keys, usage statistics, and the one-time key flow
 - `/DataTransparency` is a consent-companion page, not a dashboard tab
 - Account shows identity, email/password actions, and account metrics
-- Help uses short FAQs for users, developers, and AI coding agents
+- Help uses short FAQs for users and developers
 
 Button hierarchy:
 
@@ -241,8 +241,8 @@ Memact verifies the API key before an app can use approved capture, schema,
 graph, or memory permissions. The app receives only the scopes and activity
 categories the user approved for that app.
 
-For AI coding agents and developer docs, keep the integration explanation
-practical:
+For developer docs and generated coding guidance, keep the integration
+explanation practical:
 
 ```text
 1. Put a "Connect Memact" button in the app.
@@ -282,7 +282,7 @@ Website includes a Help tab for non-technical users. It explains:
 - whether apps get the whole memory graph
 - what Connect App does
 - what activity categories are
-- how AI coding agents and developers should embed the API safely
+- how developers should embed the API safely
 - what schema packets are
 - what apps should not do
 
