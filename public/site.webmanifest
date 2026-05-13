@@ -1,9 +1,8 @@
 {
-  "name": "Memact Access",
+  "name": "Memact",
   "short_name": "Memact",
-  "description": "Manage apps, permissions, activity categories, and scoped API keys for Memact.",
+  "description": "Manage app permissions, consent, and API keys in Memact.",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
   "background_color": "#00011B",
   "theme_color": "#00011B",
