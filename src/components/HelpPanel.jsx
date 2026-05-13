@@ -101,7 +101,7 @@ export function HelpPanel() {
         <p className="eyebrow">Help</p>
         <h2>Frequently asked questions</h2>
       </div>
-      <p className="muted help-intro">Apps ask for memory access. You choose what they get.</p>
+      <p className="muted help-intro">Built to clear your doubts with transparent, user-controlled answers.</p>
 
       <div className="faq-section">
         <p className="faq-section-title">Basics</p>
