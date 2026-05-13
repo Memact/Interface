@@ -179,12 +179,14 @@
 
 .faq-item summary.faq-trigger {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 38px;
+  grid-template-columns: minmax(0, 1fr) max-content;
   align-items: center;
   gap: 16px;
+  box-sizing: border-box;
   width: 100%;
   min-height: 60px;
   padding: 19px var(--faq-inline-pad);
+  cursor: pointer;
   list-style: none;
   list-style-type: none;
   list-style-position: outside;
@@ -216,6 +218,7 @@
   border-radius: 999px;
   padding: 0;
   flex: 0 0 auto;
+  justify-self: end;
   color: var(--muted);
   background: var(--surface-2);
   font-size: 0;
@@ -396,7 +399,7 @@
   }
 
   .faq-item summary.faq-trigger {
-    grid-template-columns: minmax(0, 1fr) 38px;
+    grid-template-columns: minmax(0, 1fr) max-content;
     min-height: 56px;
     padding: 13px var(--faq-inline-pad);
   }
