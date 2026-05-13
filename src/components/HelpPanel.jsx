@@ -82,7 +82,7 @@ const ADVANCED_FAQS = [
     question: "What code should I embed?",
     answer: (
       <>
-        Embed only the user-facing connection pieces in the client: the Connect button, the Data Transparency link, and your callback handling. Put verification on your server. The server loads <code>process.env.MEMACT_API_KEY</code>, then sends <code>connection_id</code>, <code>required_scopes</code>, and <code>activity_categories</code> to Memact's verify endpoint. Run your feature only when Memact returns <code>allowed: true</code>, and stay inside the scopes and categories returned.
+        Embed only the user-facing connection pieces in the client: the Connect button, the Data Transparency link, and your callback handling. Put verification on your server. The server loads <code>process.env.MEMACT_API_KEY</code>, then sends <code>connection_id</code>, <code>required_scopes</code>, and <code>activity_categories</code> to Memact's verify endpoint. You normally do not set a verify URL; use the default Memact endpoint shown in the generated tutorial. Add <code>MEMACT_VERIFY_URL</code> only if Memact gives you a different verification host. Run your feature only when Memact returns <code>allowed: true</code>, and stay inside the scopes and categories returned.
       </>
     )
   },

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import "../memact-ui.css"
 import "../landing-polish.css"
 import "../desktop-landing-lift.css"
@@ -28,6 +28,11 @@ export function Landing({
   onLearnMore
 }) {
   const isSignIn = authMode === "sign-in"
+  const [signupStep, setSignupStep] = useState("identity")
+
+  useEffect(() => {
+    setSignupStep("identity")
+  }, [authMode])
 
   const handleAuthScroll = (event, mode = "sign-up") => {
     event.preventDefault()
@@ -36,9 +41,41 @@ export function Landing({
       const target = document.getElementById(mode)
       if (!target) return
 
-      target.scrollIntoView({ behavior: "auto", block: "center" })
+      target.scrollIntoView({ behavior: "smooth", block: "center" })
       target.querySelector("input")?.focus({ preventScroll: true })
     })
+  }
+
+  const goToSignupPassword = () => {
+    const cleanName = signupDisplayName.trim().replace(/\s+/g, " ")
+    if (cleanName.length < 2) {
+      document.getElementById("signup-display-name")?.focus()
+      return
+    }
+    if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
+      document.getElementById("signup-email")?.focus()
+      return
+    }
+    setSignupStep("password")
+    window.requestAnimationFrame(() => {
+      document.getElementById("signup-password")?.focus()
+    })
+  }
+
+  const goBackToSignupIdentity = () => {
+    setSignupStep("identity")
+    window.requestAnimationFrame(() => {
+      document.getElementById("signup-email")?.focus()
+    })
+  }
+
+  const handleSignupSubmit = (event) => {
+    if (signupStep === "identity") {
+      event.preventDefault()
+      goToSignupPassword()
+      return
+    }
+    onEmailSignup(event)
   }
 
   return (
@@ -71,34 +108,46 @@ export function Landing({
 
         {showAuth ? (
           <section id={isSignIn ? "sign-in" : "sign-up"} className="panel auth-panel" aria-label={isSignIn ? "Memact sign in" : "Memact sign up"}>
+            {!isSignIn ? (
+              <button type="button" className="auth-step-next" onClick={signupStep === "identity" ? goToSignupPassword : handleSignupSubmit} disabled={authLoading === "signup"} aria-label={signupStep === "identity" ? "Continue to password" : "Create account"}>
+                <span>{signupStep === "identity" ? "Next" : "Create"}</span>
+                <span className="faq-chevron auth-step-chevron" aria-hidden="true">v</span>
+              </button>
+            ) : null}
             <img className="auth-panel-logo" src="/logo.png" alt="Memact" />
             <p className="eyebrow">{isSignIn ? "Sign in" : "Get started"}</p>
             <p className="muted auth-support">
-              {isSignIn ? "Sign in to manage apps, permissions, and API keys." : "Create your Memact account to manage apps, permissions, and API keys."}
+              {isSignIn ? "Sign in to manage apps, permissions, and API keys." : signupStep === "identity" ? "First, tell Memact who you are." : "Now create a strong password for your account."}
             </p>
+            {!isSignIn ? (
+              <div className="auth-progress" aria-label="Sign up progress">
+                <span className="is-active" />
+                <span className={signupStep === "password" ? "is-active" : ""} />
+              </div>
+            ) : null}
             {authNotice ? <p className="notice notice-success" role="status">{authNotice}</p> : null}
-            <form className="form" onSubmit={isSignIn ? onPasswordLogin : onEmailSignup}>
-              {!isSignIn ? (
+            <form className="form" onSubmit={isSignIn ? onPasswordLogin : handleSignupSubmit}>
+              {!isSignIn && signupStep === "identity" ? (
                 <label>
                   Display name
-                  <input value={signupDisplayName} type="text" autoComplete="name" placeholder="What should Memact call you?" maxLength={80} onChange={(event) => setSignupDisplayName(event.target.value)} required />
+                  <input id="signup-display-name" value={signupDisplayName} type="text" autoComplete="name" placeholder="What should Memact call you?" maxLength={80} onChange={(event) => setSignupDisplayName(event.target.value)} required />
                 </label>
               ) : null}
-              <label>
+              {(isSignIn || signupStep === "identity") ? <label>
                 Email
-                <input value={email} type="email" inputMode="email" autoComplete="email" placeholder="Enter your email" onChange={(event) => setEmail(event.target.value)} required />
-              </label>
-              <label>
+                <input id={isSignIn ? "signin-email" : "signup-email"} value={email} type="email" inputMode="email" autoComplete="email" placeholder="Enter your email" onChange={(event) => setEmail(event.target.value)} required />
+              </label> : null}
+              {(isSignIn || signupStep === "password") ? <label>
                 Password
-                <input value={password} type="password" autoComplete={isSignIn ? "current-password" : "new-password"} placeholder={isSignIn ? "Enter your password" : "Create a strong password"} onChange={(event) => setPassword(event.target.value)} required />
-              </label>
-              {!isSignIn ? (
+                <input id={isSignIn ? "signin-password" : "signup-password"} value={password} type="password" autoComplete={isSignIn ? "current-password" : "new-password"} placeholder={isSignIn ? "Enter your password" : "Create a strong password"} onChange={(event) => setPassword(event.target.value)} required />
+              </label> : null}
+              {!isSignIn && signupStep === "password" ? (
                 <label>
                   Confirm password
                   <input value={passwordConfirm} type="password" autoComplete="new-password" placeholder="Repeat the password" onChange={(event) => setPasswordConfirm(event.target.value)} required />
                 </label>
               ) : null}
-              {!isSignIn && passwordState ? (
+              {!isSignIn && signupStep === "password" && passwordState ? (
                 <>
                   <div className="password-strength signup-password-strength" data-strength={passwordState.level}>
                     <div className="password-strength-bar">
@@ -116,8 +165,11 @@ export function Landing({
               <button type="submit" disabled={authLoading === "password" || authLoading === "signup"}>
                 {authLoading === "password" || authLoading === "signup"
                   ? isSignIn ? "Signing in..." : "Creating account..."
-                  : isSignIn ? "Sign in" : "Create account"}
+                  : isSignIn ? "Sign in" : signupStep === "identity" ? "Continue" : "Create account"}
               </button>
+              {!isSignIn && signupStep === "password" ? (
+                <button type="button" className="text-button" onClick={goBackToSignupIdentity}>Back to name and email</button>
+              ) : null}
               {isSignIn ? (
                 <>
                   <button type="button" className="text-button" disabled={authLoading === "forgot-password"} onClick={onForgotPassword}>

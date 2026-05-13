@@ -69,6 +69,7 @@ function App() {
   const { setStatus, setError, setCanRetryDashboard } = dashboardActions
   const session = authSession?.access_token || ""
   const passwordState = useMemo(() => getPasswordState(setupPassword, setupPasswordConfirm), [setupPassword, setupPasswordConfirm])
+  const signupPasswordState = useMemo(() => getPasswordState(password, passwordConfirm), [password, passwordConfirm])
   const needsPasswordSetup = Boolean(authUser && shouldOfferPasswordSetup(authUser))
 
   function navigateToPage(page, { replace = false, hash = "" } = {}) {
@@ -872,7 +873,15 @@ function App() {
         {showStatusPill ? <span className="status-pill" aria-live="polite">{status}</span> : null}
       </header>
 
-      {error ? <p id="error-message" className="notice notice-danger error-overlay" role="alert">{error} {canRetryDashboard ? <button type="button" className="inline-retry" onClick={handleRetryDashboard}>Retry</button> : null}</p> : null}
+      {error ? (
+        <div id="error-message" className="notice notice-danger error-overlay" role="alert">
+          <span>{error}</span>
+          <div className="error-overlay-actions">
+            {canRetryDashboard ? <button type="button" className="inline-retry" onClick={handleRetryDashboard}>Retry</button> : null}
+            <button type="button" className="error-dismiss" onClick={() => setError("")} aria-label="Dismiss error">x</button>
+          </div>
+        </div>
+      ) : null}
       {authChecking && !showAuth ? <p className="status-line">Checking login.</p> : null}
 
       {currentPage === "help" ? (
@@ -983,7 +992,7 @@ function App() {
           signupDisplayName={signupDisplayName}
           password={password}
           passwordConfirm={passwordConfirm}
-          passwordState={passwordState}
+          passwordState={signupPasswordState}
           authMode={authMode}
           authLoading={authLoading}
           authNotice={authNotice}
@@ -997,7 +1006,7 @@ function App() {
           onPasswordLogin={handlePasswordLogin}
           onForgotPassword={handleForgotPassword}
           onGithubLogin={handleGithubLogin}
-          onLearnMore={() => navigateToPage("help")}
+          onLearnMore={() => { window.location.href = "/learn/" }}
         />
       )}
     </main>

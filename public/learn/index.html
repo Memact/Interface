@@ -116,6 +116,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 8px;
         min-height: 40px;
         border: 1px solid var(--border-strong);
         border-radius: 10px;
@@ -125,6 +126,23 @@
         font-size: 14px;
         font-weight: 700;
         text-decoration: none;
+      }
+
+      .back-button {
+        padding-inline: 10px 14px;
+      }
+
+      .chevron {
+        display: inline-grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        border: 1px solid var(--border-strong);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.055);
+        color: var(--text);
+        line-height: 1;
+        transform: rotate(90deg);
       }
 
       .hero,
@@ -253,7 +271,7 @@
       <header class="topbar">
         <a href="/" aria-label="Go to Memact"><img class="logo" src="/logo.png" alt="Memact" /></a>
         <nav class="nav" aria-label="Public navigation">
-          <a class="button" href="/">Access portal</a>
+          <a class="button back-button" href="/"><span class="chevron" aria-hidden="true">v</span><span>Back to Memact</span></a>
           <a class="button" href="https://github.com/Memact" rel="noreferrer">GitHub</a>
         </nav>
       </header>
