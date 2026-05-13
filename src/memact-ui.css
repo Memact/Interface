@@ -1,0 +1,510 @@
+/* Tight auth screen: centered, no forced document scroll on normal desktop */
+.page-auth {
+  min-height: 100svh;
+  height: 100svh;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.page-auth .topbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 0 4px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page-auth .logo,
+.page-auth .brand,
+.page-auth .wordmark,
+.page-auth .topbar > a,
+.page-auth .topbar > img {
+  margin-inline: auto;
+}
+
+.page-auth .landing {
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 440px);
+  justify-content: center;
+  align-content: center;
+  justify-items: stretch;
+  gap: 14px;
+  padding: 10px 0 20px;
+  overflow: auto;
+}
+
+.page-auth .landing-with-auth {
+  grid-template-columns: minmax(0, 440px);
+}
+
+.page-auth .hero-copy {
+  max-width: 440px;
+  text-align: center;
+  align-self: end;
+}
+
+.page-auth .hero-copy h1 {
+  font-size: clamp(26px, 4.5vw, 34px);
+}
+
+.page-auth .hero-copy p:not(.eyebrow) {
+  margin-top: 8px;
+  font-size: 15px;
+}
+
+.page-auth .auth-panel {
+  width: 100%;
+  max-width: 440px;
+  justify-self: stretch;
+  padding: 18px;
+  align-self: start;
+}
+
+.page-auth .auth-panel-logo {
+  display: block;
+  width: min(168px, 48%);
+  max-width: 168px;
+  height: auto;
+  margin: 0 auto 16px;
+}
+
+/* Account: keep avatar styling away from email/meta text */
+.account-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.identity-card {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.identity-card > div {
+  min-width: 0;
+  width: 100%;
+}
+
+.identity-card h2 {
+  max-width: 100%;
+  margin-bottom: 4px;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: normal;
+}
+
+.identity-meta {
+  display: block;
+  max-width: 100%;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.identity-card .identity-meta span,
+.identity-card .identity-meta span:first-child {
+  display: block;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  max-width: 100%;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  font-size: inherit;
+  font-weight: 400;
+  line-height: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: normal;
+}
+
+.compact-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 12px;
+}
+
+.compact-form button {
+  align-self: end;
+  white-space: nowrap;
+}
+
+/* FAQ: Google People Also Ask style */
+.faq-section {
+  gap: 0;
+}
+
+.faq-item {
+  border-radius: 0;
+  border-inline: 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 0;
+  background: transparent;
+}
+
+.faq-item:first-of-type {
+  border-top: 1px solid var(--border);
+}
+
+.faq-item:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.faq-item[open] {
+  background: transparent;
+}
+
+.faq-item summary.faq-trigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 16px;
+  min-height: 58px;
+  padding: 14px 0;
+  list-style: none;
+  list-style-type: none;
+}
+
+.faq-item summary.faq-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.faq-question {
+  min-width: 0;
+  line-height: 1.28;
+}
+
+.faq-chevron {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 0;
+  justify-self: end;
+  color: var(--muted);
+  background: var(--surface-2);
+  font-size: 0;
+  line-height: 0;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.faq-chevron::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transform-origin: center;
+  transition: transform 140ms ease;
+}
+
+.faq-item[open] .faq-chevron {
+  border-color: rgba(255, 255, 255, 0.36);
+  color: var(--text);
+  background: var(--surface-3);
+}
+
+.faq-item[open] .faq-chevron::before {
+  transform: translateY(2px) rotate(225deg);
+}
+
+.faq-answer {
+  padding: 0 54px 16px 0;
+}
+
+.faq-answer p {
+  margin: 0;
+  padding: 0;
+}
+
+/* API key rows: content left, status/action right */
+.api-key-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  grid-template-rows: auto auto;
+  align-items: start;
+  column-gap: 14px;
+  row-gap: 10px;
+  overflow: hidden;
+}
+
+.api-key-row > span:first-child {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.api-key-row > span:first-child strong {
+  line-height: 1.2;
+}
+
+.api-key-row > span:first-child small {
+  max-width: 100%;
+  margin-top: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.api-key-row > .badge {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  align-self: start;
+  width: fit-content;
+  transform: none;
+}
+
+.api-key-row > button {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  align-self: end;
+  min-height: 30px;
+  max-width: 100%;
+  width: fit-content;
+  padding: 5px 12px;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.revoked-key-row {
+  grid-template-columns: minmax(0, 1fr) 76px;
+}
+
+.revoked-key-row > span:first-child {
+  grid-row: 1 / span 1;
+}
+
+.badge-success {
+  border-color: rgba(80, 255, 154, 0.42);
+  color: #a8ffd0;
+  background: rgba(35, 180, 95, 0.16);
+}
+
+@media (max-width: 900px) {
+  .page-auth {
+    height: auto;
+    min-height: 100svh;
+    overflow: visible;
+  }
+
+  .page-auth .landing {
+    height: auto;
+    align-content: start;
+    padding: 14px 0 28px;
+    overflow: visible;
+  }
+
+  .page-auth .hero-copy {
+    align-self: auto;
+  }
+
+  .page-auth .auth-panel {
+    align-self: auto;
+  }
+
+  .page-auth .auth-panel-logo {
+    width: min(160px, 58%);
+    max-width: 160px;
+    margin: 0 auto 14px;
+  }
+
+  .account-panel-head {
+    display: grid;
+    gap: 10px;
+  }
+
+  .identity-meta {
+    font-size: 13px;
+  }
+
+  .compact-form {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-form button {
+    width: 100%;
+  }
+
+  .faq-item summary.faq-trigger {
+    grid-template-columns: minmax(0, 1fr) 38px;
+    min-height: 56px;
+    padding: 13px 0;
+  }
+
+  .faq-chevron {
+    width: 36px;
+    height: 36px;
+  }
+
+  .faq-chevron::before {
+    width: 8px;
+    height: 8px;
+  }
+
+  .faq-answer {
+    padding-right: 50px;
+  }
+}
+
+/* Centralized CTA styles for landing + connect surfaces */
+.landing-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 236px));
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 500px);
+  max-width: 100%;
+  margin: 28px auto 0;
+}
+
+.landing-actions .scroll-to-auth,
+.landing-actions .learn-more-link {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  border-radius: 16px !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+}
+
+.landing-actions .scroll-to-auth {
+  margin: 0 !important;
+  padding: 0 54px 0 24px !important;
+}
+
+.landing-actions .scroll-to-auth::after {
+  width: 32px !important;
+  height: 32px !important;
+  right: 13px !important;
+  background: rgba(0, 1, 27, 0.06) !important;
+}
+
+.landing-actions .scroll-to-auth::before {
+  right: 25px !important;
+}
+
+.learn-more-link,
+.connect-learn-more .learn-more-link,
+.connect-learn-more button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: 16px;
+  padding: 10px 18px;
+  color: var(--text) !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  box-shadow: none !important;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+.learn-more-link:hover,
+.connect-learn-more .learn-more-link:hover,
+.connect-learn-more button:hover {
+  border-color: rgba(255, 255, 255, 0.42) !important;
+  color: var(--text) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.landing-actions .scroll-to-auth:hover {
+  border-color: rgba(255, 255, 255, 0.95) !important;
+  color: #00011b !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.landing-actions .learn-more-link {
+  padding: 0 24px;
+}
+
+@media (max-width: 720px) {
+  .landing-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(100%, 560px);
+    gap: 14px;
+  }
+}
+
+@media (max-width: 460px) {
+  .landing-actions {
+    grid-template-columns: 1fr;
+    width: min(236px, 78vw);
+    gap: 12px;
+  }
+}
+
+.connect-learn-more {
+  margin: 4px 0 16px;
+}
+
+/* Universal Memact keyboard focus language */
+:where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus {
+  outline: none;
+}
+
+:where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.78);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.12);
+}
+
+:where(input, textarea, select):focus-visible {
+  border-color: rgba(255, 255, 255, 0.52);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.11);
+}
+
+.landing-actions .scroll-to-auth:focus-visible,
+button:not(.ghost):focus-visible,
+.form button[type="submit"]:focus-visible {
+  outline: 2px solid rgba(0, 1, 27, 0.9);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.32);
+}
+
+.ghost:focus-visible,
+.learn-more-link:focus-visible,
+.connect-learn-more .learn-more-link:focus-visible,
+.connect-learn-more button:focus-visible,
+.tab-button:focus-visible,
+.faq-trigger:focus-visible {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+:where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}

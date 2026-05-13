@@ -1,6 +1,7 @@
 import { AccessApiError } from "./legacy-access-http-client.js"
 
 import { normalizeAppName } from "./app-name.js"
+import { getDisplayName } from "./user-display.js"
 
 export class SupabaseAccessClient {
   constructor(supabase) {
@@ -25,6 +26,7 @@ export class SupabaseAccessClient {
         id: data.user.id,
         email: data.user.email || "",
         provider: data.user.app_metadata?.provider || data.user.identities?.[0]?.provider || "email",
+        display_name: getDisplayName(null, data.user),
         avatar_url: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || "",
         plan: "free_unlimited",
         created_at: data.user.created_at || null
@@ -33,7 +35,12 @@ export class SupabaseAccessClient {
   }
 
   async dashboard() {
-    return this.rpc("memact_dashboard")
+    try {
+      return await this.rpc("memact_dashboard")
+    } catch (error) {
+      if (!isMigrationOrSchemaError(error)) throw error
+      return this.dashboardFallback()
+    }
   }
 
   async apps() {
@@ -42,22 +49,11 @@ export class SupabaseAccessClient {
   }
 
   async createApp(_session, body) {
-    try {
-      return await this.rpc("memact_create_app", {
-        app_name: body?.name || "",
-        app_description: body?.description || "",
-        app_redirect_urls: body?.redirect_urls || [],
-        app_developer_url: body?.developer_url || "",
-        app_categories: body?.categories || []
-      })
-    } catch (error) {
-      if (!isLegacyCreateAppRpcError(error)) throw error
-      return this.createAppFallback(body)
-    }
+    return this.createAppFallback(body)
   }
 
   async deleteApp(_session, appId) {
-    return this.rpc("memact_delete_app", { app_id_input: appId })
+    return this.deleteAppFallback(appId)
   }
 
   async apiKeys() {
@@ -66,20 +62,11 @@ export class SupabaseAccessClient {
   }
 
   async createApiKey(_session, body) {
-    try {
-      return await this.rpc("memact_create_api_key", {
-        app_id_input: body?.app_id,
-        key_name_input: body?.name || "Default app key",
-        scopes_input: body?.scopes || []
-      })
-    } catch (error) {
-      if (!isLegacyApiKeyEntropyError(error)) throw error
-      return this.createApiKeyFallback(body)
-    }
+    return this.createApiKeyFallback(body)
   }
 
   async revokeApiKey(_session, keyId) {
-    return this.rpc("memact_revoke_api_key", { key_id_input: keyId })
+    return this.revokeApiKeyFallback(keyId)
   }
 
   async consents() {
@@ -88,24 +75,20 @@ export class SupabaseAccessClient {
   }
 
   async grantConsent(_session, body) {
-    try {
-      return await this.rpc("memact_grant_consent", {
-        app_id_input: body?.app_id,
-        scopes_input: body?.scopes || [],
-        categories_input: body?.categories || []
-      })
-    } catch (error) {
-      if (!isLegacyGrantConsentRpcError(error)) throw error
-      return this.grantConsentFallback(body)
-    }
+    return this.grantConsentFallback(body, { requireOwner: true })
   }
 
   async getConnectApp(_session, request = {}) {
-    return this.rpc("memact_get_connect_app", {
-      app_id_input: request?.app_id,
-      scopes_input: request?.scopes || [],
-      categories_input: request?.categories || []
-    })
+    try {
+      return await this.rpc("memact_get_connect_app", {
+        app_id_input: request?.app_id,
+        scopes_input: request?.scopes || [],
+        categories_input: request?.categories || []
+      })
+    } catch (error) {
+      if (!isMigrationOrSchemaError(error) && !isLegacyConnectAppRpcError(error)) throw error
+      return this.getConnectAppFallback(request)
+    }
   }
 
   async connectApp(_session, request = {}) {
@@ -121,7 +104,7 @@ export class SupabaseAccessClient {
         app_id: request?.app_id,
         scopes: request?.scopes || [],
         categories: request?.categories || []
-      })
+      }, { requireOwner: false })
       return { ...granted, connected: true }
     }
   }
@@ -151,6 +134,41 @@ export class SupabaseAccessClient {
     return data && typeof data === "object" ? data : {}
   }
 
+  async dashboardFallback() {
+    const { data: userData, error: userError } = await this.supabase.auth.getUser()
+    if (userError) throw mapSupabaseRpcError(userError)
+    const user = userData?.user
+    if (!user?.id) throw new AccessApiError(401, "Please sign in again.", "invalid_session")
+
+    const [appsResult, keysResult, consentsResult] = await Promise.all([
+      this.supabase
+        .from("memact_apps")
+        .select("id, owner_user_id, name, slug, description, developer_url, redirect_urls, default_scopes, default_categories, created_at, revoked_at")
+        .eq("owner_user_id", user.id)
+        .is("revoked_at", null)
+        .order("created_at", { ascending: true }),
+      this.supabase
+        .from("memact_api_keys")
+        .select("id, app_id, owner_user_id, name, key_prefix, scopes, created_at, last_used_at, revoked_at")
+        .eq("owner_user_id", user.id)
+        .order("created_at", { ascending: false }),
+      this.supabase
+        .from("memact_consents")
+        .select("id, user_id, app_id, scopes, categories, created_at, updated_at, revoked_at")
+        .eq("user_id", user.id)
+    ])
+
+    if (appsResult.error) throw new AccessApiError(500, appsResult.error.message || "Could not load apps.", "apps_lookup_failed", appsResult.error)
+    if (keysResult.error) throw new AccessApiError(500, keysResult.error.message || "Could not load API keys.", "api_keys_lookup_failed", keysResult.error)
+    if (consentsResult.error) throw new AccessApiError(500, consentsResult.error.message || "Could not load permissions.", "consents_lookup_failed", consentsResult.error)
+
+    return {
+      apps: appsResult.data || [],
+      api_keys: keysResult.data || [],
+      consents: consentsResult.data || []
+    }
+  }
+
   async createApiKeyFallback(body) {
     const { data: userData, error: userError } = await this.supabase.auth.getUser()
     if (userError) throw mapSupabaseRpcError(userError)
@@ -159,7 +177,7 @@ export class SupabaseAccessClient {
 
     const { data: app, error: appError } = await this.supabase
       .from("memact_apps")
-      .select("id")
+      .select("id, default_scopes")
       .eq("id", body?.app_id)
       .eq("owner_user_id", user.id)
       .is("revoked_at", null)
@@ -170,13 +188,16 @@ export class SupabaseAccessClient {
 
     const rawKey = createBrowserApiKey()
     const keyHash = await sha256Hex(rawKey)
+    const cleanScopes = filterKnownValues(body?.scopes, app.default_scopes)
+    if (!cleanScopes.length) throw new AccessApiError(400, "Select at least one permission.", "missing_scopes")
+
     const payload = {
       app_id: app.id,
       owner_user_id: user.id,
       name: (body?.name || "Default app key").trim().slice(0, 80) || "Default app key",
       key_hash: keyHash,
       key_prefix: rawKey.slice(0, 12),
-      scopes: Array.isArray(body?.scopes) ? body.scopes : []
+      scopes: cleanScopes
     }
 
     const { data: createdKey, error: createError } = await this.supabase
@@ -231,25 +252,56 @@ export class SupabaseAccessClient {
     return { app: createdApp }
   }
 
-  async grantConsentFallback(body) {
+  async deleteAppFallback(appId) {
     const { data: userData, error: userError } = await this.supabase.auth.getUser()
     if (userError) throw mapSupabaseRpcError(userError)
     const user = userData?.user
     if (!user?.id) throw new AccessApiError(401, "Please sign in again.", "invalid_session")
 
+    const revokedAt = new Date().toISOString()
     const { data: app, error: appError } = await this.supabase
+      .from("memact_apps")
+      .update({ revoked_at: revokedAt, updated_at: revokedAt })
+      .eq("id", appId)
+      .eq("owner_user_id", user.id)
+      .is("revoked_at", null)
+      .select("id")
+      .maybeSingle()
+
+    if (appError) throw new AccessApiError(500, appError.message || "Could not delete the app.", "app_delete_failed", appError)
+    if (!app?.id) throw new AccessApiError(404, "App not found.", "app_not_found")
+
+    await Promise.all([
+      this.supabase.from("memact_api_keys").update({ revoked_at: revokedAt }).eq("app_id", app.id).eq("owner_user_id", user.id).is("revoked_at", null),
+      this.supabase.from("memact_consents").update({ revoked_at: revokedAt, updated_at: revokedAt }).eq("app_id", app.id).eq("user_id", user.id).is("revoked_at", null)
+    ])
+
+    return { ok: true, app_id: app.id }
+  }
+
+  async grantConsentFallback(body, options = {}) {
+    const requireOwner = options.requireOwner !== false
+    const { data: userData, error: userError } = await this.supabase.auth.getUser()
+    if (userError) throw mapSupabaseRpcError(userError)
+    const user = userData?.user
+    if (!user?.id) throw new AccessApiError(401, "Please sign in again.", "invalid_session")
+
+    let appQuery = this.supabase
       .from("memact_apps")
       .select("id, owner_user_id, default_scopes, default_categories, revoked_at")
       .eq("id", body?.app_id)
-      .eq("owner_user_id", user.id)
       .is("revoked_at", null)
-      .maybeSingle()
+    if (requireOwner) {
+      appQuery = appQuery.eq("owner_user_id", user.id)
+    }
+    const { data: app, error: appError } = await appQuery.maybeSingle()
 
     if (appError) throw new AccessApiError(500, appError.message || "Could not check the selected app.", "app_lookup_failed", appError)
     if (!app?.id) throw new AccessApiError(404, "App not found.", "app_not_found")
 
     const scopes = filterKnownValues(body?.scopes, app.default_scopes)
-    const categories = filterKnownValues(body?.categories, app.default_categories)
+    const requestedCategories = Array.isArray(body?.categories) && body.categories.length ? body.categories : app.default_categories
+    const categories = filterKnownValues(requestedCategories, app.default_categories)
     if (!scopes.length) throw new AccessApiError(400, "Select at least one permission.", "missing_scopes")
     if (!categories.length) throw new AccessApiError(400, "Select at least one activity category.", "missing_categories")
 
@@ -281,6 +333,59 @@ export class SupabaseAccessClient {
 
     if (writeError) throw new AccessApiError(500, writeError.message || "Could not save permissions.", "consent_write_failed", writeError)
     return { consent }
+  }
+
+  async getConnectAppFallback(request = {}) {
+    const policy = await this.policy()
+    const { data: app, error: appError } = await this.supabase
+      .from("memact_apps")
+      .select("id, owner_user_id, name, slug, description, developer_url, redirect_urls, default_scopes, default_categories, created_at, revoked_at")
+      .eq("id", request?.app_id)
+      .is("revoked_at", null)
+      .maybeSingle()
+
+    if (appError) throw new AccessApiError(500, appError.message || "Could not load app details.", "app_lookup_failed", appError)
+    if (!app?.id) throw new AccessApiError(404, "App not found.", "app_not_found")
+
+    const requestedScopes = filterKnownValues(
+      Array.isArray(request?.scopes) && request.scopes.length ? request.scopes : app.default_scopes,
+      app.default_scopes
+    )
+    const requestedCategories = filterKnownValues(
+      Array.isArray(request?.categories) && request.categories.length ? request.categories : app.default_categories,
+      app.default_categories
+    )
+
+    if (!requestedScopes.length) throw new AccessApiError(400, "No valid permissions requested.", "missing_scopes")
+    if (!requestedCategories.length) throw new AccessApiError(400, "No valid activity categories requested.", "missing_categories")
+
+    return {
+      app,
+      requested_scopes: requestedScopes,
+      requested_categories: requestedCategories,
+      scopes: policy.scopes || {},
+      activity_categories: policy.activity_categories || {}
+    }
+  }
+
+  async revokeApiKeyFallback(keyId) {
+    const { data: userData, error: userError } = await this.supabase.auth.getUser()
+    if (userError) throw mapSupabaseRpcError(userError)
+    const user = userData?.user
+    if (!user?.id) throw new AccessApiError(401, "Please sign in again.", "invalid_session")
+
+    const { data: key, error: keyError } = await this.supabase
+      .from("memact_api_keys")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("id", keyId)
+      .eq("owner_user_id", user.id)
+      .is("revoked_at", null)
+      .select("id")
+      .maybeSingle()
+
+    if (keyError) throw new AccessApiError(500, keyError.message || "Could not revoke the API key.", "api_key_revoke_failed", keyError)
+    if (!key?.id) throw new AccessApiError(404, "API key not found.", "api_key_not_found")
+    return { ok: true, key_id: key.id }
   }
 
   async verifyApiKeyFallback(apiKey, requiredScopes = [], requiredCategories = [], connectionId = null) {
@@ -405,6 +510,16 @@ function isLegacyConnectAppRpcError(error) {
 
 function isLegacyAccessCryptoError(error) {
   return error instanceof AccessApiError && error.code === "legacy_access_crypto"
+}
+
+function isMigrationOrSchemaError(error) {
+  return error instanceof AccessApiError && (
+    error.code === "access_migration_required" ||
+    error.code === "legacy_create_app_rpc" ||
+    error.code === "legacy_grant_consent_rpc" ||
+    error.code === "legacy_connect_app_rpc" ||
+    error.code === "rpc_failed"
+  )
 }
 
 function filterKnownValues(values, allowedValues) {

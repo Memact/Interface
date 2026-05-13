@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
 
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
 Sitemap: https://www.memact.com/sitemap.xml

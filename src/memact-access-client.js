@@ -1,6 +1,7 @@
 import { isSupabaseConfigured, requireSupabase } from "./supabase-client.js"
 import { AccessApiError, HttpAccessClient, LEGACY_ACCESS_URL } from "./legacy-access-http-client.js"
 import { SupabaseAccessClient } from "./supabase-access-client.js"
+import "./supabase-access-permission-fix.js"
 
 export const ACCESS_MODE = isSupabaseConfigured ? "supabase" : "http"
 export const ACCESS_URL = ACCESS_MODE === "supabase" ? "supabase" : LEGACY_ACCESS_URL

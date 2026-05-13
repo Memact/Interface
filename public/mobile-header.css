@@ -1,0 +1,429 @@
+.embed-code {
+  border-color: var(--border) !important;
+  background: rgba(255, 255, 255, 0.018) !important;
+  overflow: hidden !important;
+}
+
+.embed-code summary {
+  display: grid !important;
+  gap: 3px !important;
+  min-height: 42px !important;
+  padding: 12px !important;
+  color: var(--text) !important;
+  font-weight: 700 !important;
+}
+
+.embed-code summary::after {
+  content: "Starter snippet for wiring Connect App + access verification.";
+  color: var(--soft) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+}
+
+.embed-code[open] {
+  background: rgba(255, 255, 255, 0.026) !important;
+}
+
+.embed-code pre {
+  width: calc(100% - 24px) !important;
+  max-width: calc(100% - 24px) !important;
+  max-height: 360px !important;
+  margin: 0 12px 12px !important;
+  overflow: auto !important;
+  overscroll-behavior: contain !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 12px !important;
+  background: rgba(0, 1, 27, 0.64) !important;
+  white-space: pre !important;
+}
+
+.embed-code code {
+  display: block !important;
+  width: max-content !important;
+  min-width: 100% !important;
+  color: var(--text) !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+.key-actions button:first-child::before {
+  content: none !important;
+}
+
+.faq-item summary {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding-left: 0 !important;
+  list-style: none !important;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none !important;
+}
+
+.faq-item summary::before {
+  content: none !important;
+}
+
+.faq-arrow {
+  position: relative !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  flex: 0 0 24px !important;
+  width: 24px !important;
+  height: 24px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+.faq-arrow::before {
+  content: "›" !important;
+  color: var(--text) !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  transform: translateX(1px) !important;
+}
+
+.faq-item[open] .faq-arrow::before {
+  transform: rotate(90deg) translateX(1px) !important;
+}
+
+.account-panel-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.app-actions button,
+.section-actions button,
+.key-actions button,
+.connect-actions button,
+.sign-out-button {
+  border-radius: var(--radius-sm) !important;
+  font-weight: 700 !important;
+}
+
+.sign-out-button {
+  min-height: 40px !important;
+  padding: 8px 14px !important;
+  border-color: rgba(255, 180, 180, 0.24) !important;
+  color: rgba(255, 180, 180, 0.86) !important;
+  background: rgba(255, 180, 180, 0.035) !important;
+}
+
+.sign-out-button:hover:not(:disabled) {
+  border-color: rgba(255, 180, 180, 0.34) !important;
+  color: var(--danger) !important;
+  background: rgba(255, 180, 180, 0.07) !important;
+}
+
+.new-app-button {
+  border-color: var(--border-strong) !important;
+  color: var(--text) !important;
+  background: var(--surface-2) !important;
+}
+
+.new-app-button:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  background: var(--surface-3) !important;
+}
+
+.app-delete-button {
+  border-color: rgba(255, 180, 180, 0.26) !important;
+  color: rgba(255, 180, 180, 0.86) !important;
+  background: rgba(255, 180, 180, 0.04) !important;
+}
+
+.app-delete-button:hover:not(:disabled) {
+  border-color: rgba(255, 180, 180, 0.34) !important;
+  color: var(--danger) !important;
+  background: rgba(255, 180, 180, 0.075) !important;
+}
+
+@media (min-width: 901px) {
+  .access-layout {
+    grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr) !important;
+    align-items: start !important;
+  }
+
+  .api-keys-panel {
+    align-self: start !important;
+    min-height: 0 !important;
+  }
+
+  .section-head {
+    align-items: start !important;
+  }
+
+  .section-actions {
+    flex: 0 0 156px !important;
+  }
+
+  .section-actions button,
+  .section-actions .tooltip-wrap {
+    width: 100% !important;
+  }
+
+  .section-actions button {
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+
+  .api-key-row {
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
+    gap: 10px !important;
+  }
+
+  .api-key-row button {
+    min-height: 36px !important;
+    padding: 7px 10px !important;
+    font-size: 13px !important;
+  }
+
+  .api-key-row .badge {
+    justify-self: start !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .page:not(.page-auth) .topbar {
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding-inline: 8px !important;
+  }
+
+  .page:not(.page-auth) .logo-link {
+    justify-self: start !important;
+  }
+
+  .page:not(.page-auth) .logo-img {
+    width: 102px !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
+
+  .page:not(.page-auth) .tabs {
+    justify-content: flex-end !important;
+    width: auto !important;
+    margin-inline: 0 !important;
+    padding: 1px 0 2px !important;
+    overflow-x: auto !important;
+  }
+
+  .page:not(.page-auth) .tab {
+    min-height: 36px !important;
+    padding: 7px 9px !important;
+    font-size: 13px !important;
+  }
+
+  .page-auth .topbar {
+    grid-template-columns: 1fr !important;
+  }
+
+  .page-auth .logo-img {
+    width: 120px !important;
+  }
+
+  .dashboard-head {
+    align-items: start !important;
+  }
+
+  .account-panel-head {
+    align-items: center !important;
+  }
+
+  .sign-out-button {
+    min-height: 40px !important;
+    padding: 8px 14px !important;
+    font-size: 14px !important;
+  }
+
+  .app-actions,
+  .section-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    justify-content: stretch !important;
+  }
+
+  .app-actions button,
+  .section-actions button,
+  .section-actions .tooltip-wrap {
+    width: 100% !important;
+  }
+
+  .app-actions button,
+  .section-actions button {
+    min-height: 40px !important;
+    padding: 8px 10px !important;
+    font-size: 14px !important;
+  }
+
+  .registered-apps {
+    padding: 12px !important;
+  }
+
+  .app-switcher {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding: 0 2px 3px !important;
+    margin-inline: -2px !important;
+  }
+
+  .app-chip {
+    min-height: 38px !important;
+    padding: 8px 12px !important;
+    max-width: 190px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .connect-shell {
+    display: block !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+  }
+
+  .connect-card {
+    gap: 14px !important;
+    padding: 16px !important;
+  }
+
+  .connect-card h1 {
+    font-size: clamp(26px, 7vw, 34px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .connect-card > .muted {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+  }
+
+  .app-identity {
+    align-items: center !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 12px !important;
+    background: rgba(255, 255, 255, 0.025) !important;
+  }
+
+  .app-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: var(--radius-sm) !important;
+    overflow: hidden !important;
+    font-size: 18px !important;
+  }
+
+  .connect-grid {
+    gap: 12px !important;
+  }
+
+  .connect-card .permission-list {
+    padding: 14px !important;
+  }
+
+  .connect-card .mini-row {
+    padding: 12px !important;
+  }
+
+  .connect-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .connect-actions button {
+    width: 100% !important;
+  }
+
+  .key-panel,
+  .key-box,
+  .embed-code,
+  .embed-code pre,
+  .embed-code code {
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .key-box {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+  }
+
+  .key-box code {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-all !important;
+    white-space: normal !important;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+  }
+
+  .key-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .key-actions button {
+    width: 100% !important;
+    min-height: 40px !important;
+    padding: 8px 10px !important;
+  }
+
+  .embed-code summary {
+    padding: 11px !important;
+  }
+
+  .embed-code pre {
+    width: calc(100% - 22px) !important;
+    max-width: calc(100% - 22px) !important;
+    margin: 0 11px 11px !important;
+    padding: 10px !important;
+  }
+
+  .embed-code code {
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .page:not(.page-auth) .topbar {
+    padding-inline: 6px !important;
+  }
+
+  .page:not(.page-auth) .logo-img {
+    width: 96px !important;
+  }
+
+  .page:not(.page-auth) .tab {
+    padding-inline: 8px !important;
+  }
+
+  .app-actions,
+  .section-actions {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .key-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
