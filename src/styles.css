@@ -433,7 +433,17 @@ p { margin-top: 0; }
 
 .compact-form label { margin: 0; }
 
-.section-copy { max-width: 620px; }
+.section-copy {
+  display: grid;
+  gap: 4px;
+  max-width: 620px;
+}
+
+.section-copy .eyebrow,
+.section-copy h2,
+.section-copy .muted {
+  margin: 0;
+}
 
 .section-toolbar,
 .actions,
@@ -445,6 +455,18 @@ p { margin-top: 0; }
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.section-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: min(100%, 194px);
+  gap: 10px;
+}
+
+.section-actions .tooltip-wrap,
+.section-actions button {
+  width: 100%;
 }
 
 .access-layout,
@@ -634,16 +656,20 @@ input:-webkit-autofill:focus {
 
 .scope-card {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 24px minmax(0, 1fr);
   align-items: start;
-  gap: 10px;
-  min-height: 52px;
+  gap: 12px;
+  min-height: 104px;
+  padding: 16px;
   cursor: pointer;
   -webkit-tap-highlight-color: rgba(255, 255, 255, 0.08);
   touch-action: manipulation;
 }
 
-.scope-card input { align-self: start; }
+.scope-card input {
+  align-self: start;
+  margin-top: 2px;
+}
 
 .scope-card:has(input:checked),
 .scope-card:has(input:checked):hover,
@@ -694,6 +720,15 @@ input:-webkit-autofill:focus {
   overflow-wrap: anywhere;
 }
 
+.scope-card span {
+  display: grid;
+  gap: 8px;
+}
+
+.scope-card strong {
+  line-height: 1.2;
+}
+
 .scope-card small,
 .app-card span,
 .list-card small,
@@ -701,7 +736,7 @@ input:-webkit-autofill:focus {
 .app-identity a,
 .app-identity span {
   display: block;
-  margin-top: 4px;
+  margin-top: 0;
   color: var(--muted);
   line-height: 1.42;
 }
