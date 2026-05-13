@@ -17,7 +17,7 @@ const BASIC_FAQS = [
   },
   {
     question: "What does Connect App do?",
-    answer: "It shows what an app wants before anything is connected. You approve or cancel. After approval, you can use Data Transparency to review and revoke access."
+    answer: "It shows what an app wants before anything is connected. You approve or cancel. Apps should link Data Transparency beside consent so you can review the actual data and memory objects they plan to use."
   },
   {
     question: "What are activity categories?",
@@ -66,6 +66,14 @@ const ADVANCED_FAQS = [
     answer: (
       <>
         Embed a Connect button and a server endpoint. The button sends users to <code>/connect?app_id=...&amp;scopes=...&amp;categories=...&amp;redirect_uri=...</code>. The server receives the returned <code>connection_id</code>, verifies it with the app API key, then requests only the approved capture, schema, or memory output needed for that feature.
+      </>
+    )
+  },
+  {
+    question: "Is a Data Transparency page required?",
+    answer: (
+      <>
+        Yes. Any app asking users to consent through Memact should expose Data Transparency next to the consent flow. It must explain the actual captured fields, evidence cards, summaries, graph packets, retention, and revocation path. Categories alone are not enough.
       </>
     )
   },

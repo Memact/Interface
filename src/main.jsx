@@ -11,6 +11,7 @@ import { getAuthRedirectUrl, isSupabaseConfigured, requireSupabase, supabase } f
 import { hasDuplicateAppName } from "./app-name.js"
 import { defaultCategoriesForPolicy, defaultScopesForPolicy, normalizeSelectedCategories, normalizeSelectedScopes } from "./access-policy.js"
 import { ConnectPage } from "./components/ConnectPage.jsx"
+import { DataTransparencyPage } from "./components/DataTransparencyPage.jsx"
 import { Dashboard } from "./components/Dashboard.jsx"
 import { HelpPanel } from "./components/HelpPanel.jsx"
 import { Landing } from "./components/Landing.jsx"
@@ -209,7 +210,7 @@ function App() {
   }, [authFlow, needsPasswordSetup, session])
 
   useEffect(() => {
-    const tabName = currentPage === "account" ? "Account" : currentPage === "help" ? "Help" : currentPage === "connect" ? "Connect" : currentPage === "access" ? "API Keys" : "Login"
+    const tabName = currentPage === "account" ? "Account" : currentPage === "help" ? "Help" : currentPage === "connect" ? "Connect" : currentPage === "data" ? "Data Transparency" : currentPage === "access" ? "API Keys" : "Login"
     document.title = `Memact | ${tabName}`
   }, [currentPage])
 
@@ -219,10 +220,10 @@ function App() {
   }, [authChecking, client, session])
 
   useEffect(() => {
-    if (!isConnectPage(currentPage)) return
+    if (!isConnectPage(currentPage) && currentPage !== "data") return
     const request = parseConnectRequest()
     setConnectRequest(request)
-    setActiveTab("connect")
+    setActiveTab(currentPage)
     if (!session || !request.app_id) return
 
     let cancelled = false
@@ -727,6 +728,27 @@ function App() {
     navigateToPage("access", { replace: true })
   }
 
+  function navigateToDataTransparency(request) {
+    navigateWithConnectParams(routeForPage("data"), request)
+  }
+
+  function navigateToConnect(request) {
+    navigateWithConnectParams(routeForPage("connect"), request)
+  }
+
+  function navigateWithConnectParams(pathname, request) {
+    const url = new URL(pathname, window.location.origin)
+    if (request?.app_id) url.searchParams.set("app_id", request.app_id)
+    if (request?.scopes?.length) url.searchParams.set("scopes", request.scopes.join(","))
+    if (request?.categories?.length) url.searchParams.set("categories", request.categories.join(","))
+    if (request?.redirect_uri) url.searchParams.set("redirect_uri", request.redirect_uri)
+    if (request?.state) url.searchParams.set("state", request.state)
+    window.history.pushState({}, "", `${url.pathname}${url.search}`)
+    const page = pageFromLocation(window.location)
+    setCurrentPage(page)
+    setActiveTab(page)
+  }
+
   async function signOut() {
     setError("")
     setStatus("Signing out.")
@@ -766,7 +788,6 @@ function App() {
         {session ? (
           <nav className="tabs" aria-label="Memact portal tabs">
             <button type="button" className={currentPage === "access" ? "tab is-active" : "tab"} onClick={() => navigateToPage("access")}>Access</button>
-            <button type="button" className={currentPage === "data" ? "tab is-active" : "tab"} onClick={() => navigateToPage("data")}>Data</button>
             <button type="button" className={currentPage === "account" ? "tab is-active" : "tab"} onClick={() => navigateToPage("account")}>Account</button>
             <button type="button" className={currentPage === "help" ? "tab is-active" : "tab"} onClick={() => navigateToPage("help")}>Help</button>
           </nav>
@@ -790,7 +811,18 @@ function App() {
           onApprove={handleConnectApprove}
           onCancel={handleConnectCancel}
           onLearnMore={() => navigateToPage("help")}
-          onDataTransparency={() => navigateToPage("data")}
+          onDataTransparency={() => navigateToDataTransparency(connectRequest)}
+        />
+      ) : session && currentPage === "data" ? (
+        <DataTransparencyPage
+          app={connectDetails?.app}
+          scopes={connectDetails?.scopes || scopes}
+          categories={connectDetails?.activity_categories || policy?.activity_categories || {}}
+          requestedScopes={connectDetails?.requested_scopes || connectRequest?.scopes || []}
+          requestedCategories={connectDetails?.requested_categories || connectRequest?.categories || []}
+          transparency={connectDetails?.transparency || connectDetails?.data_transparency || connectDetails?.app?.transparency || {}}
+          onBackToConsent={() => navigateToConnect(connectRequest)}
+          onManageConsent={() => navigateToPage("access")}
         />
       ) : session ? (
         <Dashboard

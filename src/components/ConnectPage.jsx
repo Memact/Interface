@@ -44,7 +44,7 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
             </div>
             <div className="mini-row">
               <strong>You can revoke access later.</strong>
-              <small>Use Data Transparency to review active keys, see what categories are allowed, and stop future collection for this app.</small>
+              <small>Use Data Transparency to review the app's actual captured fields, memory objects, graph packets, retention, and revocation path before approving.</small>
             </div>
           </div>
           <div className="connect-link-row">

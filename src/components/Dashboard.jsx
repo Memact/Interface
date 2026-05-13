@@ -2,7 +2,6 @@ import React from "react"
 import { ACCESS_MODE, ACCESS_URL } from "../memact-access-client.js"
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../supabase-client.js"
 import { CategoryGrid } from "./CategoryGrid.jsx"
-import { DataTransparencyPage } from "./DataTransparencyPage.jsx"
 import { HelpPanel } from "./HelpPanel.jsx"
 import { getAvatarUrl, getInitials, getUserEmail, getUserProvider } from "../user-display.js"
 
@@ -117,18 +116,6 @@ export function Dashboard({
 
       {activeTab === "help" ? (
         <HelpPanel />
-      ) : activeTab === "data" ? (
-        <DataTransparencyPage
-          apps={apps}
-          apiKeys={apiKeys}
-          consents={consents}
-          categories={categories}
-          scopes={scopes}
-          selectedAppId={selectedAppId}
-          setSelectedAppId={setSelectedAppId}
-          onDeleteApp={onDeleteApp}
-          onRevokeKey={onRevokeKey}
-        />
       ) : activeTab === "account" ? (
         <section className="panel account-panel">
           <div className="account-panel-head">

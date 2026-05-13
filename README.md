@@ -58,9 +58,9 @@ compact cards, rounded controls, and consistent button hierarchy.
 Authenticated dashboard:
 
 - mobile uses a compact top row with the logo and tabs kept close
-- desktop uses a fixed left rail with Access, Data, Account, and Help
+- desktop uses a fixed left rail with Access, Account, and Help
 - Access shows app registration, permissions, API keys, usage statistics, and the one-time key flow
-- Data shows what each app can collect, active keys, consent state, and revocation controls
+- `/DataTransparency` is a consent-companion page, not a dashboard tab
 - Account shows identity, email/password actions, and account metrics
 - Help uses short FAQs for users, developers, and AI coding agents
 
@@ -193,7 +193,7 @@ If Blueprint setup fails, use the direct Dashboard path in
 - API keys are shown once.
 - App names are unique per account.
 - Deleting an app revokes its active API keys and permissions.
-- Data Transparency must stay available alongside the consent flow so users can review and revoke access later.
+- Data Transparency must stay available alongside the consent flow so users can review actual captured data, graph packet use, retention, and revocation before approval.
 - Revoked keys remain visible as history.
 - Scopes and saved permissions are required before apps can use Memact.
 - Activity categories are required before apps can use Memact.
@@ -228,7 +228,7 @@ Normal app flow:
 developer creates app
 -> chooses scopes and categories
 -> user clicks "Connect Memact" inside the third-party app
--> Memact shows the app, permissions, and activity categories
+-> Memact shows consent plus Data Transparency for that app
 -> user approves or cancels
 -> approved apps receive a connection_id
 -> app verifies API key + connection_id + scopes before doing work
@@ -259,20 +259,20 @@ capture, schema, and memory are functions or layers.
 ## Consent and Data Transparency
 
 The consent page must show what the app is asking to do, what activity
-categories it wants, and where users can review the decision later.
+categories it wants, and a Data Transparency link for the same app.
 
-Data Transparency is the companion page for consent. It lets signed-in users:
+Data Transparency is not an owner-dashboard tab. It is a user-facing companion
+page for the app asking for consent. It must explain:
 
-- see each registered app's approved scopes and activity categories
-- see active and revoked API keys for the selected app
-- revoke an individual API key
-- delete an app, which revokes its active API keys and saved consent
-- understand whether the access layer has reported public key exposure signals
+- actual captured fields, such as URLs, page titles, selected text, transcripts, timestamps, or evidence snippets
+- memory objects and graph packets, such as summaries, evidence cards, nodes, edges, aggregates, or schema packets
+- why the app uses those objects
+- retention and deletion expectations
+- how the user can revoke consent or stop future access
 
-The frontend supports optional usage/exposure fields when the backend returns
-them, such as `using_apps_count`, `client_count`, `exposure_status`, or
-`public_exposure_detected`. Until those fields exist, the UI stays honest and
-labels exposure as "No signal yet" instead of pretending to scan the public web.
+Categories and scopes are boundaries, not the full disclosure. If an app cannot
+describe the actual data and graph packets it uses, the consent flow is not
+ready.
 
 ## Help Tab
 

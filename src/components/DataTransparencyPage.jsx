@@ -1,134 +1,149 @@
 import React from "react"
 
 export function DataTransparencyPage({
-  apps,
-  apiKeys,
-  consents,
+  app,
   categories,
   scopes,
-  selectedAppId,
-  setSelectedAppId,
-  onDeleteApp,
-  onRevokeKey
+  requestedCategories,
+  requestedScopes,
+  transparency,
+  onBackToConsent,
+  onManageConsent
 }) {
-  const selectedApp = apps.find((app) => app.id === selectedAppId) || apps[0] || null
-  const appConsents = selectedApp ? consents.filter((consent) => consent.app_id === selectedApp.id) : []
-  const activeConsent = appConsents.find((consent) => !consent.revoked_at) || null
-  const selectedKeys = selectedApp ? apiKeys.filter((key) => key.app_id === selectedApp.id) : []
-  const activeKeys = selectedKeys.filter((key) => !key.revoked_at)
-  const revokedKeys = selectedKeys.filter((key) => key.revoked_at)
-  const approvedCategories = activeConsent?.categories || selectedApp?.default_categories || []
-  const approvedScopes = activeConsent?.scopes || selectedApp?.default_scopes || []
+  const appName = app?.name || "this app"
+  const dataUses = normalizeDisclosureList(transparency?.data_uses || transparency?.dataUses)
+  const capturedData = normalizeDisclosureList(transparency?.captured_data || transparency?.capturedData || transparency?.data_collected)
+  const graphPackets = normalizeDisclosureList(transparency?.graph_packets || transparency?.graphPackets || transparency?.memory_packets)
+  const retention = transparency?.retention || transparency?.retention_policy || "The app has not provided a specific retention statement yet."
+  const revocation = transparency?.revocation || transparency?.revocation_policy || "After consent is revoked, new Memact access should stop. Previously copied data must follow the app's own deletion policy."
 
   return (
     <section className="panel transparency-panel">
       <div className="transparency-hero">
         <div>
           <p className="eyebrow">Data transparency</p>
-          <h2>See what each app can collect, and shut it off.</h2>
+          <h2>What {appName} will use Memact for.</h2>
           <p className="muted">
-            Consent is not a one-time trap. This page shows the apps, scopes, categories, and keys that can currently work with Memact on your behalf.
+            This page belongs beside consent. Before approving, you should be able to see the actual data, evidence, and graph packets an app expects to use, not just broad categories.
           </p>
         </div>
         <div className="transparency-summary" aria-label="Transparency summary">
           <span>
-            <strong>{apps.length}</strong>
-            Registered apps
+            <strong>{requestedScopes.length}</strong>
+            Requested scopes
           </span>
           <span>
-            <strong>{activeKeys.length}</strong>
-            Active keys here
+            <strong>{requestedCategories.length}</strong>
+            Activity categories
           </span>
         </div>
       </div>
 
-      {apps.length ? (
-        <div className="registered-apps transparency-app-picker">
-          <p className="app-list-label">Choose app</p>
-          <div className="app-switcher" aria-label="Choose app for data transparency">
-            {apps.map((app) => (
-              <button
-                key={app.id}
-                type="button"
-                className={`app-chip ${selectedApp?.id === app.id ? "is-active" : ""}`}
-                onClick={() => setSelectedAppId(app.id)}
-              >
-                {app.name}
-              </button>
+      <div className="app-identity connect-identity">
+        <span className="app-avatar" aria-hidden="true">{appName.slice(0, 1).toUpperCase()}</span>
+        <div>
+          <strong>{appName}</strong>
+          {app?.developer_url ? (
+            <a className="muted" href={app.developer_url} target="_blank" rel="noreferrer">{app.developer_url}</a>
+          ) : <span className="muted">Developer URL not provided.</span>}
+        </div>
+      </div>
+
+      <div className="transparency-grid">
+        <section className="permission-list transparency-card">
+          <p className="eyebrow">Actual data used</p>
+          <h3>Captured data and evidence</h3>
+          <DisclosureList
+            items={capturedData}
+            empty="This app has not listed exact captured data yet. It should disclose the real fields it uses, such as URLs, page titles, selected text, transcripts, evidence snippets, or timestamps."
+          />
+        </section>
+
+        <section className="permission-list transparency-card">
+          <p className="eyebrow">Memory objects</p>
+          <h3>Graph packets and summaries</h3>
+          <DisclosureList
+            items={graphPackets}
+            empty="This app has not listed exact graph packets yet. If it writes or reads memory, it should describe the packet types, summaries, evidence cards, nodes, edges, or aggregates it uses."
+          />
+        </section>
+
+        <section className="permission-list transparency-card">
+          <p className="eyebrow">Purpose</p>
+          <h3>What the app says it will do</h3>
+          <DisclosureList
+            items={dataUses}
+            empty={app?.description || "This app has not provided a plain-language purpose for its Memact usage yet."}
+          />
+        </section>
+
+        <section className="permission-list transparency-card">
+          <p className="eyebrow">Boundaries</p>
+          <h3>Scopes and categories</h3>
+          <div className="transparency-token-list">
+            {requestedScopes.map((scope) => (
+              <span className="data-token" key={scope}>{scopes?.[scope]?.label || scope}</span>
+            ))}
+            {requestedCategories.map((category) => (
+              <span className="data-token" key={category}>{categories?.[category]?.label || category}</span>
             ))}
           </div>
+        </section>
+
+        <section className="permission-list transparency-card">
+          <p className="eyebrow">Retention</p>
+          <h3>How long it keeps data</h3>
+          <p className="muted">{retention}</p>
+        </section>
+
+        <section className="permission-list transparency-card">
+          <p className="eyebrow">Revoke</p>
+          <h3>How to stop future access</h3>
+          <p className="muted">{revocation}</p>
+        </section>
+      </div>
+
+      <section className="permission-list consent-summary-card">
+        <p className="eyebrow">Required app disclosure</p>
+        <div className="mini-row">
+          <strong>Categories are not enough.</strong>
+          <small>Apps using Memact should disclose the actual captured fields, memory objects, graph packets, retention, and revocation path before asking users to approve.</small>
         </div>
-      ) : (
-        <p className="muted">Create an app first. Once an app asks for consent, its data boundary appears here.</p>
-      )}
+      </section>
 
-      {selectedApp ? (
-        <div className="transparency-grid">
-          <section className="permission-list transparency-card">
-            <p className="eyebrow">What can be collected</p>
-            <h3>{selectedApp.name}</h3>
-            <p className="muted">
-              Memact can only work inside the approved activity categories below. Anything outside this set should stay out of this app's memory flow.
-            </p>
-            <div className="transparency-token-list">
-              {approvedCategories.length ? approvedCategories.map((category) => (
-                <span className="data-token" key={category}>{categories?.[category]?.label || category}</span>
-              )) : <span className="muted">No activity categories saved.</span>}
-            </div>
-          </section>
-
-          <section className="permission-list transparency-card">
-            <p className="eyebrow">What the app can ask for</p>
-            <h3>Approved API scopes</h3>
-            <div className="transparency-token-list">
-              {approvedScopes.length ? approvedScopes.map((scope) => (
-                <span className="data-token" key={scope}>{scopes?.[scope]?.label || scope}</span>
-              )) : <span className="muted">No permissions saved.</span>}
-            </div>
-          </section>
-
-          <section className="permission-list transparency-card">
-            <p className="eyebrow">Active controls</p>
-            <h3>Stop collection later</h3>
-            <p className="muted">
-              Revoke individual keys to stop API access for a deployed client. Delete the app to revoke its active keys and saved consent together.
-            </p>
-            <div className="stack">
-              {activeKeys.length ? activeKeys.map((key) => (
-                <div className="list-card api-key-row" key={key.id}>
-                  <span>
-                    <strong>{key.name}</strong>
-                    <small>{key.key_prefix}... {key.last_used_at ? `last used ${formatDate(key.last_used_at)}` : "not used yet"}</small>
-                  </span>
-                  <span className="badge badge-success">active</span>
-                  <button type="button" className="ghost" onClick={() => onRevokeKey(key.id)}>Revoke</button>
-                </div>
-              )) : <p className="muted">No active API keys for this app.</p>}
-              <button type="button" className="ghost danger" onClick={onDeleteApp}>Delete app and revoke consent</button>
-            </div>
-          </section>
-
-          <section className="permission-list transparency-card">
-            <p className="eyebrow">Audit trail</p>
-            <h3>Consent and key history</h3>
-            <div className="mini-row">
-              <strong>{activeConsent ? "Consent is active" : "No active consent"}</strong>
-              <small>{activeConsent?.updated_at || activeConsent?.created_at ? `Last updated ${formatDate(activeConsent.updated_at || activeConsent.created_at)}` : "Save permissions to create a consent record."}</small>
-            </div>
-            <div className="mini-row">
-              <strong>{revokedKeys.length} revoked key{revokedKeys.length === 1 ? "" : "s"}</strong>
-              <small>Revoked keys stay visible so you can audit old access without reusing secrets.</small>
-            </div>
-          </section>
-        </div>
-      ) : null}
+      <div className="connect-actions">
+        <button type="button" onClick={onBackToConsent}>Back to consent</button>
+        <button type="button" className="ghost" onClick={onManageConsent}>Open dashboard</button>
+      </div>
     </section>
   )
 }
 
-function formatDate(value) {
-  if (!value) return ""
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return String(value)
-  return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+function DisclosureList({ items, empty }) {
+  if (!items.length) {
+    return <p className="muted">{empty}</p>
+  }
+  return (
+    <div className="stack">
+      {items.map((item) => (
+        <div className="mini-row" key={item.title}>
+          <strong>{item.title}</strong>
+          {item.description ? <small>{item.description}</small> : null}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function normalizeDisclosureList(value) {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((item) => {
+      if (typeof item === "string") return { title: item.trim(), description: "" }
+      return {
+        title: String(item?.title || item?.name || item?.type || "").trim(),
+        description: String(item?.description || item?.details || item?.purpose || "").trim()
+      }
+    })
+    .filter((item) => item.title)
 }
