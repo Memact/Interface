@@ -177,13 +177,14 @@
 }
 
 .faq-item summary.faq-trigger {
-  display: flex;
+  --faq-inline-pad: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   width: 100%;
   min-height: 60px;
-  padding: 19px 16px;
+  padding: 19px var(--faq-inline-pad);
   list-style: none;
   list-style-type: none;
 }
@@ -199,6 +200,7 @@
 .faq-question {
   display: block;
   min-width: 0;
+  margin: 0;
   line-height: 1.28;
 }
 
@@ -370,7 +372,7 @@
   .faq-item summary.faq-trigger {
     grid-template-columns: minmax(0, 1fr) 38px;
     min-height: 56px;
-    padding: 13px 0;
+    padding: 13px var(--faq-inline-pad);
   }
 
   .faq-chevron {
