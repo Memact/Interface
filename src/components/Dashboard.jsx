@@ -1,6 +1,4 @@
 import React, { useState } from "react"
-import { ACCESS_MODE, ACCESS_URL } from "../memact-access-client.js"
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../supabase-client.js"
 import { CategoryGrid } from "./CategoryGrid.jsx"
 import { HelpPanel } from "./HelpPanel.jsx"
 import { getAvatarUrl, getInitials, getUserEmail, getUserProvider } from "../user-display.js"
@@ -532,10 +530,8 @@ function buildEmbedCode(apiKey, scopes = [], categories = [], app = null) {
   const redirectUrl = app?.redirect_urls?.[0] || app?.developer_url || "https://your-app.example.com/memact/callback"
   const connectUrl = buildPortalConnectUrl(appId, scopes, categories, redirectUrl)
   const dataTransparencyUrl = buildPortalDataTransparencyUrl(appId, scopes, categories, redirectUrl)
-  if (ACCESS_MODE === "supabase") {
-    const accessUrl = SUPABASE_URL || "https://memact.supabase.co"
-    const publicKey = SUPABASE_ANON_KEY || "MEMACT_PUBLIC_ACCESS_KEY"
-    return `// 1. Add the Connect Memact button.
+  const verifyUrl = getDeveloperVerifyUrl()
+  return `// 1. Add the Connect Memact button.
 const memactConnectUrl = "${connectUrl}";
 
 // 2. Add the Data Transparency link beside consent.
@@ -545,28 +541,32 @@ const memactDataTransparencyUrl = "${dataTransparencyUrl}";
 const memactConnectionId = "connection_id_from_connect_redirect";
 
 // 4. Verify access on your server before doing work.
-// MEMACT_API_KEY is the private app key created in Memact Access. It usually starts with mka_.
-// App developers set only MEMACT_API_KEY. Memact's SDK/snippet handles its own public transport key.
-const MEMACT_ACCESS_URL = "${accessUrl}";
-const MEMACT_PLATFORM_PUBLIC_KEY = "${publicKey}";
+// .env on your server:
+// MEMACT_API_KEY=${apiKey || "mka_key_shown_once"}
+// Optional override only if Memact gives you a different verify host:
+// MEMACT_VERIFY_URL=${verifyUrl}
 const memactApiKey = process.env.MEMACT_API_KEY;
+const memactVerifyUrl = process.env.MEMACT_VERIFY_URL || "${verifyUrl}";
 const requiredScopes = ${JSON.stringify(scopes, null, 2)};
+const activityCategories = ${JSON.stringify(categories, null, 2)};
 
 if (!memactApiKey) {
   throw new Error("Set MEMACT_API_KEY in your server .env or secret manager.");
 }
+if (!memactConnectionId) {
+  throw new Error("Store the connection_id returned by Memact after user approval.");
+}
 
-const response = await fetch(\`\${MEMACT_ACCESS_URL}/rest/v1/rpc/memact_verify_api_key\`, {
+const response = await fetch(memactVerifyUrl, {
   method: "POST",
   headers: {
-    "apikey": MEMACT_PLATFORM_PUBLIC_KEY,
-    "Authorization": \`Bearer \${MEMACT_PLATFORM_PUBLIC_KEY}\`,
+    "Authorization": \`Bearer \${memactApiKey}\`,
     "Content-Type": "application/json"
   },
   body: JSON.stringify({
-    api_key_input: memactApiKey,
-    required_scopes_input: requiredScopes,
-    consent_id_input: memactConnectionId
+    connection_id: memactConnectionId,
+    required_scopes: requiredScopes,
+    activity_categories: activityCategories
   })
 });
 
@@ -585,21 +585,11 @@ console.log("Memact access granted", {
 // Capture: use access.categories to keep captured activity inside this app's categories.
 // Schema: write schema packets with evidence, nodes, and edges, not raw private dumps.
 // Memory: request summaries/evidence/graph objects only if the approved scopes include them.`
-  }
+}
 
-  return `import { createMemactCaptureClient } from "./memact-capture-client.mjs";
-
-const memact = createMemactCaptureClient({
-  accessUrl: "${ACCESS_URL}",
-  apiKey: "${apiKey || "mka_key_shown_once"}"
-});
-
-const { snapshot } = await memact.getLocalSnapshot({
-  scopes: ${JSON.stringify(scopes, null, 2)},
-  connectionId: "connection_id_from_connect_redirect"
-});
-
-console.log(snapshot.counts);`
+function getDeveloperVerifyUrl() {
+  const configured = import.meta.env?.VITE_MEMACT_DEVELOPER_API_URL || ""
+  return configured.replace(/\/+$/, "") || "https://api.memact.com/v1/access/verify"
 }
 
 function buildPortalConnectUrl(appId, scopes = [], categories = [], redirectUrl = "") {

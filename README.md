@@ -112,6 +112,8 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-public-anon-key
 # Optional override for non-standard deploy domains. Defaults to the current origin.
 # VITE_AUTH_REDIRECT_URL=http://localhost:3000/Access
+# Optional override for generated app integration snippets.
+# VITE_MEMACT_DEVELOPER_API_URL=https://api.memact.com/v1/access/verify
 ```
 
 Only use the Supabase anon key in Website. Never put a service role key, GitHub
@@ -146,6 +148,7 @@ For Render, set:
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-public-anon-key
 # Optional: VITE_AUTH_REDIRECT_URL=https://www.memact.com/Access
+# Optional: VITE_MEMACT_DEVELOPER_API_URL=https://api.memact.com/v1/access/verify
 ```
 
 ## Render and SEO
@@ -226,7 +229,23 @@ developer creates app
 API keys identify the app. `connection_id` identifies the specific user consent.
 Verification must pass both.
 
-Memact verifies the API key before an app can use approved capture, schema, graph, or memory permissions. The app receives only the scopes and activity categories the user approved for that app.
+Memact verifies the API key before an app can use approved capture, schema, graph, or memory permissions. Customer apps verify through the Memact HTTP endpoint; they do not call Supabase RPCs or configure Supabase keys.
+
+```http
+POST https://api.memact.com/v1/access/verify
+Authorization: Bearer mka_your_private_app_key
+Content-Type: application/json
+```
+
+```json
+{
+  "connection_id": "connection_id_from_connect_redirect",
+  "required_scopes": ["memory:read_summary"],
+  "activity_categories": ["web:research"]
+}
+```
+
+The app receives only the scopes and activity categories the user approved for that app.
 
 For developer docs and generated coding guidance, keep the integration
 explanation practical:
@@ -237,7 +256,7 @@ explanation practical:
 3. Link /DataTransparency with the same app_id, scopes, categories, and redirect_uri.
 4. Store the returned connection_id for that user.
 5. Keep the raw Memact API key on the server.
-6. Verify api_key + connection_id + required_scopes before calling Memact.
+6. Verify api_key + connection_id + required_scopes + activity_categories through the Memact verification endpoint before calling Memact.
 7. Use only the approved scopes and categories returned by verification.
 ```
 
@@ -279,7 +298,7 @@ not inside the dashboard.
 
 ## Backend Notes
 
-Website expects the Supabase access layer to provide these functions:
+Website expects the Supabase access layer to provide these functions for the dashboard and consent UI:
 
 ```text
 memact_create_app
@@ -290,6 +309,9 @@ memact_revoke_api_key
 ```
 
 Supabase RPC names and argument names must match exactly. If the schema cache is stale or a function signature changes, Website falls back to browser-safe table paths where possible and shows a clear error where it cannot.
+
+Third-party apps should not use those RPC names directly. They should call the
+Memact verification API from their backend with their private `mka_...` key.
 
 ## License
 

@@ -299,7 +299,7 @@
         </details>
         <details>
           <summary>What does an API key do?</summary>
-          <p>An API key identifies the app. It is the private `mka_...` key created in Memact Access and belongs in `.env` locally or a production secret manager, never in a user-facing settings panel. Developers do not configure Supabase keys; Memact handles its own verification infrastructure. The app still needs a user connection id and approved scopes before Memact allows access.</p>
+          <p>An API key identifies the app. It is the private `mka_...` key created in the Memact portal and belongs in `.env` locally or a production secret manager, never in a user-facing settings panel. Developers do not configure Supabase keys. The app backend calls Memact's verification endpoint with the API key, a user connection id, required scopes, and activity categories before Memact allows access.</p>
         </details>
       </section>
 
@@ -314,7 +314,7 @@
             <li>Link `/DataTransparency` with the same app context beside consent.</li>
             <li>Store the returned `connection_id` for the signed-in user.</li>
             <li>Keep the raw API key in server environment config, such as `MEMACT_API_KEY` in `.env` locally and a secret manager in production.</li>
-            <li>Verify the API key, connection id, and required scopes before using Memact output.</li>
+            <li>Verify the API key, connection id, required scopes, and activity categories through the Memact verification endpoint before using Memact output.</li>
           </ol>
         </details>
         <details>
