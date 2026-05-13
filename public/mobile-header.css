@@ -148,12 +148,12 @@
 
 @media (min-width: 901px) {
   .access-layout {
-    grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr) !important;
-    align-items: start !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch !important;
   }
 
   .api-keys-panel {
-    align-self: start !important;
+    align-self: stretch !important;
     min-height: 0 !important;
   }
 
@@ -162,12 +162,14 @@
   }
 
   .section-actions {
-    flex: 0 0 156px !important;
+    display: flex !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
   }
 
   .section-actions button,
   .section-actions .tooltip-wrap {
-    width: 100% !important;
+    width: auto !important;
   }
 
   .section-actions button {

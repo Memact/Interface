@@ -435,9 +435,10 @@ export function Dashboard({
 
       {oneTimeKey ? (
         <section id="one-time-key-panel" className="panel key-panel">
-          <div>
+          <div className="key-panel-head">
             <p className="eyebrow">Copy now</p>
             <h2>One-time API key</h2>
+            <p className="muted key-warning">Memact stores only a hash. This raw key cannot be shown again.</p>
           </div>
           <div className="key-box">
             <code>{oneTimeKey}</code>
@@ -451,7 +452,6 @@ export function Dashboard({
             <summary>Embed code</summary>
             <pre><code>{buildEmbedCode(oneTimeKey, oneTimeKeyScopes, oneTimeKeyCategories, selectedApp)}</code></pre>
           </details>
-          <p className="muted">Memact stores only a hash. This raw key cannot be shown again.</p>
         </section>
       ) : null}
     </section>
