@@ -411,7 +411,10 @@ export function Dashboard({
 
                     {revokedKeys.length ? (
                       <details className="revoked-history">
-                        <summary>Revoked history ({revokedKeys.length})</summary>
+                        <summary>
+                          <span>Revoked history ({revokedKeys.length})</span>
+                          <span className="faq-chevron revoked-chevron" aria-hidden="true">v</span>
+                        </summary>
                         <div className="revoked-history-list">
                           {revokedKeys.map((key) => (
                             <div className="list-card api-key-row revoked-key-row" key={key.id}>
@@ -433,7 +436,7 @@ export function Dashboard({
         </>
       )}
 
-      {oneTimeKey ? (
+      {activeTab === "access" && oneTimeKey ? (
         <section id="one-time-key-panel" className="panel key-panel">
           <div className="key-panel-head">
             <p className="eyebrow">Copy now</p>
@@ -513,16 +516,16 @@ function buildEmbedCode(apiKey, scopes = [], categories = [], app = null) {
   if (ACCESS_MODE === "supabase") {
     const accessUrl = SUPABASE_URL || "https://memact.supabase.co"
     const publicKey = SUPABASE_ANON_KEY || "MEMACT_PUBLIC_ACCESS_KEY"
-    return `// 1. Put this URL behind your own "Connect Memact" button.
+    return `// 1. Add the Connect Memact button.
 const memactConnectUrl = "${connectUrl}";
 
-// 2. Put this URL beside consent so users can review actual data use.
+// 2. Add the Data Transparency link beside consent.
 const memactDataTransparencyUrl = "${dataTransparencyUrl}";
 
 // 3. After the user approves, Memact redirects back with ?connected=1&connection_id=...
 const memactConnectionId = "connection_id_from_connect_redirect";
 
-// 4. Verify the API key, user connection, and scopes before doing work.
+// 4. Verify access on your server before doing work.
 const MEMACT_ACCESS_URL = "${accessUrl}";
 const MEMACT_PUBLIC_ACCESS_KEY = "${publicKey}";
 const memactApiKey = "${apiKey || "mka_key_shown_once"}";
@@ -553,7 +556,7 @@ console.log("Memact access granted", {
   categories: access.categories
 });
 
-// 5. Topic-wise integration examples.
+// 5. Use only approved access.
 // Capture: use access.categories to keep captured activity inside this app's categories.
 // Schema: write schema packets with evidence, nodes, and edges, not raw private dumps.
 // Memory: request summaries/evidence/graph objects only if the approved scopes include them.`

@@ -10,7 +10,23 @@ function enhanceEmbedCode() {
     const steps = splitEmbedSteps(fullCode)
 
     details.dataset.memactTutorial = "ready"
-    summary.textContent = "Connect tutorial"
+    summary.textContent = ""
+    summary.classList.add("embed-trigger")
+
+    const title = document.createElement("span")
+    title.className = "embed-title"
+    title.textContent = "Connect tutorial"
+
+    const subtitle = document.createElement("span")
+    subtitle.className = "embed-subtitle"
+    subtitle.textContent = "Numbered wiring guide with code inside each step."
+
+    const chevron = document.createElement("span")
+    chevron.className = "faq-chevron embed-chevron"
+    chevron.setAttribute("aria-hidden", "true")
+    chevron.textContent = "v"
+
+    summary.append(title, subtitle, chevron)
 
     const tutorial = document.createElement("div")
     tutorial.className = "embed-tutorial"
@@ -114,8 +130,8 @@ function splitEmbedSteps(code) {
 
 function titleForStep(title, index) {
   const titles = [
-    "Send the user to the consent page",
-    "Show the Data Transparency page",
+    "Add the Connect Memact button",
+    "Add the Data Transparency link",
     "Read the connection id after approval",
     "Verify access before doing work",
     "Use only approved access"
@@ -126,9 +142,9 @@ function titleForStep(title, index) {
 function describeStep(title, index) {
   const descriptions = [
     "Put this URL behind your own Connect Memact button. It opens the approval screen for this app.",
-    "Put this URL next to consent. It shows the actual captured fields, memory objects, graph packets, retention, and revocation path for this app.",
+    "Put this URL next to consent. It explains the actual captured fields, evidence cards, summaries, graph packets, retention, and revocation path for this app.",
     "After the user approves, Memact redirects back to your app with a connection id.",
-    "Before your app uses Memact, verify the API key, connection id, and required scopes.",
+    "Keep the raw API key on your server. Before your app uses Memact, verify the API key, connection id, and required scopes.",
     "Use the verified scopes and categories as the boundary for what your app does next."
   ]
   return descriptions[index] || title

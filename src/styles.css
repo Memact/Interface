@@ -890,13 +890,26 @@ input:-webkit-autofill:focus {
 }
 
 .revoked-history summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 12px;
   min-height: 40px;
   padding: 10px 12px;
   cursor: pointer;
   color: var(--soft);
   font-size: 13px;
   font-weight: 700;
-  list-style-position: inside;
+  list-style: none;
+}
+
+.revoked-history summary::-webkit-details-marker { display: none; }
+
+.revoked-history summary::marker { content: ""; }
+
+.revoked-chevron {
+  width: 30px;
+  height: 30px;
 }
 
 .revoked-history-list {
