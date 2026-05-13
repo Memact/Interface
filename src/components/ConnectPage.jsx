@@ -82,7 +82,7 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
           </div>
           <div className="mini-row">
             <strong>Apps should load their Memact key from environment secrets.</strong>
-            <small>The raw API key should not be typed by users, pasted into client UI, or shipped in browser/mobile code. The app backend reads it from `.env` or a secret manager, then verifies this consent before doing work.</small>
+            <small>The private app key is the `mka_...` key created in Memact Access. The app backend reads it from `.env` or a secret manager, then verifies this consent before doing work. App developers should not configure Supabase keys; Memact handles that infrastructure.</small>
           </div>
           <div className="mini-row">
             <strong>Blocked uses stay blocked.</strong>

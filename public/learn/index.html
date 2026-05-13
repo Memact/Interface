@@ -299,7 +299,7 @@
         </details>
         <details>
           <summary>What does an API key do?</summary>
-          <p>An API key identifies the app. It belongs in `.env` locally or a production secret manager, never in a user-facing settings panel. The app still needs a user connection id and approved scopes before Memact allows access.</p>
+          <p>An API key identifies the app. It is the private `mka_...` key created in Memact Access and belongs in `.env` locally or a production secret manager, never in a user-facing settings panel. Developers do not configure Supabase keys; Memact handles its own verification infrastructure. The app still needs a user connection id and approved scopes before Memact allows access.</p>
         </details>
       </section>
 

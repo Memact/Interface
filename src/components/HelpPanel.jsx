@@ -66,7 +66,15 @@ const ADVANCED_FAQS = [
     question: "Where should the Memact API key live in code?",
     answer: (
       <>
-        Treat the raw Memact API key like a server-side secret. In local development, put it in <code>.env</code> as something like <code>MEMACT_API_KEY=mka_...</code>. In production, put the same value in your host's secret manager. Do not hard-code it into browser bundles, mobile apps, public repos, README examples, logs, shared prompts, or manual user-facing settings panels.
+        Treat the raw Memact API key like a server-side secret. This is the private app key that starts with <code>mka_</code> and is created in Memact Access. In local development, put it in <code>.env</code> as something like <code>MEMACT_API_KEY=mka_...</code>. In production, put the same value in your host's secret manager. Do not hard-code it into browser bundles, mobile apps, public repos, README examples, logs, shared prompts, or manual user-facing settings panels.
+      </>
+    )
+  },
+  {
+    question: "Do I need a Supabase public key?",
+    answer: (
+      <>
+        No. App developers should only configure the private Memact app key, usually <code>MEMACT_API_KEY=mka_...</code>. Any public transport key used by Memact's own verification infrastructure is Memact's responsibility and should be hidden inside the Memact SDK, generated snippet, or hosted endpoint. Do not ask users or app developers to manage a Supabase key.
       </>
     )
   },

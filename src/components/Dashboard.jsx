@@ -545,8 +545,10 @@ const memactDataTransparencyUrl = "${dataTransparencyUrl}";
 const memactConnectionId = "connection_id_from_connect_redirect";
 
 // 4. Verify access on your server before doing work.
+// MEMACT_API_KEY is the private app key created in Memact Access. It usually starts with mka_.
+// App developers set only MEMACT_API_KEY. Memact's SDK/snippet handles its own public transport key.
 const MEMACT_ACCESS_URL = "${accessUrl}";
-const MEMACT_PUBLIC_ACCESS_KEY = "${publicKey}";
+const MEMACT_PLATFORM_PUBLIC_KEY = "${publicKey}";
 const memactApiKey = process.env.MEMACT_API_KEY;
 const requiredScopes = ${JSON.stringify(scopes, null, 2)};
 
@@ -557,8 +559,8 @@ if (!memactApiKey) {
 const response = await fetch(\`\${MEMACT_ACCESS_URL}/rest/v1/rpc/memact_verify_api_key\`, {
   method: "POST",
   headers: {
-    "apikey": MEMACT_PUBLIC_ACCESS_KEY,
-    "Authorization": \`Bearer \${MEMACT_PUBLIC_ACCESS_KEY}\`,
+    "apikey": MEMACT_PLATFORM_PUBLIC_KEY,
+    "Authorization": \`Bearer \${MEMACT_PLATFORM_PUBLIC_KEY}\`,
     "Content-Type": "application/json"
   },
   body: JSON.stringify({
