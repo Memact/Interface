@@ -8,12 +8,14 @@ export function Landing({
   isConnecting,
   showAuth,
   email,
+  signupDisplayName,
   password,
   passwordConfirm,
   authMode,
   authLoading,
   authNotice,
   setEmail,
+  setSignupDisplayName,
   setPassword,
   setPasswordConfirm,
   setAuthMode,
@@ -75,6 +77,12 @@ export function Landing({
             </p>
             {authNotice ? <p className="notice notice-success" role="status">{authNotice}</p> : null}
             <form className="form" onSubmit={isSignIn ? onPasswordLogin : onEmailSignup}>
+              {!isSignIn ? (
+                <label>
+                  Display name
+                  <input value={signupDisplayName} type="text" autoComplete="name" placeholder="What should Memact call you?" maxLength={80} onChange={(event) => setSignupDisplayName(event.target.value)} required />
+                </label>
+              ) : null}
               <label>
                 Email
                 <input value={email} type="email" inputMode="email" autoComplete="email" placeholder="Enter your email" onChange={(event) => setEmail(event.target.value)} required />

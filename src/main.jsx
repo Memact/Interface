@@ -32,6 +32,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState(initialPage)
   const [activeTab, setActiveTab] = useState(initialPage === "home" ? "login" : initialPage)
   const [email, setEmail] = useState("")
+  const [signupDisplayName, setSignupDisplayName] = useState("")
   const [password, setPassword] = useState("")
   const [passwordConfirm, setPasswordConfirm] = useState("")
   const [authLoading, setAuthLoading] = useState("")
@@ -354,12 +355,19 @@ function App() {
     setAuthLoading("signup")
     setStatus("Creating account.")
     try {
+      const cleanDisplayName = signupDisplayName.trim().replace(/\s+/g, " ").slice(0, 80)
+      if (cleanDisplayName.length < 2) {
+        setError("Add a display name with at least 2 characters.")
+        return
+      }
       const { data, error: signUpError } = await requireSupabase().auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: getAuthRedirectTarget(),
           data: {
+            memact_display_name: cleanDisplayName,
+            memact_display_name_updated_at: new Date().toISOString(),
             memact_password_ready: true,
             memact_password_updated_at: new Date().toISOString()
           }
@@ -368,6 +376,7 @@ function App() {
       if (signUpError) throw signUpError
       setPassword("")
       setPasswordConfirm("")
+      setSignupDisplayName("")
       if (data?.session) {
         setAuthChecking(false)
         applySession(data.session, "default")
@@ -971,12 +980,14 @@ function App() {
           isConnecting={Boolean(connectRequest?.app_id && isConnectPath())}
           showAuth={showAuth}
           email={email}
+          signupDisplayName={signupDisplayName}
           password={password}
           passwordConfirm={passwordConfirm}
           authMode={authMode}
           authLoading={authLoading}
           authNotice={authNotice}
           setEmail={setEmail}
+          setSignupDisplayName={setSignupDisplayName}
           setPassword={setPassword}
           setPasswordConfirm={setPasswordConfirm}
           setAuthMode={setLandingAuthMode}

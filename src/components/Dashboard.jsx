@@ -104,6 +104,8 @@ export function Dashboard({
   const [accountEditor, setAccountEditor] = useState(authFlow === "recovery" || needsPasswordSetup ? "password" : "")
   const showDisplayNameEditor = accountEditor === "display-name"
   const showPasswordEditor = accountEditor === "password"
+  const hasDisplayName = Boolean(displayNameDraft.trim())
+  const displayNameAction = hasDisplayName ? "Change name" : "Set display name"
 
   return (
     <section className="dashboard">
@@ -136,17 +138,17 @@ export function Dashboard({
           </div>
           <div className="account-quick-actions" aria-label="Account settings">
             <button type="button" className={showDisplayNameEditor ? "" : "ghost"} onClick={() => setAccountEditor(showDisplayNameEditor ? "" : "display-name")}>
-              Set display name
+              {displayNameAction}
             </button>
             <button type="button" className={showPasswordEditor ? "" : "ghost"} onClick={() => setAccountEditor(showPasswordEditor ? "" : "password")}>
               {needsPasswordSetup ? "Set password" : "Change password"}
             </button>
           </div>
           {showDisplayNameEditor ? (
-            <section className="password-panel display-name-panel">
+            <section className="password-panel account-editor-panel display-name-panel">
               <div>
                 <p className="eyebrow">Display name</p>
-                <h2>Set your display name.</h2>
+                <h2>{hasDisplayName ? "Change your name." : "Set your display name."}</h2>
                 <p className="muted">This is the name shown across your dashboard.</p>
               </div>
               {displayNameSuccess ? <p className="notice notice-success" role="status">{displayNameSuccess}</p> : null}
@@ -183,7 +185,7 @@ export function Dashboard({
             Permissions mean you choose exactly which actions a registered app can ask Memact to perform. If a scope is not saved for that app, its API key cannot use that permission.
           </p>
           {displayEmail && showPasswordEditor ? (
-            <section className="password-panel">
+            <section className="password-panel account-editor-panel">
               <div>
                 <p className="eyebrow">Password</p>
                 <h2>{authFlow === "recovery" ? "Reset your password." : needsPasswordSetup ? "Set a password." : "Update your password."}</h2>

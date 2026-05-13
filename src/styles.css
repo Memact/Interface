@@ -494,6 +494,15 @@ p { margin-top: 0; }
   min-height: 46px;
 }
 
+.account-editor-panel {
+  border-color: var(--border);
+  background: var(--surface-1);
+}
+
+.account-editor-panel .form {
+  align-self: stretch;
+}
+
 .section-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
