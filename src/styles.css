@@ -1276,7 +1276,7 @@ input:-webkit-autofill:focus {
   .page:not(.page-auth) .tabs {
     width: auto;
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-end;
     overflow-x: auto;
   }
 
@@ -1321,8 +1321,12 @@ input:-webkit-autofill:focus {
   .topbar {
     grid-template-columns: 1fr;
     gap: 10px;
-    padding: 8px 0 9px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 8px 10px 9px;
     margin-bottom: 12px;
+    background: rgba(0, 1, 27, 0.86);
+    backdrop-filter: blur(18px);
   }
 
   .logo-link {
