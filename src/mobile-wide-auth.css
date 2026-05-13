@@ -59,8 +59,8 @@
   }
 
   .page-auth .auth-panel-logo {
-    width: min(160px, 58%) !important;
-    max-width: 160px !important;
+    width: min(148px, 52%) !important;
+    max-width: 148px !important;
     margin-inline: auto !important;
   }
 }
