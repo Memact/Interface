@@ -114,8 +114,8 @@ const LEGAL_FAQS = [
     answer: (
       <>
         For access, security, or project questions, contact{" "}
-        <a className="inline-help-link" href="mailto:keepsloading@gmail.com">keepsloading@gmail.com</a>.
-        Do not send secrets, raw memory exports, or API keys by email.
+        <a className="inline-help-link" href="mailto:keepsloading@gmail.com">keepsloading@gmail.com.</a>
+        {" "}For safety, do not send secrets, raw memory exports, or API keys by email.
       </>
     )
   }

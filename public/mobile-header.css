@@ -208,7 +208,7 @@
     gap: 10px !important;
     border: 1px solid var(--border) !important;
     border-radius: var(--radius-lg) !important;
-    padding: 8px 10px 9px !important;
+    padding: 10px 12px 12px !important;
     background: rgba(0, 1, 27, 0.86) !important;
     backdrop-filter: blur(18px) !important;
   }
@@ -227,8 +227,9 @@
     justify-content: flex-end !important;
     width: auto !important;
     margin-inline: 0 !important;
-    padding: 1px 0 2px !important;
+    padding: 1px 0 6px !important;
     overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .page:not(.page-auth) .tab {
@@ -265,6 +266,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
     justify-content: stretch !important;
+    width: 100% !important;
   }
 
   .app-actions button,
@@ -275,9 +277,15 @@
 
   .app-actions button,
   .section-actions button {
-    min-height: 40px !important;
-    padding: 8px 10px !important;
-    font-size: 14px !important;
+    min-height: 54px !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 9px 8px !important;
+    font-size: 13px !important;
+    line-height: 1.18 !important;
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    hyphens: none !important;
   }
 
   .registered-apps {
@@ -287,6 +295,8 @@
   .app-switcher {
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
+    overscroll-behavior-inline: contain !important;
+    -webkit-overflow-scrolling: touch !important;
     padding: 0 2px 3px !important;
     margin-inline: -2px !important;
   }
@@ -420,7 +430,7 @@
 
 @media (max-width: 420px) {
   .page:not(.page-auth) .topbar {
-    padding-inline: 6px !important;
+    padding-inline: 10px !important;
   }
 
   .page:not(.page-auth) .logo-img {

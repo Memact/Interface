@@ -1366,7 +1366,8 @@ input:-webkit-autofill:focus {
     gap: 6px;
     width: 100%;
     margin-inline: -12px;
-    padding: 1px 12px 2px;
+    padding: 1px 12px 8px;
+    -webkit-overflow-scrolling: touch;
   }
 
   .tab {
@@ -1398,6 +1399,16 @@ input:-webkit-autofill:focus {
 
   .panel { padding: 16px; }
 
+  .dashboard,
+  .panel,
+  .app-workspace,
+  .account-panel,
+  .password-panel,
+  .key-panel,
+  .help-panel {
+    min-height: 0;
+  }
+
   .dashboard-head,
   .section-head,
   .list-card,
@@ -1411,6 +1422,10 @@ input:-webkit-autofill:focus {
   .key-actions,
   .connect-actions {
     justify-content: stretch;
+  }
+
+  .section-actions {
+    width: 100%;
   }
 
   .connect-hero,
@@ -1439,6 +1454,17 @@ input:-webkit-autofill:focus {
     width: 100%;
   }
 
+  .section-actions .tooltip-wrap,
+  .section-actions button {
+    min-width: 0;
+    min-height: 52px;
+    border-radius: var(--radius-sm);
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
+
   .dashboard-head .sign-out-button {
     align-self: flex-start;
     width: auto;
@@ -1457,6 +1483,8 @@ input:-webkit-autofill:focus {
     margin-inline: -4px;
     padding: 0 4px 2px;
     overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .app-chip { flex: 0 0 auto; max-width: calc(100vw - 48px); }
@@ -1470,6 +1498,31 @@ input:-webkit-autofill:focus {
   .account-grid { grid-template-columns: 1fr; }
 
   .key-box code { white-space: pre; }
+
+  .key-box code,
+  .embed-code pre,
+  .revoked-history-list {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .faq-item summary.faq-trigger {
+    grid-template-columns: minmax(0, 1fr) 40px;
+  }
+
+  .faq-question,
+  .faq-answer,
+  .faq-answer p,
+  .faq-answer-content,
+  .faq-answer-content li {
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
+
+  .faq-answer-content code,
+  .inline-help-link {
+    overflow-wrap: anywhere;
+  }
 }
 
 @media (max-width: 520px) {
@@ -1479,7 +1532,7 @@ input:-webkit-autofill:focus {
 
   .topbar {
     gap: 9px;
-    padding-bottom: 8px;
+    padding: 10px 12px 12px;
     margin-bottom: 10px;
   }
 
@@ -1527,6 +1580,17 @@ input:-webkit-autofill:focus {
   .app-actions button {
     min-height: 40px;
     padding: 8px 11px;
+  }
+
+  .section-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .section-actions button {
+    min-height: 54px;
+    padding: 9px 8px;
+    font-size: 13px;
+    line-height: 1.18;
   }
 
   .hero-copy h1 { font-size: 26px; }
