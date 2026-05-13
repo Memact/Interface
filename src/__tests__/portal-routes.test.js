@@ -13,6 +13,8 @@ test("portal routes map clean URL pages", () => {
 test("legacy dashboard and login paths normalize to current routes", () => {
   assert.equal(normalizePortalPath("/dashboard"), "/Access")
   assert.equal(normalizePortalPath("/login"), "/#sign-in")
+  assert.equal(normalizePortalPath("/access"), "/")
+  assert.equal(normalizePortalPath("/account"), "/")
 })
 
 test("route metadata keeps help public and account protected", () => {

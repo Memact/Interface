@@ -10,6 +10,7 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
     const target = document.getElementById("sign-in")
     if (!target) return
 
+    window.history.pushState({}, "", "/#sign-in")
     target.scrollIntoView({ behavior: "auto", block: "center" })
     target.querySelector("input")?.focus({ preventScroll: true })
   }

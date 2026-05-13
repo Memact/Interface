@@ -8,7 +8,9 @@ export const ROUTES = {
 
 const LEGACY_ROUTES = new Map([
   ["/dashboard", ROUTES.access],
-  ["/login", `${ROUTES.home}#sign-in`]
+  ["/login", `${ROUTES.home}#sign-in`],
+  ["/access", ROUTES.home],
+  ["/account", ROUTES.home]
 ])
 
 export function normalizePortalPath(pathname = "/") {
