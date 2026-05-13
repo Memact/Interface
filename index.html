@@ -3,53 +3,69 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Memact Access | Permissioned Memory Infrastructure</title>
     <meta
       name="description"
-      content="Manage app permissions in Memact. Sign in, register apps, save consent settings, and create scoped API keys while memory data stays protected by default."
+      content="Memact Access lets apps request scoped memory permissions, activity categories, and API keys without getting blanket access to a user's memory graph."
     />
     <meta name="robots" content="index,follow" />
     <meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <meta name="author" content="Memact" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="theme-color" content="#00011B" />
-    <meta name="application-name" content="Memact" />
+    <meta name="application-name" content="Memact Access" />
     <meta name="format-detection" content="telephone=no" />
-    <meta property="og:site_name" content="Memact" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:title" content="Memact | Permissions And API Keys" />
-    <meta
-      property="og:description"
-      content="Sign in, register apps, save consent settings, and create scoped API keys while memory data stays protected by default."
-    />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://www.memact.com/" />
-    <meta property="og:image" content="https://www.memact.com/seo-logo.png" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1024" />
-    <meta property="og:image:height" content="282" />
-    <meta property="og:image:alt" content="Memact logo" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Memact | Permissions And API Keys" />
-    <meta
-      name="twitter:description"
-      content="Sign in, register apps, save consent settings, and create scoped API keys while memory data stays protected by default."
-    />
-    <meta name="twitter:image" content="https://www.memact.com/seo-logo.png" />
+    <meta name="keywords" content="Memact, Memact Access, memory infrastructure, permissioned memory, scoped API keys, app permissions, digital activity memory" />
     <link rel="canonical" href="https://www.memact.com/" />
     <link rel="icon" href="/icon.png" type="image/png" />
     <link rel="apple-touch-icon" href="/icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <title>Memact | Permissions And API Keys</title>
+    <link rel="stylesheet" href="/mobile-header.css" />
+    <link rel="stylesheet" href="/embed-tutorial.css" />
+    <link rel="stylesheet" href="/dashboard-layout.css" />
+
+    <meta property="og:site_name" content="Memact" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content="Memact Access | Permissioned Memory Infrastructure" />
+    <meta
+      property="og:description"
+      content="Apps ask for memory access. Users choose what they get. Memact Access manages scoped permissions, activity categories, and API keys."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.memact.com/" />
+    <meta property="og:image" content="https://www.memact.com/seo-logo.png" />
+    <meta property="og:image:secure_url" content="https://www.memact.com/seo-logo.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1024" />
+    <meta property="og:image:height" content="282" />
+    <meta property="og:image:alt" content="Memact wordmark on a dark background" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Memact Access | Permissioned Memory Infrastructure" />
+    <meta
+      name="twitter:description"
+      content="Apps ask for memory access. Users choose what they get. Memact Access manages scoped permissions, activity categories, and API keys."
+    />
+    <meta name="twitter:image" content="https://www.memact.com/seo-logo.png" />
+    <meta name="twitter:image:alt" content="Memact wordmark on a dark background" />
+
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "WebApplication",
-        "name": "Memact",
+        "name": "Memact Access",
+        "alternateName": "Memact",
         "url": "https://www.memact.com/",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "Web",
         "image": "https://www.memact.com/seo-logo.png",
-        "description": "Manage app permissions in Memact. Sign in, register apps, save consent settings, and create scoped API keys while memory data stays protected by default.",
+        "description": "Memact Access lets apps request scoped memory permissions, activity categories, and API keys without getting blanket access to a user's memory graph.",
+        "creator": {
+          "@type": "Organization",
+          "name": "Memact",
+          "url": "https://github.com/Memact"
+        },
+        "isAccessibleForFree": true,
         "offers": {
           "@type": "Offer",
           "price": "0",
@@ -62,10 +78,14 @@
     <div id="root"></div>
     <noscript>
       <main>
-        <h1>Memact</h1>
-        <p>Manage app permissions in Memact. Sign in, register apps, save consent settings, and create scoped API keys.</p>
+        <h1>Memact Access</h1>
+        <p>Apps ask for memory access. You choose what they get.</p>
+        <p>Sign in to manage apps, permissions, activity categories, and scoped API keys.</p>
       </main>
     </noscript>
     <script type="module" src="/src/main.jsx"></script>
+    <script src="/embed-tutorial.js" defer></script>
+    <script src="/usage-heading-fix.js" defer></script>
+    <script src="/access-learn-more.js" defer></script>
   </body>
 </html>
