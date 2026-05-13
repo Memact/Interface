@@ -99,7 +99,7 @@ export function HelpPanel() {
     <section className="panel help-panel">
       <div>
         <p className="eyebrow">Help</p>
-        <h2>Memact notes</h2>
+        <h2>Frequently asked questions</h2>
       </div>
       <p className="muted help-intro">Apps ask for memory access. You choose what they get.</p>
 
