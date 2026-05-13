@@ -4,8 +4,8 @@ export function DataTransparencyPage({
   app,
   categories,
   scopes,
-  requestedCategories,
-  requestedScopes,
+  requestedCategories = [],
+  requestedScopes = [],
   transparency,
   onBackToConsent,
   onManageConsent
@@ -16,6 +16,8 @@ export function DataTransparencyPage({
   const graphPackets = normalizeDisclosureList(transparency?.graph_packets || transparency?.graphPackets || transparency?.memory_packets)
   const retention = transparency?.retention || transparency?.retention_policy || "The app has not provided a specific retention statement yet."
   const revocation = transparency?.revocation || transparency?.revocation_policy || "After consent is revoked, new Memact access should stop. Previously copied data must follow the app's own deletion policy."
+  const safeRequestedScopes = Array.isArray(requestedScopes) ? requestedScopes : []
+  const safeRequestedCategories = Array.isArray(requestedCategories) ? requestedCategories : []
 
   return (
     <section className="panel transparency-panel">
@@ -29,11 +31,11 @@ export function DataTransparencyPage({
         </div>
         <div className="transparency-summary" aria-label="Transparency summary">
           <span>
-            <strong>{requestedScopes.length}</strong>
+            <strong>{safeRequestedScopes.length}</strong>
             Requested scopes
           </span>
           <span>
-            <strong>{requestedCategories.length}</strong>
+            <strong>{safeRequestedCategories.length}</strong>
             Activity categories
           </span>
         </div>
@@ -81,12 +83,15 @@ export function DataTransparencyPage({
           <p className="eyebrow">Boundaries</p>
           <h3>Scopes and categories</h3>
           <div className="transparency-token-list">
-            {requestedScopes.map((scope) => (
+            {safeRequestedScopes.map((scope) => (
               <span className="data-token" key={scope}>{scopes?.[scope]?.label || scope}</span>
             ))}
-            {requestedCategories.map((category) => (
+            {safeRequestedCategories.map((category) => (
               <span className="data-token" key={category}>{categories?.[category]?.label || category}</span>
             ))}
+            {!safeRequestedScopes.length && !safeRequestedCategories.length ? (
+              <p className="muted">No scopes or activity categories were attached to this transparency link.</p>
+            ) : null}
           </div>
         </section>
 

@@ -81,6 +81,10 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
             <small>Memact verifies the app, user permission, requested scopes, and selected categories before allowing access.</small>
           </div>
           <div className="mini-row">
+            <strong>Apps should load their Memact key from environment secrets.</strong>
+            <small>The raw API key should not be typed by users, pasted into client UI, or shipped in browser/mobile code. The app backend reads it from `.env` or a secret manager, then verifies this consent before doing work.</small>
+          </div>
+          <div className="mini-row">
             <strong>Blocked uses stay blocked.</strong>
             <small>Apps may not use Memact for surveillance, selling raw personal memory, manipulative targeting, or sensitive eligibility decisions.</small>
           </div>

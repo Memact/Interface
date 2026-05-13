@@ -872,7 +872,7 @@ function App() {
         {showStatusPill ? <span className="status-pill" aria-live="polite">{status}</span> : null}
       </header>
 
-      {error ? <p id="error-message" className="notice notice-danger" role="alert">{error} {canRetryDashboard ? <button type="button" className="inline-retry" onClick={handleRetryDashboard}>Retry</button> : null}</p> : null}
+      {error ? <p id="error-message" className="notice notice-danger error-overlay" role="alert">{error} {canRetryDashboard ? <button type="button" className="inline-retry" onClick={handleRetryDashboard}>Retry</button> : null}</p> : null}
       {authChecking && !showAuth ? <p className="status-line">Checking login.</p> : null}
 
       {currentPage === "help" ? (
@@ -983,6 +983,7 @@ function App() {
           signupDisplayName={signupDisplayName}
           password={password}
           passwordConfirm={passwordConfirm}
+          passwordState={passwordState}
           authMode={authMode}
           authLoading={authLoading}
           authNotice={authNotice}
@@ -1254,6 +1255,7 @@ function getPasswordState(password, confirmPassword) {
 
 function scrollElementIntoView(id) {
   if (typeof window === "undefined") return
+  if (id === "error-message") return
   window.requestAnimationFrame(() => {
     document.getElementById(id)?.scrollIntoView({
       behavior: "smooth",

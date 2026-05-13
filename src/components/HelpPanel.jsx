@@ -55,7 +55,7 @@ const ADVANCED_FAQS = [
           <li>Add a <strong>Connect Memact</strong> button in your app. Send users to <code>/connect?app_id=...&amp;scopes=...&amp;categories=...&amp;redirect_uri=...</code>.</li>
           <li>Put a Data Transparency link beside that consent flow. Explain the actual captured fields, evidence cards, summaries, graph packets, retention, and revocation path.</li>
           <li>After approval, Memact redirects back to your <code>redirect_uri</code> with a <code>connection_id</code>. Store that id for the signed-in user in your app.</li>
-          <li>Keep the raw Memact API key on your server. Do not ship it in browser JavaScript, mobile apps, public repos, docs, logs, or prompts.</li>
+          <li>Keep the raw Memact API key in server environment config, such as <code>MEMACT_API_KEY</code> in <code>.env</code> locally and a secret manager in production. Do not ask users to paste it into UI.</li>
           <li>Before using Memact output, your backend verifies <code>api_key + connection_id + required_scopes</code>. If verification fails, do not collect or read anything.</li>
           <li>Use only the approved result: summaries, evidence snippets, graph objects, schema writes, or capture status that match the returned scopes and categories.</li>
         </ol>
@@ -66,7 +66,7 @@ const ADVANCED_FAQS = [
     question: "Where should the Memact API key live in code?",
     answer: (
       <>
-        Treat the raw Memact API key like a server-side secret. Do not hard-code it into browser bundles, mobile apps, public repos, README examples, logs, or shared prompts. Frontend code should open the Connect URL; backend code should verify access and call Memact.
+        Treat the raw Memact API key like a server-side secret. In local development, put it in <code>.env</code> as something like <code>MEMACT_API_KEY=mka_...</code>. In production, put the same value in your host's secret manager. Do not hard-code it into browser bundles, mobile apps, public repos, README examples, logs, shared prompts, or manual user-facing settings panels.
       </>
     )
   },
@@ -74,7 +74,7 @@ const ADVANCED_FAQS = [
     question: "What code should I embed?",
     answer: (
       <>
-        Embed only the user-facing connection pieces in the client: the Connect button, the Data Transparency link, and your callback handling. Put verification and Memact API calls on your server. A typical server step is: receive <code>connection_id</code>, load the app's Memact API key from server secrets, call the verification endpoint with required scopes, then run the feature only with the approved scopes and categories returned by Memact.
+        Embed only the user-facing connection pieces in the client: the Connect button, the Data Transparency link, and your callback handling. Put verification and Memact API calls on your server. A typical server step is: receive <code>connection_id</code>, load <code>process.env.MEMACT_API_KEY</code> or your platform's equivalent secret, call the verification endpoint with required scopes, then run the feature only with the approved scopes and categories returned by Memact.
       </>
     )
   },

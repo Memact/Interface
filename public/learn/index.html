@@ -41,7 +41,7 @@
           {"@type":"Question","name":"What is Memact?","acceptedAnswer":{"@type":"Answer","text":"Memact lets apps remember useful context from user-approved activity without giving them blanket access."}},
           {"@type":"Question","name":"Does an app get my whole memory graph?","acceptedAnswer":{"@type":"Answer","text":"No. Apps only get the permissions, activity categories, and output the user approved for that app."}},
           {"@type":"Question","name":"What is Data Transparency?","acceptedAnswer":{"@type":"Answer","text":"Data Transparency is the consent-companion page where an app explains actual captured fields, evidence, graph packets, retention, and revocation."}},
-          {"@type":"Question","name":"How does a developer use the Memact API?","acceptedAnswer":{"@type":"Answer","text":"Register an app, choose scopes and categories, send the user through consent, link the matching Data Transparency page, store the returned connection_id, keep the API key server-side, and verify access before using Memact output."}},
+          {"@type":"Question","name":"How does a developer use the Memact API?","acceptedAnswer":{"@type":"Answer","text":"Register an app, choose scopes and categories, send the user through consent, link the matching Data Transparency page, store the returned connection_id, keep the API key in server environment config or a secret manager, and verify access before using Memact output."}},
           {"@type":"Question","name":"What is a schema packet?","acceptedAnswer":{"@type":"Answer","text":"A schema packet is a memory object that can include evidence, content units, nodes, edges, and a summary."}}
         ]
       }
@@ -271,7 +271,7 @@
         </article>
         <article class="card">
           <h2>For developers</h2>
-          <p>Register an app, choose narrow scopes and categories, send users through consent, keep the raw API key on your server, and verify access before using Memact output.</p>
+          <p>Register an app, choose narrow scopes and categories, send users through consent, keep the raw API key in server environment config, and verify access before using Memact output.</p>
         </article>
         <article class="card">
           <h2>No blanket graph dump</h2>
@@ -299,7 +299,7 @@
         </details>
         <details>
           <summary>What does an API key do?</summary>
-          <p>An API key identifies the app. The app still needs a user connection id and approved scopes before Memact allows access.</p>
+          <p>An API key identifies the app. It belongs in `.env` locally or a production secret manager, never in a user-facing settings panel. The app still needs a user connection id and approved scopes before Memact allows access.</p>
         </details>
       </section>
 
@@ -313,7 +313,7 @@
             <li>Add a Connect Memact button that opens `/connect` with app context.</li>
             <li>Link `/DataTransparency` with the same app context beside consent.</li>
             <li>Store the returned `connection_id` for the signed-in user.</li>
-            <li>Keep the raw API key on your server, not in client code.</li>
+            <li>Keep the raw API key in server environment config, such as `MEMACT_API_KEY` in `.env` locally and a secret manager in production.</li>
             <li>Verify the API key, connection id, and required scopes before using Memact output.</li>
           </ol>
         </details>

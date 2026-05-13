@@ -547,8 +547,12 @@ const memactConnectionId = "connection_id_from_connect_redirect";
 // 4. Verify access on your server before doing work.
 const MEMACT_ACCESS_URL = "${accessUrl}";
 const MEMACT_PUBLIC_ACCESS_KEY = "${publicKey}";
-const memactApiKey = "${apiKey || "mka_key_shown_once"}";
+const memactApiKey = process.env.MEMACT_API_KEY;
 const requiredScopes = ${JSON.stringify(scopes, null, 2)};
+
+if (!memactApiKey) {
+  throw new Error("Set MEMACT_API_KEY in your server .env or secret manager.");
+}
 
 const response = await fetch(\`\${MEMACT_ACCESS_URL}/rest/v1/rpc/memact_verify_api_key\`, {
   method: "POST",

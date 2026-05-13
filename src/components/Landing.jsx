@@ -11,6 +11,7 @@ export function Landing({
   signupDisplayName,
   password,
   passwordConfirm,
+  passwordState,
   authMode,
   authLoading,
   authNotice,
@@ -96,6 +97,21 @@ export function Landing({
                   Confirm password
                   <input value={passwordConfirm} type="password" autoComplete="new-password" placeholder="Repeat the password" onChange={(event) => setPasswordConfirm(event.target.value)} required />
                 </label>
+              ) : null}
+              {!isSignIn && passwordState ? (
+                <>
+                  <div className="password-strength signup-password-strength" data-strength={passwordState.level}>
+                    <div className="password-strength-bar">
+                      <span style={{ width: `${passwordState.percent}%` }} />
+                    </div>
+                    <strong>{passwordState.label}</strong>
+                  </div>
+                  <ul className="password-rules signup-password-rules" aria-label="Password requirements">
+                    {passwordState.checks.map((check) => (
+                      <li key={check.label} className={check.ok ? "is-passed" : ""}>{check.label}</li>
+                    ))}
+                  </ul>
+                </>
               ) : null}
               <button type="submit" disabled={authLoading === "password" || authLoading === "signup"}>
                 {authLoading === "password" || authLoading === "signup"
