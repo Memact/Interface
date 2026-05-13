@@ -1,5 +1,5 @@
 {
-  "name": "Memact Access",
+  "name": "Memact",
   "short_name": "Memact",
   "description": "Manage apps, permissions, activity categories, and scoped API keys for Memact.",
   "start_url": "/",

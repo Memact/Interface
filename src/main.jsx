@@ -12,16 +12,24 @@ import { hasDuplicateAppName } from "./app-name.js"
 import { defaultCategoriesForPolicy, defaultScopesForPolicy, normalizeSelectedCategories, normalizeSelectedScopes } from "./access-policy.js"
 import { ConnectPage } from "./components/ConnectPage.jsx"
 import { Dashboard } from "./components/Dashboard.jsx"
+import { HelpPanel } from "./components/HelpPanel.jsx"
 import { Landing } from "./components/Landing.jsx"
 import { refreshDashboard, useDashboardState } from "./hooks/useDashboardState.js"
+import { isConnectPage, isProtectedPage, normalizePortalPath, pageFromLocation, routeForPage } from "./portal-routes.js"
 import { getDisplayName } from "./user-display.js"
+
+const AUTH_INIT_TIMEOUT_MS = 12000
+const AUTH_CODE_EXCHANGE_TIMEOUT_MS = 9000
+const AUTH_SESSION_CHECK_TIMEOUT_MS = 9000
 
 function App() {
   const client = useMemo(() => new AccessClient(ACCESS_URL), [])
+  const initialPage = pageFromLocation()
   const [authSession, setAuthSession] = useState(null)
   const [authUser, setAuthUser] = useState(null)
   const [authChecking, setAuthChecking] = useState(true)
-  const [activeTab, setActiveTab] = useState(window.location.pathname === "/dashboard" ? "access" : "login")
+  const [currentPage, setCurrentPage] = useState(initialPage)
+  const [activeTab, setActiveTab] = useState(initialPage === "home" ? "login" : initialPage)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [authLoading, setAuthLoading] = useState("")
@@ -59,6 +67,36 @@ function App() {
   const passwordState = useMemo(() => getPasswordState(setupPassword, setupPasswordConfirm), [setupPassword, setupPasswordConfirm])
   const needsPasswordSetup = Boolean(authUser && shouldOfferPasswordSetup(authUser))
 
+  function navigateToPage(page, { replace = false, hash = "" } = {}) {
+    const nextPath = `${routeForPage(page)}${hash}`
+    const historyMethod = replace ? "replaceState" : "pushState"
+    window.history[historyMethod]({}, "", nextPath)
+    setCurrentPage(page)
+    setActiveTab(page === "home" ? "login" : page)
+  }
+
+  function applySession(nextSession, detectedFlow = "default") {
+    setAuthSession(nextSession)
+    setAuthUser(nextSession?.user || null)
+    setAuthFlow(detectedFlow)
+    const page = pageFromLocation()
+
+    if (nextSession && isConnectPage(page)) {
+      setCurrentPage("connect")
+      setActiveTab("connect")
+      return
+    }
+
+    if (nextSession) {
+      navigateToPage(shouldOpenAccountTab(nextSession.user, detectedFlow === "recovery") ? "account" : "access", { replace: true })
+      return
+    }
+
+    if (isProtectedPage(page)) {
+      navigateToPage("home", { replace: true, hash: "#sign-in" })
+    }
+  }
+
   useEffect(() => {
     client.health()
       .then(() => setStatus(ACCESS_MODE === "supabase" ? "Access is running through Supabase." : "Memact is online."))
@@ -73,33 +111,56 @@ function App() {
       return undefined
     }
 
+    const normalizedPath = normalizePortalPath(window.location.pathname)
+    if (normalizedPath !== window.location.pathname) {
+      window.history.replaceState({}, "", normalizedPath)
+      const normalizedPage = pageFromLocation()
+      setCurrentPage(normalizedPage)
+      setActiveTab(normalizedPage === "home" ? "login" : normalizedPage)
+    }
+
     let mounted = true
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (!mounted) return
-      if (error) {
-        setError(error.message)
-      }
-      const nextSession = data?.session || null
-      const detectedFlow = detectAuthFlowFromUrl()
-      setAuthSession(nextSession)
-      setAuthUser(nextSession?.user || null)
-      setAuthFlow(detectedFlow)
+    const shouldCheckSession = shouldCheckSessionOnLoad()
+    let sessionCheckTimeout
+
+    if (!shouldCheckSession) {
       setAuthChecking(false)
-      if (nextSession && isConnectPath()) {
-        setActiveTab("connect")
-      } else if (nextSession && window.location.pathname !== "/dashboard") {
-        window.history.replaceState({}, "", "/dashboard")
-      }
-      if (!nextSession && window.location.pathname === "/dashboard") {
-        window.history.replaceState({}, "", "/login")
-        setActiveTab("login")
-      }
-    })
+    } else {
+      sessionCheckTimeout = window.setTimeout(() => {
+        if (!mounted) return
+        setAuthChecking(false)
+        setAuthNotice("Sign-in took too long. Try GitHub again from this page.")
+        if (isProtectedPage(pageFromLocation())) {
+          navigateToPage("home", { replace: true, hash: "#sign-in" })
+        }
+      }, AUTH_INIT_TIMEOUT_MS)
+
+      resolveInitialSession(supabase)
+        .then(({ data, error }) => {
+          if (!mounted) return
+          if (error) {
+            setError(error.message)
+          }
+          const nextSession = data?.session || null
+          if (!nextSession && isProtectedPage(pageFromLocation())) {
+            setAuthNotice("Sign-in did not finish in this browser. Try GitHub again from this page.")
+          }
+          applySession(nextSession, detectAuthFlowFromUrl())
+        })
+        .catch((sessionError) => {
+          if (!mounted) return
+          setError(sessionError?.message || "Could not check login status.")
+        })
+        .finally(() => {
+          if (!mounted) return
+          window.clearTimeout(sessionCheckTimeout)
+          setAuthChecking(false)
+        })
+    }
 
     const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return
-      setAuthSession(nextSession)
-      setAuthUser(nextSession?.user || null)
+      setAuthChecking(false)
       if (event === "PASSWORD_RECOVERY") {
         setAuthFlow("recovery")
       } else if (event === "SIGNED_IN") {
@@ -107,40 +168,50 @@ function App() {
       } else if (event === "SIGNED_OUT") {
         setAuthFlow("default")
       }
-      if (nextSession) {
-        if (isConnectPath()) {
-          setActiveTab("connect")
-        } else {
-          setActiveTab(shouldOpenAccountTab(nextSession.user, event === "PASSWORD_RECOVERY" || detectAuthFlowFromUrl() === "recovery") ? "account" : "access")
-          window.history.replaceState({}, "", "/dashboard")
+      applySession(nextSession, event === "PASSWORD_RECOVERY" ? "recovery" : detectAuthFlowFromUrl())
+      if (!nextSession && event === "SIGNED_OUT") {
+        if (isProtectedPage(pageFromLocation())) {
+          navigateToPage("home", { replace: true, hash: "#sign-in" })
         }
       }
     })
 
     return () => {
       mounted = false
+      window.clearTimeout(sessionCheckTimeout)
       subscription?.subscription?.unsubscribe()
     }
   }, [])
 
   useEffect(() => {
+    function handlePopState() {
+      const page = pageFromLocation()
+      setCurrentPage(page)
+      setActiveTab(page === "home" ? "login" : page)
+    }
+
+    window.addEventListener("popstate", handlePopState)
+    return () => window.removeEventListener("popstate", handlePopState)
+  }, [])
+
+  useEffect(() => {
     if (!session) return
     if (authFlow === "recovery") {
-      setActiveTab("account")
+      navigateToPage("account", { replace: true })
       setStatus("Reset your password.")
       setAuthNotice("Choose a new password for your Memact account.")
       return
     }
     if (needsPasswordSetup) {
-      setActiveTab("account")
+      navigateToPage("account", { replace: true })
       setStatus("Set a password to make your next login faster.")
     }
   }, [authFlow, needsPasswordSetup, session])
 
   useEffect(() => {
-    const tabName = activeTab === "account" ? "Account" : activeTab === "help" ? "Help" : activeTab === "connect" ? "Connect" : activeTab === "access" ? "API Keys" : "Login"
+    const tabName = currentPage === "account" ? "Account" : currentPage === "help" ? "Help" : currentPage === "connect" ? "Connect" : currentPage === "access" ? "API Keys" : "Login"
     document.title = `Memact | ${tabName}`
-  }, [activeTab])
+  }, [currentPage])
 
   useEffect(() => {
     if (authChecking || !session) return
@@ -148,7 +219,7 @@ function App() {
   }, [authChecking, client, session])
 
   useEffect(() => {
-    if (!isConnectPath()) return
+    if (!isConnectPage(currentPage)) return
     const request = parseConnectRequest()
     setConnectRequest(request)
     setActiveTab("connect")
@@ -177,7 +248,7 @@ function App() {
     return () => {
       cancelled = true
     }
-  }, [client, session])
+  }, [client, currentPage, session])
 
   useEffect(() => {
     setNewAppCategories(defaultCategoriesForPolicy(policy))
@@ -239,7 +310,7 @@ function App() {
       setAuthNotice("Check your email for the login link.")
       setStatus("Login link sent.")
     } catch (authError) {
-      setError(authError.message)
+      setError(formatAuthErrorMessage(authError))
       setStatus(authStatusMessage(authError))
     } finally {
       setAuthLoading("")
@@ -261,20 +332,22 @@ function App() {
       })
       if (signInError) throw signInError
       setPassword("")
-      const signedInUser = data?.user
-      if (signedInUser && !signedInUser.user_metadata?.memact_password_ready) {
-        const { data: updated, error: updateError } = await auth.auth.updateUser({
-          data: {
-            ...signedInUser.user_metadata,
-            memact_password_ready: true,
-            memact_password_updated_at: new Date().toISOString()
-          }
-        })
-        if (updateError) throw updateError
-        if (updated?.user) {
-          setAuthUser(updated.user)
-        }
+      let signedInSession = data?.session || null
+      const signedInUser = signedInSession?.user || data?.user || null
+
+      if (!signedInSession) {
+        const { data: sessionData, error: sessionError } = await auth.auth.getSession()
+        if (sessionError) throw sessionError
+        signedInSession = sessionData?.session || null
       }
+
+      if (!signedInSession) {
+        throw new Error("Login finished, but Memact did not receive a browser session. Refresh and try again.")
+      }
+
+      setAuthChecking(false)
+      applySession(signedInSession, "default")
+      markPasswordReadyInBackground(auth, signedInUser || signedInSession.user, setAuthUser)
       setStatus("Signed in.")
     } catch (authError) {
       setError(passwordLoginErrorMessage(authError))
@@ -302,7 +375,7 @@ function App() {
       setAuthNotice("Check your email for the password reset link.")
       setStatus("Password reset link sent.")
     } catch (resetError) {
-      setError(String(resetError?.message || "Could not send the password reset link."))
+      setError(formatAuthErrorMessage(resetError, "Could not send the password reset link."))
       setStatus(authStatusMessage(resetError))
     } finally {
       setAuthLoading("")
@@ -323,7 +396,7 @@ function App() {
       })
       if (oauthError) throw oauthError
     } catch (authError) {
-      setError(authError.message)
+      setError(formatAuthErrorMessage(authError))
       setStatus(authStatusMessage(authError))
       setAuthLoading("")
     }
@@ -394,7 +467,7 @@ function App() {
       setEmailChangeSuccess("Check both email inboxes to confirm the change, based on your Supabase email settings.")
       setStatus("Email change started.")
     } catch (emailError) {
-      setError(String(emailError?.message || "Email change did not finish."))
+      setError(formatAuthErrorMessage(emailError, "Email change did not finish."))
       setStatus(authStatusMessage(emailError))
     } finally {
       setAuthLoading("")
@@ -429,7 +502,7 @@ function App() {
       setDisplayNameSuccess("Display name saved.")
       setStatus("Display name saved.")
     } catch (displayNameError) {
-      setError(String(displayNameError?.message || "Display name did not save."))
+      setError(formatAuthErrorMessage(displayNameError, "Display name did not save."))
       setStatus(authStatusMessage(displayNameError))
       scrollElementIntoView("error-message")
     } finally {
@@ -649,8 +722,7 @@ function App() {
       })
       return
     }
-    window.history.replaceState({}, "", "/dashboard")
-    setActiveTab("access")
+    navigateToPage("access", { replace: true })
   }
 
   async function signOut() {
@@ -674,9 +746,8 @@ function App() {
     setApiTestResult("")
     setDisplayNameDraft("")
     setDisplayNameSuccess("")
-    setActiveTab("login")
     setStatus("Signed out.")
-    window.history.replaceState({}, "", "/login")
+    navigateToPage("home", { replace: true })
   }
 
   const scopes = policy?.scopes || {}
@@ -692,18 +763,22 @@ function App() {
         </a>
         {session ? (
           <nav className="tabs" aria-label="Memact portal tabs">
-            <button type="button" className={activeTab === "access" ? "tab is-active" : "tab"} onClick={() => setActiveTab("access")}>Access</button>
-            <button type="button" className={activeTab === "account" ? "tab is-active" : "tab"} onClick={() => setActiveTab("account")}>Account</button>
-            <button type="button" className={activeTab === "help" ? "tab is-active" : "tab"} onClick={() => setActiveTab("help")}>Help</button>
+            <button type="button" className={currentPage === "access" ? "tab is-active" : "tab"} onClick={() => navigateToPage("access")}>Access</button>
+            <button type="button" className={currentPage === "account" ? "tab is-active" : "tab"} onClick={() => navigateToPage("account")}>Account</button>
+            <button type="button" className={currentPage === "help" ? "tab is-active" : "tab"} onClick={() => navigateToPage("help")}>Help</button>
           </nav>
         ) : null}
         {showStatusPill ? <span className="status-pill" aria-live="polite">{status}</span> : null}
       </header>
 
       {error ? <p id="error-message" className="notice notice-danger" role="alert">{error} {canRetryDashboard ? <button type="button" className="inline-retry" onClick={handleRetryDashboard}>Retry</button> : null}</p> : null}
-      {authChecking ? <p className="status-line">Checking login.</p> : null}
+      {authChecking && !showAuth ? <p className="status-line">Checking login.</p> : null}
 
-      {session && activeTab === "connect" ? (
+      {currentPage === "help" ? (
+        <section className="dashboard">
+          <HelpPanel />
+        </section>
+      ) : session && currentPage === "connect" ? (
         <ConnectPage
           connectRequest={connectRequest}
           connectDetails={connectDetails}
@@ -711,6 +786,7 @@ function App() {
           notice={connectNotice}
           onApprove={handleConnectApprove}
           onCancel={handleConnectCancel}
+          onLearnMore={() => navigateToPage("help")}
         />
       ) : session ? (
         <Dashboard
@@ -784,6 +860,7 @@ function App() {
           onPasswordLogin={handlePasswordLogin}
           onForgotPassword={handleForgotPassword}
           onGithubLogin={handleGithubLogin}
+          onLearnMore={() => navigateToPage("help")}
         />
       )}
     </main>
@@ -810,6 +887,24 @@ function statusForAccessError(error) {
 }
 
 
+
+function formatAuthErrorMessage(error, fallback = "Login did not finish.") {
+  const baseMessage = String(error?.message || "").trim()
+  if (/invalid login credentials/i.test(baseMessage)) {
+    return "Email or password did not match. You can use the email link if this is your first login."
+  }
+  if (/email not confirmed/i.test(baseMessage)) {
+    return "Confirm your email first, then sign in again."
+  }
+  const code = String(error?.code || "").trim()
+  const status = Number.isFinite(error?.status) ? `status ${error.status}` : ""
+  const details = String(error?.details || error?.hint || "").trim()
+  const suffix = [code, status, details].filter(Boolean).join(" - ")
+  if (baseMessage && suffix) return `${baseMessage} (${suffix})`
+  if (baseMessage) return baseMessage
+  return suffix || fallback
+}
+
 function authStatusMessage(error) {
   const message = String(error?.message || "").toLowerCase()
   if (message.includes("failed to fetch") || message.includes("networkerror")) {
@@ -822,11 +917,7 @@ function authStatusMessage(error) {
 }
 
 function passwordLoginErrorMessage(error) {
-  const message = String(error?.message || "")
-  if (/invalid login credentials/i.test(message)) {
-    return "Email or password did not match. You can use the email link if this is your first login."
-  }
-  return message || "Password login did not finish."
+  return formatAuthErrorMessage(error, "Password login did not finish.")
 }
 
 function passwordSetupErrorMessage(error) {
@@ -858,6 +949,67 @@ function detectAuthFlowFromUrl() {
   return "default"
 }
 
+function shouldCheckSessionOnLoad() {
+  if (typeof window === "undefined") return false
+  const page = pageFromLocation(window.location)
+  const authPayload = `${window.location.search || ""}${window.location.hash || ""}`.toLowerCase()
+  return isProtectedPage(page) ||
+    authPayload.includes("code=") ||
+    authPayload.includes("access_token=") ||
+    authPayload.includes("type=recovery") ||
+    authPayload.includes("type=magiclink")
+}
+
+async function resolveInitialSession(authClient) {
+  const authCode = getAuthCodeFromUrl()
+  if (authCode && typeof authClient?.auth?.exchangeCodeForSession === "function") {
+    try {
+      const exchanged = await withAuthTimeout(authClient.auth.exchangeCodeForSession(authCode), AUTH_CODE_EXCHANGE_TIMEOUT_MS)
+      if (exchanged?.data?.session || exchanged?.error) {
+        return exchanged
+      }
+    } catch (exchangeError) {
+      const fallback = await withAuthTimeout(authClient.auth.getSession(), AUTH_SESSION_CHECK_TIMEOUT_MS)
+      if (fallback?.data?.session) return fallback
+      return { data: { session: null }, error: exchangeError }
+    }
+  }
+
+  return withAuthTimeout(authClient.auth.getSession(), AUTH_SESSION_CHECK_TIMEOUT_MS)
+}
+
+function getAuthCodeFromUrl() {
+  if (typeof window === "undefined") return ""
+  return new URLSearchParams(window.location.search || "").get("code") || ""
+}
+
+function withAuthTimeout(promise, timeoutMs) {
+  let timeoutId
+  const timeout = new Promise((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error("Login callback took too long.")), timeoutMs)
+  })
+  return Promise.race([promise, timeout]).finally(() => {
+    window.clearTimeout(timeoutId)
+  })
+}
+
+function markPasswordReadyInBackground(auth, user, setAuthUser) {
+  if (!user || user.user_metadata?.memact_password_ready) return
+  auth.auth.updateUser({
+    data: {
+      ...user.user_metadata,
+      memact_password_ready: true,
+      memact_password_updated_at: new Date().toISOString()
+    }
+  })
+    .then(({ data }) => {
+      if (data?.user) {
+        setAuthUser(data.user)
+      }
+    })
+    .catch(() => {})
+}
+
 function isConnectPath() {
   return typeof window !== "undefined" && window.location.pathname === "/connect"
 }
@@ -887,7 +1039,7 @@ function getAuthRedirectTarget() {
   if (isConnectPath()) {
     return window.location.href
   }
-  return getAuthRedirectUrl()
+  return getAuthRedirectUrl(routeForPage("access"))
 }
 
 function buildConnectRedirect(redirectUri, values) {
@@ -900,7 +1052,7 @@ function buildConnectRedirect(redirectUri, values) {
     })
     return url.toString()
   } catch {
-    return "/dashboard"
+    return routeForPage("access")
   }
 }
 

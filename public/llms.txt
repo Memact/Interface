@@ -17,7 +17,7 @@ Memact lets apps create permissioned memory from a user's digital activity. Apps
 ## Core concepts
 
 - Permissioned memory
-- Memact Access
+- Access layer and permission console
 - Scoped API keys
 - Activity categories
 - Connect App consent flow

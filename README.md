@@ -2,9 +2,9 @@
 
 Version: `v0.0`
 
-Website is the Memact Access web UI.
+Website is the Memact web UI.
 
-Memact Access lets apps request scoped memory permissions while users choose
+Memact lets apps request scoped memory permissions while users choose
 what each app can access.
 
 ```text
@@ -24,7 +24,7 @@ Website owns the public and authenticated interface for:
 - public SEO/AI-search explanation pages
 
 Website does not capture activity and does not read memory graphs. It talks to
-the Access layer inside Supabase, which protects the permission boundary.
+Memact's Access layer inside Supabase, which protects the permission boundary.
 
 The old demo/query website has been archived outside this repo at:
 
@@ -78,7 +78,7 @@ billboard.
 
 The site includes crawlable public discovery assets:
 
-- `/` for Memact Access metadata and app shell
+- `/` for Memact metadata and app shell
 - `/learn/` for a static explanation page
 - `/robots.txt`
 - `/sitemap.xml`
@@ -120,7 +120,7 @@ Create `.env`:
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-public-anon-key
 # Optional override for non-standard deploy domains. Defaults to the current origin.
-# VITE_AUTH_REDIRECT_URL=http://localhost:3000/dashboard
+# VITE_AUTH_REDIRECT_URL=http://localhost:3000/Access
 ```
 
 Only use the Supabase anon key in Website. Never put a service role key, GitHub
@@ -135,9 +135,11 @@ Before the portal works, apply the Access SQL migration from:
 In Supabase Auth URL settings, allow the local and production callback URLs:
 
 ```text
-http://localhost:3000/dashboard
+http://localhost:3000/Access
+http://localhost:3000/Account
 http://localhost:3000/connect
-https://www.memact.com/dashboard
+https://www.memact.com/Access
+https://www.memact.com/Account
 https://www.memact.com/connect
 https://www.memact.com/**
 ```
@@ -150,7 +152,7 @@ For Render, set:
 ```text
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-public-anon-key
-# Optional: VITE_AUTH_REDIRECT_URL=https://www.memact.com/dashboard
+# Optional: VITE_AUTH_REDIRECT_URL=https://www.memact.com/Access
 ```
 
 ## Render and SEO

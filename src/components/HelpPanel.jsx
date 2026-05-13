@@ -47,7 +47,7 @@ const CAPTURE_FAQS = [
 const ADVANCED_FAQS = [
   {
     question: "What is a schema packet?",
-    answer: "A schema packet is Memact’s memory envelope: evidence, content units, nodes, edges, and a short summary that later layers can decide to keep."
+    answer: "A schema packet is Memact's memory envelope: evidence, content units, nodes, edges, and a short summary that later layers can decide to keep."
   },
   {
     question: "What is not allowed?",
@@ -57,10 +57,10 @@ const ADVANCED_FAQS = [
 
 const LEGAL_FAQS = [
   {
-    question: "Who runs Memact Access?",
+    question: "Who runs Memact?",
     answer: (
       <>
-        Memact Access is part of the Memact project by{" "}
+        Memact is a project by{" "}
         <a className="inline-help-link" href="https://github.com/keepsloading" target="_blank" rel="noreferrer">Keeps Loading</a>.
         Some code may be viewable through the{" "}
         <a className="inline-help-link" href="https://github.com/Memact" target="_blank" rel="noreferrer">Memact GitHub organization</a>,
@@ -85,7 +85,7 @@ function FaqItem({ faq, open = false }) {
     <details className="faq-item" open={open}>
       <summary className="faq-trigger">
         <span className="faq-question">{faq.question}</span>
-        <span className="faq-chevron" aria-hidden="true">⌄</span>
+        <span className="faq-chevron" aria-hidden="true">v</span>
       </summary>
       <div className="faq-answer">
         <p>{faq.answer}</p>
@@ -99,7 +99,7 @@ export function HelpPanel() {
     <section className="panel help-panel">
       <div>
         <p className="eyebrow">Help</p>
-        <h2>Access notes</h2>
+        <h2>Memact notes</h2>
       </div>
       <p className="muted help-intro">Apps ask for memory access. You choose what they get.</p>
 

@@ -26,16 +26,16 @@ export function Landing({ isConnecting, showAuth, email, password, authLoading, 
             <>
               <h1>Review app access.</h1>
               <p>Sign in to review the app, requested scopes, and activity categories before connecting.</p>
-              <button type="button" className="learn-more-link" onClick={onLearnMore}>Learn More</button>
+              <button type="button" className="learn-more-link" onClick={onLearnMore}>Learn more</button>
             </>
           ) : (
             <>
               <h1>Let apps remember<br />only what the user allows.</h1>
-              <p>Memact lets apps use helpful info from a user's digital activity without giving them everything.</p>
+              <p>Memact lets apps use helpful info from a user's<br className="mobile-subtitle-break" /> digital activity without giving them everything.</p>
               {showAuth ? (
                 <div className="landing-actions">
-                  <a className="scroll-to-auth" href="#sign-in" onClick={handleSignInScroll}>Sign in</a>
-                  <button type="button" className="learn-more-link" onClick={onLearnMore}>Learn More</button>
+                  <a className="scroll-to-auth" href="/#sign-in" onClick={handleSignInScroll}>Sign in</a>
+                  <button type="button" className="learn-more-link" onClick={onLearnMore}>Learn more</button>
                 </div>
               ) : null}
             </>

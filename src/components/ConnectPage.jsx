@@ -23,9 +23,9 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
           </div>
         </div>
         <p className="muted">
-          Review the exact permissions and activity categories before approving. You can disconnect this app later from Memact Access.
+          Review the exact permissions and activity categories before approving. You can disconnect this app later from Memact.
         </p>
-        <button type="button" className="learn-more-link connect-learn-more" onClick={onLearnMore}>Learn More</button>
+        <button type="button" className="learn-more-link connect-learn-more" onClick={onLearnMore}>Learn more</button>
 
         {loading === "loading" ? <p className="status-line">Loading app details.</p> : null}
         {notice ? <p className="notice notice-success" role="status">{notice}</p> : null}
