@@ -1,1 +1,147 @@
-.embed-code summary::after{content:"Numbered wiring guide with code inside each step."!important}.embed-tutorial{display:grid!important;gap:10px!important;margin:0 12px 12px!important}.embed-tutorial-lead{margin:0!important;color:var(--muted)!important;font-size:13px!important;line-height:1.45!important}.embed-step{display:grid!important;gap:8px!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;padding:12px!important;background:rgba(255,255,255,.024)!important}.embed-step h3{margin:0!important;color:var(--text)!important;font-size:14px!important;line-height:1.28!important;letter-spacing:-.01em!important}.embed-step p{margin:0!important;color:var(--muted)!important;font-size:12px!important;line-height:1.45!important}.embed-code-wrap{position:relative!important;display:grid!important;min-width:0!important}.embed-copy-button{position:absolute!important;top:8px!important;right:8px!important;z-index:2!important;min-height:30px!important;border:1px solid var(--border-strong)!important;border-radius:8px!important;padding:5px 10px!important;color:var(--text)!important;background:rgba(255,255,255,.08)!important;font-size:12px!important;font-weight:700!important}.embed-copy-button[data-copied="true"]{border-color:rgba(200,247,212,.36)!important;color:var(--success)!important;background:rgba(200,247,212,.07)!important}.embed-step pre{width:100%!important;max-width:100%!important;max-height:220px!important;margin:0!important;overflow:auto!important;overscroll-behavior:contain!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;padding:46px 10px 10px!important;background:rgba(0,1,27,.64)!important;white-space:pre!important}.embed-step code{display:block!important;width:max-content!important;min-width:100%!important;color:var(--text)!important;font-size:11px!important;line-height:1.45!important}.embed-code>pre{display:none!important}@media(max-width:900px){.embed-tutorial{margin:0 11px 11px!important}.embed-step{padding:10px!important}.embed-step pre{max-height:200px!important}.embed-step code{font-size:10.5px!important}}
+.embed-code summary {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) max-content !important;
+  align-items: center !important;
+  gap: 8px 16px !important;
+}
+
+.embed-code summary::before {
+  content: "" !important;
+  grid-column: 2 !important;
+  grid-row: 1 / span 2 !important;
+  justify-self: end !important;
+  width: 38px !important;
+  height: 38px !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: 999px !important;
+  background-color: var(--surface-2) !important;
+  background-image:
+    linear-gradient(45deg, transparent 47%, currentColor 48%, currentColor 58%, transparent 59%),
+    linear-gradient(-45deg, transparent 47%, currentColor 48%, currentColor 58%, transparent 59%) !important;
+  background-position: calc(50% - 3px) 50%, calc(50% + 3px) 50% !important;
+  background-repeat: no-repeat !important;
+  background-size: 10px 10px, 10px 10px !important;
+  transition: color 140ms ease, border-color 140ms ease, background-color 140ms ease, transform 140ms ease !important;
+}
+
+.embed-code[open] summary::before {
+  border-color: rgba(255, 255, 255, 0.36) !important;
+  color: var(--text) !important;
+  background-color: var(--surface-3) !important;
+  transform: rotate(180deg) !important;
+}
+
+.embed-code summary::after {
+  content: "Numbered wiring guide with code inside each step." !important;
+  grid-column: 1 !important;
+  color: var(--soft) !important;
+}
+
+.embed-tutorial {
+  display: grid !important;
+  gap: 10px !important;
+  margin: 0 12px 12px !important;
+}
+
+.embed-tutorial-lead {
+  margin: 0 !important;
+  color: var(--muted) !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+
+.embed-step {
+  display: grid !important;
+  gap: 8px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 12px !important;
+  background: rgba(255, 255, 255, 0.024) !important;
+}
+
+.embed-step h3 {
+  margin: 0 !important;
+  color: var(--text) !important;
+  font-size: 14px !important;
+  line-height: 1.28 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.embed-step p {
+  margin: 0 !important;
+  color: var(--muted) !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.embed-code-wrap {
+  position: relative !important;
+  display: grid !important;
+  min-width: 0 !important;
+}
+
+.embed-copy-button {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  z-index: 2 !important;
+  min-height: 30px !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: 8px !important;
+  padding: 5px 10px !important;
+  color: var(--text) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.embed-copy-button[data-copied="true"] {
+  border-color: rgba(200, 247, 212, 0.36) !important;
+  color: var(--success) !important;
+  background: rgba(200, 247, 212, 0.07) !important;
+}
+
+.embed-step pre {
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: 220px !important;
+  margin: 0 !important;
+  overflow: auto !important;
+  overscroll-behavior: contain !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 46px 10px 10px !important;
+  background: rgba(0, 1, 27, 0.64) !important;
+  white-space: pre !important;
+}
+
+.embed-step code {
+  display: block !important;
+  width: max-content !important;
+  min-width: 100% !important;
+  color: var(--text) !important;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+}
+
+.embed-code > pre {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .embed-tutorial {
+    margin: 0 11px 11px !important;
+  }
+
+  .embed-step {
+    padding: 10px !important;
+  }
+
+  .embed-step pre {
+    max-height: 200px !important;
+  }
+
+  .embed-step code {
+    font-size: 10.5px !important;
+  }
+}

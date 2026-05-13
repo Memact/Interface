@@ -508,17 +508,21 @@ function formatDate(value) {
 function buildEmbedCode(apiKey, scopes = [], categories = [], app = null) {
   const appId = app?.id || "app_id_from_memact_portal"
   const redirectUrl = app?.redirect_urls?.[0] || app?.developer_url || "https://your-app.example.com/memact/callback"
-  const connectUrl = buildPortalConnectUrl(appId, scopes, [], redirectUrl)
+  const connectUrl = buildPortalConnectUrl(appId, scopes, categories, redirectUrl)
+  const dataTransparencyUrl = buildPortalDataTransparencyUrl(appId, scopes, categories, redirectUrl)
   if (ACCESS_MODE === "supabase") {
     const accessUrl = SUPABASE_URL || "https://memact.supabase.co"
     const publicKey = SUPABASE_ANON_KEY || "MEMACT_PUBLIC_ACCESS_KEY"
     return `// 1. Put this URL behind your own "Connect Memact" button.
 const memactConnectUrl = "${connectUrl}";
 
-// 2. After the user approves, Memact redirects back with ?connected=1&connection_id=...
+// 2. Put this URL beside consent so users can review actual data use.
+const memactDataTransparencyUrl = "${dataTransparencyUrl}";
+
+// 3. After the user approves, Memact redirects back with ?connected=1&connection_id=...
 const memactConnectionId = "connection_id_from_connect_redirect";
 
-// 3. Verify the API key, user connection, and scopes before doing work.
+// 4. Verify the API key, user connection, and scopes before doing work.
 const MEMACT_ACCESS_URL = "${accessUrl}";
 const MEMACT_PUBLIC_ACCESS_KEY = "${publicKey}";
 const memactApiKey = "${apiKey || "mka_key_shown_once"}";
@@ -549,7 +553,7 @@ console.log("Memact access granted", {
   categories: access.categories
 });
 
-// 4. Topic-wise integration examples.
+// 5. Topic-wise integration examples.
 // Capture: use access.categories to keep captured activity inside this app's categories.
 // Schema: write schema packets with evidence, nodes, and edges, not raw private dumps.
 // Memory: request summaries/evidence/graph objects only if the approved scopes include them.`
@@ -573,6 +577,16 @@ console.log(snapshot.counts);`
 function buildPortalConnectUrl(appId, scopes = [], categories = [], redirectUrl = "") {
   const origin = typeof window !== "undefined" ? window.location.origin : "https://memact.com"
   const url = new URL("/connect", origin)
+  url.searchParams.set("app_id", appId)
+  if (scopes.length) url.searchParams.set("scopes", scopes.join(","))
+  if (categories.length) url.searchParams.set("categories", categories.join(","))
+  if (redirectUrl) url.searchParams.set("redirect_uri", redirectUrl)
+  return url.toString()
+}
+
+function buildPortalDataTransparencyUrl(appId, scopes = [], categories = [], redirectUrl = "") {
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://memact.com"
+  const url = new URL("/DataTransparency", origin)
   url.searchParams.set("app_id", appId)
   if (scopes.length) url.searchParams.set("scopes", scopes.join(","))
   if (categories.length) url.searchParams.set("categories", categories.join(","))

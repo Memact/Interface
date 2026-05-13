@@ -217,9 +217,10 @@ code dump:
 
 ```text
 1. Send the user to Connect App
-2. Read the connection id after approval
-3. Verify access before doing work
-4. Use only approved access
+2. Link the matching Data Transparency page
+3. Read the connection id after approval
+4. Verify access before doing work
+5. Use only approved access
 ```
 
 Normal app flow:

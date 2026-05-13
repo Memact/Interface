@@ -813,7 +813,7 @@ function App() {
           onLearnMore={() => navigateToPage("help")}
           onDataTransparency={() => navigateToDataTransparency(connectRequest)}
         />
-      ) : session && currentPage === "data" ? (
+      ) : session && currentPage === "data" && connectRequest?.app_id && connectDetails?.app ? (
         <DataTransparencyPage
           app={connectDetails?.app}
           scopes={connectDetails?.scopes || scopes}
@@ -824,6 +824,22 @@ function App() {
           onBackToConsent={() => navigateToConnect(connectRequest)}
           onManageConsent={() => navigateToPage("access")}
         />
+      ) : session && currentPage === "data" ? (
+        <section className="connect-shell">
+          <article className="panel connect-card">
+            <p className="eyebrow">Data transparency</p>
+            <h1>{connectRequest?.app_id && connectLoading === "loading" ? "Loading app transparency." : "Open this from an app consent link."}</h1>
+            <p className="muted">
+              {connectRequest?.app_id && connectLoading === "loading"
+                ? "Checking the Memact app request before showing any data disclosure."
+                : "This page only works with a real Memact app request. Use the Data Transparency link beside that app's consent screen."}
+            </p>
+            <div className="connect-actions">
+              <button type="button" onClick={() => navigateToPage("access")}>Open dashboard</button>
+              <button type="button" className="ghost" onClick={() => navigateToPage("help")}>Learn more</button>
+            </div>
+          </article>
+        </section>
       ) : session ? (
         <Dashboard
           activeTab={activeTab}

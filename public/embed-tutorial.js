@@ -123,6 +123,7 @@ function splitEmbedSteps(code) {
 function titleForStep(title, index) {
   const titles = [
     "Send the user to Connect App",
+    "Show the Data Transparency page",
     "Read the connection id after approval",
     "Verify access before doing work",
     "Use only approved access"
@@ -133,6 +134,7 @@ function titleForStep(title, index) {
 function describeStep(title, index) {
   const descriptions = [
     "Put this URL behind your own Connect Memact button. It opens the approval screen for this app.",
+    "Put this URL next to consent. It shows the actual captured fields, memory objects, graph packets, retention, and revocation path for this app.",
     "After the user approves, Memact redirects back to your app with a connection id.",
     "Before your app uses Memact, verify the API key, connection id, and required scopes.",
     "Use the verified scopes and categories as the boundary for what your app does next."

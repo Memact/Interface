@@ -21,6 +21,33 @@
 
 * { box-sizing: border-box; }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.34) rgba(255, 255, 255, 0.045);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(0, 1, 27, 0.84);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.22));
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.32));
+}
+
 html {
   min-width: 320px;
   min-height: 100%;
@@ -1004,10 +1031,49 @@ input:-webkit-autofill:focus {
 }
 
 .embed-code summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 16px;
   min-height: 44px;
   color: var(--muted);
   font-weight: 700;
   cursor: pointer;
+  list-style: none;
+}
+
+.embed-code summary::-webkit-details-marker {
+  display: none;
+}
+
+.embed-code summary::marker {
+  content: "";
+}
+
+.embed-code summary::before {
+  content: "";
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background-color: var(--surface-2);
+  background-image:
+    linear-gradient(45deg, transparent 47%, currentColor 48%, currentColor 58%, transparent 59%),
+    linear-gradient(-45deg, transparent 47%, currentColor 48%, currentColor 58%, transparent 59%);
+  background-position: calc(50% - 3px) 50%, calc(50% + 3px) 50%;
+  background-repeat: no-repeat;
+  background-size: 10px 10px, 10px 10px;
+  transition: color 140ms ease, border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
+}
+
+.embed-code[open] summary::before {
+  border-color: rgba(255, 255, 255, 0.36);
+  color: var(--text);
+  background-color: var(--surface-3);
+  transform: rotate(180deg);
 }
 
 .embed-code pre {
