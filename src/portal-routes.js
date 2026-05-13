@@ -2,6 +2,7 @@ export const ROUTES = {
   home: "/",
   access: "/Access",
   account: "/Account",
+  data: "/DataTransparency",
   help: "/Help",
   connect: "/connect"
 }
@@ -10,7 +11,10 @@ const LEGACY_ROUTES = new Map([
   ["/dashboard", ROUTES.access],
   ["/login", `${ROUTES.home}#sign-in`],
   ["/access", ROUTES.home],
-  ["/account", ROUTES.home]
+  ["/account", ROUTES.home],
+  ["/data", ROUTES.data],
+  ["/transparency", ROUTES.data],
+  ["/data-transparency", ROUTES.data]
 ])
 
 export function normalizePortalPath(pathname = "/") {
@@ -21,6 +25,7 @@ export function pageFromLocation(locationLike = globalThis.window?.location) {
   const pathname = normalizePortalPath(locationLike?.pathname || ROUTES.home)
   if (pathname === ROUTES.access) return "access"
   if (pathname === ROUTES.account) return "account"
+  if (pathname === ROUTES.data) return "data"
   if (pathname === ROUTES.help) return "help"
   if (pathname === ROUTES.connect) return "connect"
   return "home"
@@ -31,7 +36,7 @@ export function routeForPage(page = "home") {
 }
 
 export function isProtectedPage(page = "home") {
-  return page === "access" || page === "account" || page === "connect"
+  return page === "access" || page === "account" || page === "data" || page === "connect"
 }
 
 export function isConnectPage(page = "home") {

@@ -19,6 +19,7 @@ Website owns the public and authenticated interface for:
 - activity category selection
 - API key creation, testing, and revocation
 - Connect App consent flow
+- Data Transparency controls for reviewing and revoking app access
 - account management
 - plain-English help
 - public pages that explain Memact for search and sharing
@@ -57,10 +58,11 @@ compact cards, rounded controls, and consistent button hierarchy.
 Authenticated dashboard:
 
 - mobile uses a compact top row with the logo and tabs kept close
-- desktop uses a fixed left rail with Access, Account, and Help
-- Access shows app registration, permissions, API keys, and the one-time key flow
+- desktop uses a fixed left rail with Access, Data, Account, and Help
+- Access shows app registration, permissions, API keys, usage statistics, and the one-time key flow
+- Data shows what each app can collect, active keys, consent state, and revocation controls
 - Account shows identity, email/password actions, and account metrics
-- Help uses short FAQs for users and developers
+- Help uses short FAQs for users, developers, and AI coding agents
 
 Button hierarchy:
 
@@ -136,9 +138,11 @@ In Supabase Auth URL settings, allow the local and production callback URLs:
 
 ```text
 http://localhost:3000/Access
+http://localhost:3000/DataTransparency
 http://localhost:3000/Account
 http://localhost:3000/connect
 https://www.memact.com/Access
+https://www.memact.com/DataTransparency
 https://www.memact.com/Account
 https://www.memact.com/connect
 https://www.memact.com/**
@@ -189,11 +193,13 @@ If Blueprint setup fails, use the direct Dashboard path in
 - API keys are shown once.
 - App names are unique per account.
 - Deleting an app revokes its active API keys and permissions.
+- Data Transparency must stay available alongside the consent flow so users can review and revoke access later.
 - Revoked keys remain visible as history.
 - Scopes and saved permissions are required before apps can use Memact.
 - Activity categories are required before apps can use Memact.
 - Connect App creates user-specific consent, like an app authorization page.
 - Graph read access is separate from activity capture and schema writes.
+- Redirect URLs and developer URLs must use `http://` or `https://`; unsafe schemes are rejected or ignored.
 - Supabase is the primary access backend. The old HTTP service is only a fallback for local development.
 
 ## App Embed / Connect Tutorial
@@ -235,6 +241,39 @@ Memact verifies the API key before an app can use approved capture, schema,
 graph, or memory permissions. The app receives only the scopes and activity
 categories the user approved for that app.
 
+For AI coding agents and developer docs, keep the integration explanation
+practical:
+
+```text
+1. Put a "Connect Memact" button in the app.
+2. Send users to /connect with app_id, scopes, categories, redirect_uri, and optional state.
+3. Store the returned connection_id for that user.
+4. Keep the raw Memact API key on the server.
+5. Verify api_key + connection_id + required_scopes before calling Memact.
+6. Use only the approved scopes and categories returned by verification.
+```
+
+Do not describe repository names as separate brands. Memact is the brand; access,
+capture, schema, and memory are functions or layers.
+
+## Consent and Data Transparency
+
+The consent page must show what the app is asking to do, what activity
+categories it wants, and where users can review the decision later.
+
+Data Transparency is the companion page for consent. It lets signed-in users:
+
+- see each registered app's approved scopes and activity categories
+- see active and revoked API keys for the selected app
+- revoke an individual API key
+- delete an app, which revokes its active API keys and saved consent
+- understand whether the access layer has reported public key exposure signals
+
+The frontend supports optional usage/exposure fields when the backend returns
+them, such as `using_apps_count`, `client_count`, `exposure_status`, or
+`public_exposure_detected`. Until those fields exist, the UI stays honest and
+labels exposure as "No signal yet" instead of pretending to scan the public web.
+
 ## Help Tab
 
 Website includes a Help tab for non-technical users. It explains:
@@ -243,6 +282,7 @@ Website includes a Help tab for non-technical users. It explains:
 - whether apps get the whole memory graph
 - what Connect App does
 - what activity categories are
+- how AI coding agents and developers should embed the API safely
 - what schema packets are
 - what apps should not do
 

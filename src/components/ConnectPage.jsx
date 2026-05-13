@@ -1,6 +1,6 @@
 import React from "react"
 
-export function ConnectPage({ connectRequest, connectDetails, loading, notice, onApprove, onCancel, onLearnMore }) {
+export function ConnectPage({ connectRequest, connectDetails, loading, notice, onApprove, onCancel, onLearnMore, onDataTransparency }) {
   const app = connectDetails?.app
   const scopes = connectDetails?.scopes || {}
   const categories = connectDetails?.activity_categories || {}
@@ -11,9 +11,18 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
   return (
     <section className="connect-shell">
       <article className="panel connect-card">
-        <p className="eyebrow">Permission request</p>
-        <h1>{appName} wants to connect.</h1>
-        <div className="app-identity">
+        <div className="connect-hero">
+          <div>
+            <p className="eyebrow">Permission request</p>
+            <h1>{appName} wants to use Memact.</h1>
+            <p className="muted">
+              Approve only if you trust this app and the requested data boundary makes sense.
+            </p>
+          </div>
+          <span className="consent-state-pill">User controlled</span>
+        </div>
+
+        <div className="app-identity connect-identity">
           <span className="app-avatar" aria-hidden="true">{appName.slice(0, 1).toUpperCase()}</span>
           <div>
             <strong>{appName}</strong>
@@ -22,13 +31,27 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
             ) : <span className="muted">Developer URL not provided.</span>}
           </div>
         </div>
-        <p className="muted">
-          Review the exact permissions and activity categories before approving. You can disconnect this app later from Memact.
-        </p>
-        <button type="button" className="learn-more-link connect-learn-more" onClick={onLearnMore}>Learn more</button>
 
         {loading === "loading" ? <p className="status-line">Loading app details.</p> : null}
         {notice ? <p className="notice notice-success" role="status">{notice}</p> : null}
+
+        <section className="permission-list consent-summary-card">
+          <p className="eyebrow">What consent means</p>
+          <div className="consent-points">
+            <div className="mini-row">
+              <strong>You are allowing this app to ask Memact for scoped output.</strong>
+              <small>The app does not get unlimited memory access. Memact verifies the app, API key, user consent, scopes, and categories first.</small>
+            </div>
+            <div className="mini-row">
+              <strong>You can revoke access later.</strong>
+              <small>Use Data Transparency to review active keys, see what categories are allowed, and stop future collection for this app.</small>
+            </div>
+          </div>
+          <div className="connect-link-row">
+            <button type="button" className="learn-more-link connect-learn-more" onClick={onLearnMore}>Learn more</button>
+            <button type="button" className="ghost connect-learn-more" onClick={onDataTransparency}>Data transparency</button>
+          </div>
+        </section>
 
         <div className="connect-grid">
           <section className="permission-list">

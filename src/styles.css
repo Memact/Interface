@@ -526,18 +526,39 @@ p { margin-top: 0; }
   background: var(--surface-2);
 }
 
-.faq-item summary {
+.faq-item summary.faq-trigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  align-items: center;
+  gap: 16px;
   min-height: 44px;
-  padding: 12px;
+  padding: 12px 16px;
   cursor: pointer;
   color: var(--text);
   font-weight: 700;
-  list-style-position: inside;
+  list-style: none;
+  list-style-position: outside;
 }
 
-.faq-item p {
+.faq-item summary.faq-trigger::-webkit-details-marker { display: none; }
+
+.faq-item summary.faq-trigger::marker { content: ""; }
+
+.faq-question {
+  display: block;
+  min-width: 0;
   margin: 0;
-  padding: 0 12px 12px;
+  padding: 0 0 0 16px;
+}
+
+.faq-answer {
+  padding: 0 16px 12px;
+}
+
+.faq-answer p,
+.faq-answer-content {
+  margin: 0;
+  padding: 0;
   color: var(--muted);
   line-height: 1.45;
 }
@@ -1006,18 +1027,136 @@ input:-webkit-autofill:focus {
 
 .connect-card {
   display: grid;
-  gap: 16px;
-  width: min(860px, 100%);
+  gap: 18px;
+  width: min(920px, 100%);
 }
 
 .connect-card h1 {
   margin: 0;
-  font-size: clamp(24px, 4vw, 32px);
-  line-height: 1.14;
-  letter-spacing: -0.03em;
+  font-size: clamp(32px, 5vw, 54px);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+}
+
+.connect-hero,
+.transparency-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.connect-hero .muted,
+.transparency-hero .muted {
+  margin: 0;
+}
+
+.consent-state-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  border: 1px solid rgba(200, 247, 212, 0.24);
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--success);
+  background: rgba(200, 247, 212, 0.045);
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.connect-identity {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.consent-summary-card {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.018)),
+    var(--surface-1);
+}
+
+.consent-points {
+  display: grid;
+  gap: 8px;
+}
+
+.connect-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.connect-link-row button {
+  width: auto;
 }
 
 .connect-actions { justify-content: flex-end; }
+
+.transparency-panel {
+  gap: 18px;
+}
+
+.transparency-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(112px, 1fr));
+  gap: 10px;
+  min-width: min(100%, 280px);
+}
+
+.transparency-summary span {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.025);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.transparency-summary strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text);
+  font-size: 24px;
+}
+
+.transparency-app-picker {
+  margin: 0;
+}
+
+.transparency-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.transparency-card h3 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.transparency-token-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.data-token {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 13px;
+  font-weight: 700;
+}
 
 /* Desktop console shell */
 @media (min-width: 901px) {
@@ -1122,7 +1261,8 @@ input:-webkit-autofill:focus {
   .landing-with-auth,
   .access-layout,
   .grid,
-  .connect-grid {
+  .connect-grid,
+  .transparency-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1153,6 +1293,16 @@ input:-webkit-autofill:focus {
     justify-content: stretch;
   }
 
+  .connect-hero,
+  .transparency-hero {
+    display: grid;
+  }
+
+  .connect-link-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
   .app-actions {
     justify-content: stretch;
   }
@@ -1164,6 +1314,7 @@ input:-webkit-autofill:focus {
   .compact-form,
   .compact-form button,
   .key-actions button,
+  .connect-link-row button,
   .connect-actions button {
     width: 100%;
   }

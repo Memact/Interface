@@ -526,11 +526,13 @@ function App() {
       return
     }
     try {
+      const developerUrl = normalizeOptionalHttpUrl(newAppDeveloperUrl, "Developer website")
+      const redirectUrl = normalizeOptionalHttpUrl(newAppRedirectUrl, "Connect redirect URL")
       const result = await client.createApp(session, {
         name: cleanName,
         description: newAppDescription.trim(),
-        developer_url: newAppDeveloperUrl.trim(),
-        redirect_urls: newAppRedirectUrl.trim() ? [newAppRedirectUrl.trim()] : [],
+        developer_url: developerUrl,
+        redirect_urls: redirectUrl ? [redirectUrl] : [],
         categories: normalizeSelectedCategories(newAppCategories, policy)
       })
       await refreshDashboard(client, session, dashboardActions, statusForAccessError)
@@ -764,6 +766,7 @@ function App() {
         {session ? (
           <nav className="tabs" aria-label="Memact portal tabs">
             <button type="button" className={currentPage === "access" ? "tab is-active" : "tab"} onClick={() => navigateToPage("access")}>Access</button>
+            <button type="button" className={currentPage === "data" ? "tab is-active" : "tab"} onClick={() => navigateToPage("data")}>Data</button>
             <button type="button" className={currentPage === "account" ? "tab is-active" : "tab"} onClick={() => navigateToPage("account")}>Account</button>
             <button type="button" className={currentPage === "help" ? "tab is-active" : "tab"} onClick={() => navigateToPage("help")}>Help</button>
           </nav>
@@ -787,6 +790,7 @@ function App() {
           onApprove={handleConnectApprove}
           onCancel={handleConnectCancel}
           onLearnMore={() => navigateToPage("help")}
+          onDataTransparency={() => navigateToPage("data")}
         />
       ) : session ? (
         <Dashboard
@@ -1023,8 +1027,8 @@ function parseConnectRequest() {
     app_id: params.get("app_id") || "",
     scopes: parseListParam(params.get("scopes")),
     categories: parseListParam(params.get("categories")),
-    redirect_uri: params.get("redirect_uri") || "",
-    state: params.get("state") || ""
+    redirect_uri: sanitizeConnectRedirectParam(params.get("redirect_uri") || ""),
+    state: String(params.get("state") || "").slice(0, 300)
   }
 }
 
@@ -1045,6 +1049,7 @@ function getAuthRedirectTarget() {
 function buildConnectRedirect(redirectUri, values) {
   try {
     const url = new URL(redirectUri)
+    if (!isSafeHttpUrl(url)) return routeForPage("access")
     Object.entries(values || {}).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== "") {
         url.searchParams.set(key, value)
@@ -1054,6 +1059,36 @@ function buildConnectRedirect(redirectUri, values) {
   } catch {
     return routeForPage("access")
   }
+}
+
+function normalizeOptionalHttpUrl(value, label) {
+  const trimmed = String(value || "").trim()
+  if (!trimmed) return ""
+  try {
+    const url = new URL(trimmed)
+    if (!isSafeHttpUrl(url)) {
+      throw new Error(`${label} must start with http:// or https://.`)
+    }
+    return url.toString()
+  } catch (error) {
+    if (error?.message?.includes("http://")) throw error
+    throw new Error(`${label} must be a valid http:// or https:// URL.`)
+  }
+}
+
+function sanitizeConnectRedirectParam(value) {
+  const trimmed = String(value || "").trim()
+  if (!trimmed) return ""
+  try {
+    const url = new URL(trimmed)
+    return isSafeHttpUrl(url) ? url.toString() : ""
+  } catch {
+    return ""
+  }
+}
+
+function isSafeHttpUrl(url) {
+  return url?.protocol === "https:" || url?.protocol === "http:"
 }
 
 function getPasswordState(password, confirmPassword) {

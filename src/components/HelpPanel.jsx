@@ -17,7 +17,7 @@ const BASIC_FAQS = [
   },
   {
     question: "What does Connect App do?",
-    answer: "It shows what an app wants before anything is connected. You approve or cancel."
+    answer: "It shows what an app wants before anything is connected. You approve or cancel. After approval, you can use Data Transparency to review and revoke access."
   },
   {
     question: "What are activity categories?",
@@ -45,6 +45,30 @@ const ACTIVITY_FAQS = [
 ]
 
 const ADVANCED_FAQS = [
+  {
+    question: "If an AI coding agent is told to use Memact, what should it build?",
+    answer: (
+      <>
+        Build the normal app flow: register an app, choose narrow scopes and activity categories, send the user to Memact Connect, store the returned <code>connection_id</code>, and verify <code>api_key + connection_id + required_scopes</code> before using any Memact output.
+      </>
+    )
+  },
+  {
+    question: "Where should the Memact API key live in code?",
+    answer: (
+      <>
+        Treat the raw Memact API key like a server-side secret. Do not hard-code it into browser bundles, mobile apps, public repos, README examples, or client-side AI agent prompts. Frontend code should open the Connect URL; backend code should verify access and call Memact.
+      </>
+    )
+  },
+  {
+    question: "What should a developer embed?",
+    answer: (
+      <>
+        Embed a Connect button and a server endpoint. The button sends users to <code>/connect?app_id=...&amp;scopes=...&amp;categories=...&amp;redirect_uri=...</code>. The server receives the returned <code>connection_id</code>, verifies it with the app API key, then requests only the approved capture, schema, or memory output needed for that feature.
+      </>
+    )
+  },
   {
     question: "What is a schema packet?",
     answer: "A schema packet is Memact's memory envelope: evidence, content units, nodes, edges, and a short summary that later layers can decide to keep."
@@ -88,7 +112,7 @@ function FaqItem({ faq, open = false }) {
         <span className="faq-chevron" aria-hidden="true">v</span>
       </summary>
       <div className="faq-answer">
-        <p>{faq.answer}</p>
+        {typeof faq.answer === "string" ? <p>{faq.answer}</p> : <div className="faq-answer-content">{faq.answer}</div>}
       </div>
     </details>
   )

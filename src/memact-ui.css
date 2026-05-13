@@ -202,6 +202,7 @@
   display: block;
   min-width: 0;
   margin: 0;
+  padding: 0 0 0 var(--faq-inline-pad);
   line-height: 1.28;
 }
 
@@ -247,9 +248,17 @@
   padding: 0 var(--faq-inline-pad) 16px var(--faq-inline-pad);
 }
 
-.faq-answer p {
+.faq-answer p,
+.faq-answer-content {
   margin: 0;
   padding: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.faq-answer-content code {
+  color: var(--text);
+  font-size: 0.95em;
 }
 
 /* API key rows: content left, status/action right */

@@ -2,6 +2,7 @@ import React from "react"
 import { ACCESS_MODE, ACCESS_URL } from "../memact-access-client.js"
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../supabase-client.js"
 import { CategoryGrid } from "./CategoryGrid.jsx"
+import { DataTransparencyPage } from "./DataTransparencyPage.jsx"
 import { HelpPanel } from "./HelpPanel.jsx"
 import { getAvatarUrl, getInitials, getUserEmail, getUserProvider } from "../user-display.js"
 
@@ -69,6 +70,7 @@ export function Dashboard({
   const selectedKeys = apiKeys.filter((key) => key.app_id === selectedAppId)
   const activeKeys = selectedKeys.filter((key) => !key.revoked_at)
   const revokedKeys = selectedKeys.filter((key) => key.revoked_at)
+  const usageStats = getUsageStats(selectedApp, selectedKeys, apps)
   const selectedConsent = consents.find((consent) => consent.app_id === selectedAppId && !consent.revoked_at)
   const scopesChanged = selectedConsent ? !sameValues(selectedScopes, selectedConsent.scopes) : true
   const categoriesChanged = selectedConsent ? !sameValues(selectedAppCategories, selectedConsent.categories || []) : true
@@ -115,6 +117,18 @@ export function Dashboard({
 
       {activeTab === "help" ? (
         <HelpPanel />
+      ) : activeTab === "data" ? (
+        <DataTransparencyPage
+          apps={apps}
+          apiKeys={apiKeys}
+          consents={consents}
+          categories={categories}
+          scopes={scopes}
+          selectedAppId={selectedAppId}
+          setSelectedAppId={setSelectedAppId}
+          onDeleteApp={onDeleteApp}
+          onRevokeKey={onRevokeKey}
+        />
       ) : activeTab === "account" ? (
         <section className="panel account-panel">
           <div className="account-panel-head">
@@ -278,7 +292,7 @@ export function Dashboard({
               <form className="form app-create-form" onSubmit={onCreateApp}>
                 <label>
                   App name
-                  <input value={newAppName} placeholder="Example: Personal capture layer" onChange={(event) => setNewAppName(event.target.value)} required />
+                  <input value={newAppName} placeholder="Example: Reading assistant" onChange={(event) => setNewAppName(event.target.value)} required />
                 </label>
                 <label>
                   Developer website
@@ -375,6 +389,28 @@ export function Dashboard({
               <div className="stack">
                 {selectedAppId ? (
                   <>
+                    <section className="usage-overview" aria-label="Usage statistics">
+                      <div className="usage-overview-head">
+                        <p className="eyebrow">Usage statistics</p>
+                        <h3>Key binding and exposure checks</h3>
+                      </div>
+                      <div className="usage-kpis">
+                        <div className="usage-kpi">
+                          <p>Apps using this key</p>
+                          <strong>{usageStats.appsUsingSameKey}</strong>
+                        </div>
+                        <div className="usage-kpi">
+                          <p>Public exposure</p>
+                          <strong>{usageStats.exposureLabel}</strong>
+                        </div>
+                        <div className="usage-kpi">
+                          <p>Last key use</p>
+                          <strong>{usageStats.lastUsedLabel}</strong>
+                        </div>
+                      </div>
+                      <p className="usage-empty-state muted">{usageStats.exposureDetail}</p>
+                    </section>
+
                     {activeKeys.length ? activeKeys.map((key) => (
                       <div className="list-card api-key-row" key={key.id}>
                         <span>
@@ -445,6 +481,41 @@ function toggleValue(setter, value) {
   setter((current) => current.includes(value)
     ? current.filter((item) => item !== value)
     : [...current, value])
+}
+
+function getUsageStats(selectedApp, selectedKeys = [], apps = []) {
+  const activeKeys = selectedKeys.filter((key) => !key.revoked_at)
+  const keyAppIds = new Set(activeKeys.map((key) => key.app_id).filter(Boolean))
+  const reportedAppCounts = activeKeys
+    .map((key) => Number(key.app_count || key.client_count || key.using_apps_count || key.application_count))
+    .filter((count) => Number.isFinite(count) && count > 0)
+  const appsUsingSameKey = reportedAppCounts.length
+    ? Math.max(...reportedAppCounts)
+    : Math.max(keyAppIds.size || (activeKeys.length ? 1 : 0), 0)
+  const exposedKey = activeKeys.find((key) => key.public_exposure_detected || key.exposure_status === "exposed")
+  const unknownExposure = activeKeys.length && !activeKeys.some((key) => key.exposure_status || key.public_exposure_detected === false)
+  const lastUsedAt = activeKeys
+    .map((key) => key.last_used_at)
+    .filter(Boolean)
+    .sort()
+    .at(-1)
+  const appName = selectedApp?.name || "this app"
+  return {
+    appsUsingSameKey,
+    exposureLabel: exposedKey ? "Review now" : unknownExposure ? "No signal yet" : "Clear",
+    exposureDetail: exposedKey
+      ? "A public exposure signal was reported for this key. Revoke it and create a replacement after removing the leak."
+      : unknownExposure
+        ? `Memact can show exposure signals when the access layer reports them. Until then, keep ${appName}'s raw key server-side and out of public code.`
+        : "No public exposure signal has been reported for active keys.",
+    lastUsedLabel: lastUsedAt ? formatDate(lastUsedAt) : "No use yet"
+  }
+}
+
+function formatDate(value) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "Unknown"
+  return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
 }
 
 function buildEmbedCode(apiKey, scopes = [], categories = [], app = null) {
