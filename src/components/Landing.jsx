@@ -11,6 +11,8 @@ export function Landing({
   signupDisplayName,
   password,
   passwordConfirm,
+  pendingVerificationEmail,
+  verificationCode,
   passwordState,
   authMode,
   authLoading,
@@ -19,21 +21,29 @@ export function Landing({
   setSignupDisplayName,
   setPassword,
   setPasswordConfirm,
+  setVerificationCode,
   setAuthMode,
   onEmailSignup,
+  onVerifySignupCode,
   onEmailLogin,
   onPasswordLogin,
   onForgotPassword,
   onResendConfirmation,
+  onClearPendingVerification,
   onGithubLogin,
   onLearnMore
 }) {
   const isSignIn = authMode === "sign-in"
+  const isVerificationStep = !isSignIn && Boolean(pendingVerificationEmail)
   const [signupStep, setSignupStep] = useState("identity")
 
   useEffect(() => {
+    if (pendingVerificationEmail && !isSignIn) {
+      setSignupStep("verify")
+      return
+    }
     setSignupStep("identity")
-  }, [authMode])
+  }, [authMode, isSignIn, pendingVerificationEmail])
 
   const handleAuthScroll = (event, mode = "sign-up") => {
     event.preventDefault()
@@ -71,6 +81,10 @@ export function Landing({
   }
 
   const handleSignupSubmit = (event) => {
+    if (isVerificationStep) {
+      onVerifySignupCode(event)
+      return
+    }
     if (signupStep === "identity") {
       event.preventDefault()
       goToSignupPassword()
@@ -112,37 +126,60 @@ export function Landing({
             <img className="auth-panel-logo" src="/logo.png" alt="Memact" />
             <p className="eyebrow">{isSignIn ? "Sign in" : "Get started"}</p>
             <p className="muted auth-support">
-              {isSignIn ? "Sign in to manage apps, permissions, and API keys." : signupStep === "identity" ? "First, tell Memact who you are." : "Now create a strong password for your account."}
+              {isSignIn
+                ? "Sign in to manage apps, permissions, and API keys."
+                : isVerificationStep
+                ? `Enter the code sent to ${pendingVerificationEmail}.`
+                : signupStep === "identity"
+                ? "First, tell Memact who you are."
+                : "Now create a strong password for your account."}
             </p>
             {!isSignIn ? (
-              <div className="auth-progress" aria-label="Sign up progress">
+              <div className={isVerificationStep ? "auth-progress auth-progress-three" : "auth-progress"} aria-label="Sign up progress">
                 <span className="is-active" />
-                <span className={signupStep === "password" ? "is-active" : ""} />
+                <span className={signupStep === "password" || isVerificationStep ? "is-active" : ""} />
+                {isVerificationStep ? <span className="is-active" /> : null}
               </div>
             ) : null}
             {isSignIn && lastAuthMethod ? <p className="last-auth-chip">Last used: {lastAuthMethod}</p> : null}
             <form className="form" onSubmit={isSignIn ? onPasswordLogin : handleSignupSubmit}>
-              {!isSignIn && signupStep === "identity" ? (
+              {isVerificationStep ? (
+                <label>
+                  Verification code
+                  <input
+                    className="verification-code-input"
+                    value={verificationCode}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="000000"
+                    maxLength={10}
+                    onChange={(event) => setVerificationCode(event.target.value.replace(/\s+/g, "").slice(0, 10))}
+                    required
+                  />
+                </label>
+              ) : null}
+              {!isVerificationStep && !isSignIn && signupStep === "identity" ? (
                 <label>
                   Display name
                   <input id="signup-display-name" value={signupDisplayName} type="text" autoComplete="name" placeholder="What should Memact call you?" maxLength={80} onChange={(event) => setSignupDisplayName(event.target.value)} required />
                 </label>
               ) : null}
-              {(isSignIn || signupStep === "identity") ? <label>
+              {!isVerificationStep && (isSignIn || signupStep === "identity") ? <label>
                 Email
                 <input id={isSignIn ? "signin-email" : "signup-email"} value={email} type="email" inputMode="email" autoComplete="email" placeholder="Enter your email" onChange={(event) => setEmail(event.target.value)} required />
               </label> : null}
-              {(isSignIn || signupStep === "password") ? <label>
+              {!isVerificationStep && (isSignIn || signupStep === "password") ? <label>
                 Password
                 <input id={isSignIn ? "signin-password" : "signup-password"} value={password} type="password" autoComplete={isSignIn ? "current-password" : "new-password"} placeholder={isSignIn ? "Enter your password" : "Create a strong password"} onChange={(event) => setPassword(event.target.value)} required />
               </label> : null}
-              {!isSignIn && signupStep === "password" ? (
+              {!isVerificationStep && !isSignIn && signupStep === "password" ? (
                 <label>
                   Confirm password
                   <input value={passwordConfirm} type="password" autoComplete="new-password" placeholder="Repeat the password" onChange={(event) => setPasswordConfirm(event.target.value)} required />
                 </label>
               ) : null}
-              {!isSignIn && signupStep === "password" && passwordState ? (
+              {!isVerificationStep && !isSignIn && signupStep === "password" && passwordState ? (
                 <>
                   <div className="password-strength signup-password-strength" data-strength={passwordState.level}>
                     <div className="password-strength-bar">
@@ -157,13 +194,21 @@ export function Landing({
                   </ul>
                 </>
               ) : null}
-              <button type="submit" disabled={authLoading === "password" || authLoading === "signup"}>
-                <span>{authLoading === "password" || authLoading === "signup"
-                  ? isSignIn ? "Signing in..." : "Creating account..."
-                  : isSignIn ? "Sign in" : signupStep === "identity" ? "Continue" : "Create account"}</span>
+              <button type="submit" disabled={authLoading === "password" || authLoading === "signup" || authLoading === "verify-signup"}>
+                <span>{authLoading === "password" || authLoading === "signup" || authLoading === "verify-signup"
+                  ? authLoading === "verify-signup" ? "Verifying email..." : isSignIn ? "Signing in..." : "Creating account..."
+                  : isSignIn ? "Sign in" : isVerificationStep ? "Verify email" : signupStep === "identity" ? "Continue" : "Create account"}</span>
                 {!isSignIn ? <span className="auth-native-chevron auth-submit-chevron" aria-hidden="true" /> : null}
               </button>
-              {!isSignIn && signupStep === "password" ? (
+              {isVerificationStep ? (
+                <>
+                  <button type="button" className="text-button" disabled={authLoading === "resend-confirmation"} onClick={onResendConfirmation}>
+                    {authLoading === "resend-confirmation" ? "Sending code..." : "Resend code"}
+                  </button>
+                  <button type="button" className="text-button" onClick={onClearPendingVerification}>Use a different email</button>
+                </>
+              ) : null}
+              {!isVerificationStep && !isSignIn && signupStep === "password" ? (
                 <button type="button" className="text-button" onClick={goBackToSignupIdentity}>Back to name and email</button>
               ) : null}
               {isSignIn ? (
@@ -179,13 +224,13 @@ export function Landing({
                   </button>
                 </>
               ) : null}
-              <button type="button" className="text-button" onClick={(event) => handleAuthScroll(event, isSignIn ? "sign-up" : "sign-in")}>
+              {!isVerificationStep ? <button type="button" className="text-button" onClick={(event) => handleAuthScroll(event, isSignIn ? "sign-up" : "sign-in")}>
                 {isSignIn ? "New to Memact? Get started" : "Already have an account? Sign in"}
-              </button>
-              <div className="auth-divider" aria-hidden="true"><span>or</span></div>
-              <button type="button" className="ghost" disabled={authLoading === "github"} onClick={onGithubLogin}>
+              </button> : null}
+              {!isVerificationStep ? <div className="auth-divider" aria-hidden="true"><span>or</span></div> : null}
+              {!isVerificationStep ? <button type="button" className="ghost" disabled={authLoading === "github"} onClick={onGithubLogin}>
                 {authLoading === "github" ? "Opening GitHub..." : isSignIn ? "Sign in with GitHub" : "Sign up with GitHub"}
-              </button>
+              </button> : null}
             </form>
           </section>
         ) : null}

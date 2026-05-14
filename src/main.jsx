@@ -37,6 +37,8 @@ function App() {
   const [signupDisplayName, setSignupDisplayName] = useState("")
   const [password, setPassword] = useState("")
   const [passwordConfirm, setPasswordConfirm] = useState("")
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState("")
+  const [verificationCode, setVerificationCode] = useState("")
   const [authLoading, setAuthLoading] = useState("")
   const [authNotice, setAuthNotice] = useState("")
   const [authFlow, setAuthFlow] = useState(() => detectAuthFlowFromUrl())
@@ -137,6 +139,8 @@ function App() {
     setAuthMode("sign-in")
     setPassword("")
     setPasswordConfirm("")
+    setPendingVerificationEmail("")
+    setVerificationCode("")
     setAuthNotice("Email verified. Sign in with your email and password.")
     setStatus("Email verified.")
     navigateToPage("home", { replace: true, hash: "#sign-in" })
@@ -396,12 +400,13 @@ function App() {
     setStatus("Creating account.")
     try {
       const cleanDisplayName = signupDisplayName.trim().replace(/\s+/g, " ").slice(0, 80)
+      const cleanEmail = email.trim().toLowerCase()
       if (cleanDisplayName.length < 2) {
         setError("Add a display name with at least 2 characters.")
         return
       }
       const { data, error: signUpError } = await requireSupabase().auth.signUp({
-        email,
+        email: cleanEmail,
         password,
         options: {
           emailRedirectTo: getEmailConfirmationRedirectTarget(),
@@ -424,9 +429,13 @@ function App() {
         setStatus("Account created.")
       } else {
         rememberAuthMethod("Email password")
-        navigateToPage("home", { replace: true, hash: "#sign-in" })
-        setAuthNotice("Check your email to confirm your Memact account.")
-        setStatus("Confirmation email sent.")
+        setEmail(cleanEmail)
+        setPendingVerificationEmail(cleanEmail)
+        setVerificationCode("")
+        setAuthMode("sign-up")
+        navigateToPage("home", { replace: true, hash: "#sign-up" })
+        setAuthNotice("Enter the verification code from your email.")
+        setStatus("Verification code sent.")
       }
     } catch (authError) {
       setError(formatAuthErrorMessage(authError, "Account creation did not finish."))
@@ -476,6 +485,44 @@ function App() {
     } finally {
       setAuthLoading("")
     }
+  }
+
+  async function handleVerifySignupCode(event) {
+    event.preventDefault()
+    setError("")
+    setAuthNotice("")
+    const cleanEmail = pendingVerificationEmail.trim().toLowerCase()
+    const cleanCode = verificationCode.replace(/\s+/g, "")
+    if (!cleanEmail) {
+      setError("Start sign up again so Memact knows which email to verify.")
+      return
+    }
+    if (!/^[0-9A-Za-z]{6,10}$/.test(cleanCode)) {
+      setError("Enter the verification code from your email.")
+      return
+    }
+    setAuthLoading("verify-signup")
+    setStatus("Verifying email.")
+    try {
+      const { data, error: verifyError } = await requireSupabase().auth.verifyOtp({
+        email: cleanEmail,
+        token: cleanCode,
+        type: "email"
+      })
+      if (verifyError) throw verifyError
+      await finishEmailVerification(data?.session || null)
+    } catch (verifyError) {
+      setError(formatAuthErrorMessage(verifyError, "Verification code did not work. Check the latest email and try again."))
+      setStatus(authStatusMessage(verifyError))
+    } finally {
+      setAuthLoading("")
+    }
+  }
+
+  function clearPendingVerification() {
+    setPendingVerificationEmail("")
+    setVerificationCode("")
+    setAuthNotice("")
   }
 
   async function handleForgotPassword() {
@@ -565,7 +612,8 @@ function App() {
   async function handleResendConfirmation() {
     setError("")
     setAuthNotice("")
-    if (!email.trim()) {
+    const targetEmail = (pendingVerificationEmail || email).trim().toLowerCase()
+    if (!targetEmail) {
       setError("Enter your email first so Memact knows where to send the confirmation email.")
       return
     }
@@ -578,14 +626,15 @@ function App() {
       }
       const { error: resendError } = await auth.auth.resend({
         type: "signup",
-        email: email.trim(),
+        email: targetEmail,
         options: {
           emailRedirectTo: getEmailConfirmationRedirectTarget()
         }
       })
       if (resendError) throw resendError
-      setAuthNotice("Confirmation email sent again.")
-      setStatus("Confirmation email sent.")
+      setPendingVerificationEmail(targetEmail)
+      setAuthNotice("Verification code sent again.")
+      setStatus("Verification code sent.")
     } catch (resendError) {
       setError(formatAuthErrorMessage(resendError, "Could not resend the confirmation email."))
       setStatus(authStatusMessage(resendError))
@@ -964,6 +1013,8 @@ function App() {
     setInviteEmail("")
     setInviteSuccess("")
     setAuthMode("sign-up")
+    setPendingVerificationEmail("")
+    setVerificationCode("")
     setStatus("Signed out.")
     navigateToPage("home", { replace: true })
   }
@@ -1118,6 +1169,8 @@ function App() {
           signupDisplayName={signupDisplayName}
           password={password}
           passwordConfirm={passwordConfirm}
+          pendingVerificationEmail={pendingVerificationEmail}
+          verificationCode={verificationCode}
           passwordState={signupPasswordState}
           authMode={authMode}
           authLoading={authLoading}
@@ -1126,12 +1179,15 @@ function App() {
           setSignupDisplayName={setSignupDisplayName}
           setPassword={setPassword}
           setPasswordConfirm={setPasswordConfirm}
+          setVerificationCode={setVerificationCode}
           setAuthMode={setLandingAuthMode}
           onEmailSignup={handleEmailSignup}
+          onVerifySignupCode={handleVerifySignupCode}
           onEmailLogin={handleEmailLogin}
           onPasswordLogin={handlePasswordLogin}
           onForgotPassword={handleForgotPassword}
           onResendConfirmation={handleResendConfirmation}
+          onClearPendingVerification={clearPendingVerification}
           onGithubLogin={handleGithubLogin}
           onLearnMore={() => { window.location.href = "/learn/" }}
         />
