@@ -63,6 +63,14 @@
   letter-spacing: -0.055em !important;
 }
 
+.page-auth .hero-copy h1.locked-tagline {
+  max-width: 720px !important;
+}
+
+.locked-tagline span {
+  display: block;
+}
+
 .page-auth .hero-copy p:not(.eyebrow) {
   max-width: 480px !important;
   margin: 22px auto 0 !important;

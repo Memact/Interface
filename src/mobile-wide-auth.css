@@ -38,6 +38,10 @@
     line-height: 1.04 !important;
   }
 
+  .page-auth .hero-copy h1.locked-tagline {
+    max-width: 430px !important;
+  }
+
   .page-auth .hero-copy p:not(.eyebrow) {
     max-width: 360px !important;
     margin-top: 24px !important;

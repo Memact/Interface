@@ -5,7 +5,7 @@ import "../faq-chevron.css"
 const BASIC_FAQS = [
   {
     question: "What is Memact?",
-    answer: "Memact helps apps understand what you do, what you are trying to do, and what context may matter next, using only the activity and memory permissions you approve."
+    answer: "Memact helps apps understand what users are trying to do, using only the activity and memory permissions they approve."
   },
   {
     question: "Where does Memact run?",
