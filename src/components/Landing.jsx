@@ -151,10 +151,10 @@ export function Landing({
                 : "Now create a strong password for your account."}
             </p>
             {!isSignIn ? (
-              <div className={isVerificationStep ? "auth-progress auth-progress-three" : "auth-progress"} aria-label="Sign up progress">
-                <span className="is-active" />
-                <span className={signupStep === "password" || isVerificationStep ? "is-active" : ""} />
-                {isVerificationStep ? <span className="is-active" /> : null}
+              <div className="auth-progress" aria-label="Sign up progress">
+                <span className="is-active" aria-label="Name and email step" />
+                <span className={signupStep === "password" || isVerificationStep ? "is-active" : ""} aria-label="Password step" />
+                <span className={isVerificationStep ? "is-active" : ""} aria-label="Verification step" />
               </div>
             ) : null}
             {isSignIn && lastAuthMethod && !isSignInVerificationStep ? <p className="last-auth-chip">Last used: {lastAuthMethod}</p> : null}
