@@ -184,7 +184,6 @@ function App() {
       sessionCheckTimeout = window.setTimeout(() => {
         if (!mounted) return
         setAuthChecking(false)
-        setAuthNotice("Sign-in took too long. Try GitHub again from this page.")
         if (isProtectedPage(pageFromLocation())) {
           navigateToPage("home", { replace: true, hash: "#sign-up" })
         }
@@ -207,7 +206,7 @@ function App() {
             if (guarded) return
           }
           if (!nextSession && isProtectedPage(pageFromLocation())) {
-            setAuthNotice("Sign-in did not finish in this browser. Try GitHub again from this page.")
+            setAuthNotice("")
           }
           applySession(nextSession, detectedFlow)
         })
@@ -447,7 +446,6 @@ function App() {
         setVerificationCode("")
         setAuthMode("sign-up")
         navigateToPage("home", { replace: true, hash: "#sign-up" })
-        setAuthNotice("Enter the verification code from your email.")
         setStatus("Verification code sent.")
       }
     } catch (authError) {
@@ -523,7 +521,6 @@ function App() {
     setSignInVerificationCode("")
     setAuthMode("sign-in")
     navigateToPage("home", { replace: true, hash: "#sign-in" })
-    setAuthNotice("Enter the verification code from your email.")
     setStatus("Verification code sent.")
     return true
   }
