@@ -124,8 +124,8 @@ export function Landing({
           ) : (
             <>
               <h1 className="locked-tagline">
-                <span>Understand what users</span>
-                <span>are trying to do.</span>
+                <span>Understand what</span>
+                <span>users are trying to do.</span>
               </h1>
               <p>Memact turns approved activity into useful context<br className="mobile-subtitle-break" /> and memory without handing apps everything.</p>
               {showAuth ? (

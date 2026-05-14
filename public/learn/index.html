@@ -248,6 +248,7 @@
 
       .locked-tagline span {
         display: block;
+        white-space: nowrap;
       }
 
       .lead {
@@ -385,6 +386,19 @@
           padding: 0 16px 18px;
         }
       }
+
+      @media (max-width: 520px) {
+        .locked-tagline {
+          font-size: clamp(30px, 8vw, 42px);
+          letter-spacing: -0.045em;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .locked-tagline {
+          font-size: clamp(28px, 8.2vw, 32px);
+        }
+      }
     </style>
   </head>
   <body>
@@ -398,7 +412,7 @@
 
       <section class="panel hero-panel">
         <p class="eyebrow">Memact</p>
-        <h1 class="locked-tagline"><span>Understand what users</span><span>are trying to do.</span></h1>
+        <h1 class="locked-tagline"><span>Understand what</span><span>users are trying to do.</span></h1>
         <p class="lead">Memact gives developers a consent-first way to turn approved activity into useful context, schemas, and memory. Apps get understanding, not a raw activity feed.</p>
         <div class="hero-actions">
           <a class="button" href="/#sign-up">Get started</a>
