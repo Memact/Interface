@@ -104,11 +104,25 @@ export function Dashboard({
   const displayEmail = getUserEmail(user, authUser)
   const initials = getInitials(displayName, displayEmail)
   const [accountEditor, setAccountEditor] = useState(authFlow === "recovery" || needsPasswordSetup ? "password" : "")
+  const [changeMenuOpen, setChangeMenuOpen] = useState(false)
   const showDisplayNameEditor = accountEditor === "display-name"
   const showPasswordEditor = accountEditor === "password"
+  const showEmailEditor = accountEditor === "email"
   const showInviteEditor = accountEditor === "invite"
   const hasDisplayName = Boolean(displayNameDraft.trim())
   const displayNameAction = hasDisplayName ? "Change name" : "Set display name"
+  const changeOptions = [
+    { id: "display-name", label: displayNameAction },
+    provider === "email" ? { id: "email", label: "Change email" } : null,
+    { id: "password", label: needsPasswordSetup ? "Set password" : "Change password" },
+    { id: "invite", label: "Invite user" }
+  ].filter(Boolean)
+  const activeChangeLabel = changeOptions.find((option) => option.id === accountEditor)?.label || "Choose an action"
+
+  const chooseAccountEditor = (editor) => {
+    setAccountEditor(accountEditor === editor ? "" : editor)
+    setChangeMenuOpen(false)
+  }
 
   return (
     <section className="dashboard">
@@ -139,16 +153,34 @@ export function Dashboard({
               </p>
             </div>
           </div>
-          <div className="account-quick-actions" aria-label="Account settings">
-            <button type="button" className={showDisplayNameEditor ? "" : "ghost"} onClick={() => setAccountEditor(showDisplayNameEditor ? "" : "display-name")}>
-              {displayNameAction}
+          <div className="account-change-control">
+            <button
+              type="button"
+              className={accountEditor ? "account-change-button is-active" : "account-change-button"}
+              aria-expanded={changeMenuOpen}
+              onClick={() => setChangeMenuOpen((current) => !current)}
+            >
+              <span>
+                <span className="account-change-label">Change</span>
+                <strong>{activeChangeLabel}</strong>
+              </span>
+              <span className="faq-chevron account-change-chevron" aria-hidden="true">v</span>
             </button>
-            <button type="button" className={showPasswordEditor ? "" : "ghost"} onClick={() => setAccountEditor(showPasswordEditor ? "" : "password")}>
-              {needsPasswordSetup ? "Set password" : "Change password"}
-            </button>
-            <button type="button" className={showInviteEditor ? "" : "ghost"} onClick={() => setAccountEditor(showInviteEditor ? "" : "invite")}>
-              Invite user
-            </button>
+            {changeMenuOpen ? (
+              <div className="account-change-menu" role="menu">
+                {changeOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={accountEditor === option.id ? "is-active" : ""}
+                    role="menuitem"
+                    onClick={() => chooseAccountEditor(option.id)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
           {showDisplayNameEditor ? (
             <section className="password-panel account-editor-panel display-name-panel">
@@ -231,6 +263,35 @@ export function Dashboard({
               </form>
             </section>
           ) : null}
+          {provider === "email" && showEmailEditor ? (
+            <section className="password-panel account-editor-panel email-panel">
+              <div>
+                <p className="eyebrow">Email</p>
+                <h2>Change your email.</h2>
+                <p className="muted">
+                  Supabase will send a Memact-native verification email before this change is saved.
+                </p>
+              </div>
+              {emailChangeSuccess ? <p className="notice notice-success" role="status">{emailChangeSuccess}</p> : null}
+              <form className="form compact-form" onSubmit={onChangeEmail}>
+                <label>
+                  New email address
+                  <input
+                    value={newEmailAddress}
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="Enter the new email address"
+                    onChange={(event) => setNewEmailAddress(event.target.value)}
+                    required
+                  />
+                </label>
+                <button type="submit" disabled={authLoading === "change-email"}>
+                  {authLoading === "change-email" ? "Sending confirmation..." : "Change email"}
+                </button>
+              </form>
+            </section>
+          ) : null}
           {showInviteEditor ? (
             <section className="password-panel account-editor-panel invite-panel">
               <div>
@@ -271,35 +332,6 @@ export function Dashboard({
           <p className="muted">
             Permissions mean you choose exactly which actions a registered app can ask Memact to perform. If a scope is not saved for that app, its API key cannot use that permission.
           </p>
-          {provider === "email" ? (
-            <section className="password-panel">
-              <div>
-                <p className="eyebrow">Email</p>
-                <h2>Change your email.</h2>
-                <p className="muted">
-                  Start an email change here. Supabase will send verification based on your project email settings.
-                </p>
-              </div>
-              {emailChangeSuccess ? <p className="notice notice-success" role="status">{emailChangeSuccess}</p> : null}
-              <form className="form" onSubmit={onChangeEmail}>
-                <label>
-                  New email address
-                  <input
-                    value={newEmailAddress}
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    placeholder="Enter the new email address"
-                    onChange={(event) => setNewEmailAddress(event.target.value)}
-                    required
-                  />
-                </label>
-                <button type="submit" disabled={authLoading === "change-email"}>
-                  {authLoading === "change-email" ? "Sending confirmation..." : "Change email"}
-                </button>
-              </form>
-            </section>
-          ) : null}
         </section>
       ) : (
         <>
