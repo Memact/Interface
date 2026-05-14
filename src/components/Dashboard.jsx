@@ -58,7 +58,11 @@ export function Dashboard({
   displayNameDraft,
   setDisplayNameDraft,
   displayNameSuccess,
-  onUpdateDisplayName
+  onUpdateDisplayName,
+  inviteEmail,
+  setInviteEmail,
+  inviteSuccess,
+  onInviteUser
 }) {
   const hasApps = apps.length > 0
   const isCreatingApp = showAppForm || !hasApps
@@ -102,6 +106,7 @@ export function Dashboard({
   const [accountEditor, setAccountEditor] = useState(authFlow === "recovery" || needsPasswordSetup ? "password" : "")
   const showDisplayNameEditor = accountEditor === "display-name"
   const showPasswordEditor = accountEditor === "password"
+  const showInviteEditor = accountEditor === "invite"
   const hasDisplayName = Boolean(displayNameDraft.trim())
   const displayNameAction = hasDisplayName ? "Change name" : "Set display name"
 
@@ -140,6 +145,9 @@ export function Dashboard({
             </button>
             <button type="button" className={showPasswordEditor ? "" : "ghost"} onClick={() => setAccountEditor(showPasswordEditor ? "" : "password")}>
               {needsPasswordSetup ? "Set password" : "Change password"}
+            </button>
+            <button type="button" className={showInviteEditor ? "" : "ghost"} onClick={() => setAccountEditor(showInviteEditor ? "" : "invite")}>
+              Invite user
             </button>
           </div>
           {showDisplayNameEditor ? (
@@ -219,6 +227,33 @@ export function Dashboard({
                 </ul>
                 <button type="submit" disabled={!passwordState.canSubmit || authLoading === "set-password"}>
                   {authLoading === "set-password" ? "Saving password..." : authFlow === "recovery" ? "Reset password" : needsPasswordSetup ? "Save password" : "Update password"}
+                </button>
+              </form>
+            </section>
+          ) : null}
+          {showInviteEditor ? (
+            <section className="password-panel account-editor-panel invite-panel">
+              <div>
+                <p className="eyebrow">Invite</p>
+                <h2>Invite someone to Memact.</h2>
+                <p className="muted">Send a Memact-native account invitation using your Supabase invite email template.</p>
+              </div>
+              {inviteSuccess ? <p className="notice notice-success" role="status">{inviteSuccess}</p> : null}
+              <form className="form compact-form" onSubmit={onInviteUser}>
+                <label>
+                  Email address
+                  <input
+                    value={inviteEmail}
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="person@example.com"
+                    onChange={(event) => setInviteEmail(event.target.value)}
+                    required
+                  />
+                </label>
+                <button type="submit" disabled={authLoading === "invite-user"}>
+                  {authLoading === "invite-user" ? "Sending invite..." : "Send invite"}
                 </button>
               </form>
             </section>

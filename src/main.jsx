@@ -17,12 +17,13 @@ import { HelpPanel } from "./components/HelpPanel.jsx"
 import { Landing } from "./components/Landing.jsx"
 import { refreshDashboard, useDashboardState } from "./hooks/useDashboardState.js"
 import { isConnectPage, isProtectedPage, normalizePortalPath, pageFromLocation, routeForPage } from "./portal-routes.js"
-import { getDisplayName } from "./user-display.js"
+import { getDisplayName, getUserEmail } from "./user-display.js"
 
 const AUTH_INIT_TIMEOUT_MS = 12000
 const AUTH_CODE_EXCHANGE_TIMEOUT_MS = 9000
 const AUTH_SESSION_CHECK_TIMEOUT_MS = 9000
 const LAST_AUTH_METHOD_KEY = "memact.lastAuthMethod"
+const INVITE_FUNCTION_NAME = import.meta.env.VITE_SUPABASE_INVITE_FUNCTION || "invite-user"
 
 function App() {
   const client = useMemo(() => new AccessClient(ACCESS_URL), [])
@@ -67,6 +68,8 @@ function App() {
   const [emailChangeSuccess, setEmailChangeSuccess] = useState("")
   const [displayNameDraft, setDisplayNameDraft] = useState("")
   const [displayNameSuccess, setDisplayNameSuccess] = useState("")
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [inviteSuccess, setInviteSuccess] = useState("")
   const { user, apps, apiKeys, consents, status, error, canRetryDashboard } = dashboard
   const { setStatus, setError, setCanRetryDashboard } = dashboardActions
   const session = authSession?.access_token || ""
@@ -521,6 +524,44 @@ function App() {
     }
   }
 
+  async function handleInviteUser(event) {
+    event.preventDefault()
+    setError("")
+    setAuthNotice("")
+    setInviteSuccess("")
+    const cleanEmail = inviteEmail.trim().toLowerCase()
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      setError("Enter a valid email address for the invite.")
+      return
+    }
+    if (cleanEmail === getUserEmail(user, authUser).toLowerCase()) {
+      setError("Use a different email address for the invite.")
+      return
+    }
+    setAuthLoading("invite-user")
+    setStatus("Sending invite.")
+    try {
+      const auth = requireSupabase()
+      const { data, error: inviteError } = await auth.functions.invoke(INVITE_FUNCTION_NAME, {
+        body: {
+          email: cleanEmail,
+          redirect_to: getEmailConfirmationRedirectTarget()
+        }
+      })
+      if (inviteError) throw inviteError
+      const invitedEmail = data?.email || cleanEmail
+      setInviteEmail("")
+      setInviteSuccess(`Invite sent to ${invitedEmail}.`)
+      setAuthNotice(`Invite sent to ${invitedEmail}.`)
+      setStatus("Invite sent.")
+    } catch (inviteError) {
+      setError(formatAuthErrorMessage(inviteError, "Could not send the invite. Check the Supabase invite function."))
+      setStatus(authStatusMessage(inviteError))
+    } finally {
+      setAuthLoading("")
+    }
+  }
+
   async function handleResendConfirmation() {
     setError("")
     setAuthNotice("")
@@ -920,6 +961,8 @@ function App() {
     setApiTestResult("")
     setDisplayNameDraft("")
     setDisplayNameSuccess("")
+    setInviteEmail("")
+    setInviteSuccess("")
     setAuthMode("sign-up")
     setStatus("Signed out.")
     navigateToPage("home", { replace: true })
@@ -1062,6 +1105,10 @@ function App() {
           setDisplayNameDraft={setDisplayNameDraft}
           displayNameSuccess={displayNameSuccess}
           onUpdateDisplayName={handleUpdateDisplayName}
+          inviteEmail={inviteEmail}
+          setInviteEmail={setInviteEmail}
+          inviteSuccess={inviteSuccess}
+          onInviteUser={handleInviteUser}
         />
       ) : (
         <Landing
@@ -1172,6 +1219,7 @@ function detectAuthFlowFromUrl() {
   if (typeof window === "undefined") return "default"
   const path = window.location.pathname.toLowerCase()
   const query = `${window.location.search || ""}${window.location.hash || ""}`.toLowerCase()
+  if (query.includes("type=invite")) return "invite"
   if (path === "/auth/confirm" || query.includes("type=signup")) return "verified"
   if (query.includes("type=recovery")) return "recovery"
   return "default"
@@ -1193,6 +1241,7 @@ function shouldCheckSessionOnLoad() {
     authPayload.includes("token_hash=") ||
     authPayload.includes("access_token=") ||
     authPayload.includes("type=signup") ||
+    authPayload.includes("type=invite") ||
     authPayload.includes("type=recovery") ||
     authPayload.includes("type=magiclink")
 }
