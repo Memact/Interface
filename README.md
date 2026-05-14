@@ -4,11 +4,11 @@ Version: `v0.0`
 
 Website is the Memact web UI for users and developers.
 
-Memact lets apps request scoped memory permissions while users choose
-what each app can access.
+Memact lets apps request scoped understanding from a user's approved activity
+and memory while users choose what each app is allowed to know.
 
 ```text
-Apps ask for memory access. Users choose what they get.
+Apps ask for context. Users choose what Memact can understand.
 ```
 
 This repo owns the public site and the authenticated portal for:
@@ -24,20 +24,21 @@ This repo owns the public site and the authenticated portal for:
 - plain-English help
 - public pages that explain Memact for search and sharing
 
-Website does not capture activity and does not read memory graphs directly. It talks to the Supabase-backed access layer that stores apps, permissions, consent records, and API key metadata.
+Website does not capture activity, infer intent, or read memory graphs directly. It talks to the Supabase-backed access layer that stores apps, permissions, consent records, and API key metadata.
 
 ## Product Definition
 
-Memact lets apps remember useful context from your activity, but only inside
-the permissions a user approves.
+Memact turns approved digital activity into useful context: what a user is
+doing, what they may be trying to do, what patterns matter, and what memory is
+safe to reuse for a specific app.
 
 Website is not the memory engine. It is the account, app, permission, consent, and API key console.
 
 ```text
-Website -> access layer -> scoped API key -> user consent -> local capture/filtering -> approved memory output
+Website -> access layer -> scoped API key -> user consent -> evidence/filtering -> context, schemas, and memory
 ```
 
-Apps use Memact to work with approved activity and useful memory objects. They do not get a blanket dump of a user's private graph. Each app must stay inside the scopes, categories, consent, and Data Transparency disclosure attached to that app.
+Apps use Memact for permissioned understanding, not a raw data feed. They do not get a blanket dump of a user's private graph or captured activity. Each app must stay inside the scopes, categories, consent, and Data Transparency disclosure attached to that app.
 
 ## Current UI
 
@@ -185,12 +186,12 @@ If Blueprint setup fails, use the direct Dashboard path in
 - API keys are shown once and should be stored server-side by the app developer.
 - App names are unique per account.
 - Deleting an app revokes its active API keys and permissions.
-- Data Transparency must stay available alongside the consent flow so users can review actual captured data, graph packet use, retention, and revocation before approval.
+- Data Transparency must stay available alongside the consent flow so users can review the evidence fields, context objects, graph packet use, retention, and revocation path before approval.
 - Revoked keys remain visible as history.
 - Scopes and saved permissions are required before apps can use Memact.
 - Activity categories are required before apps can use Memact.
 - The consent flow creates user-specific permission for one app.
-- Graph read access is separate from activity capture and schema writes.
+- Graph read access is separate from evidence use and schema writes.
 - Redirect URLs and developer URLs must use `http://` or `https://`; unsafe schemes are rejected or ignored.
 - Supabase is the primary access backend. The local HTTP client is only a development fallback.
 
@@ -223,13 +224,13 @@ developer creates app
 -> Memact shows consent plus Data Transparency for that app
 -> user approves or cancels
 -> approved apps receive a connection_id
--> app verifies API key + connection_id + scopes before doing work
+-> app verifies API key + connection_id + scopes before requesting context
 ```
 
 API keys identify the app. `connection_id` identifies the specific user consent.
 Verification must pass both.
 
-Memact verifies the API key before an app can use approved capture, schema, graph, or memory permissions. Customer apps verify through the Memact HTTP endpoint; they do not call Supabase RPCs or configure Supabase keys.
+Memact verifies the API key before an app can use approved evidence, schema, graph, or memory permissions. Customer apps verify through the Memact HTTP endpoint; they do not call Supabase RPCs or configure Supabase keys.
 
 ```http
 POST https://api.memact.com/v1/access/verify
@@ -245,7 +246,7 @@ Content-Type: application/json
 }
 ```
 
-The app receives only the scopes and activity categories the user approved for that app.
+The app receives only the context, memory, and graph access allowed by the scopes and activity categories the user approved for that app.
 
 For developer docs and generated coding guidance, keep the integration
 explanation practical:
@@ -256,8 +257,8 @@ explanation practical:
 3. Link /DataTransparency with the same app_id, scopes, categories, and redirect_uri.
 4. Store the returned connection_id for that user.
 5. Keep the raw Memact API key on the server.
-6. Verify api_key + connection_id + required_scopes + activity_categories through the Memact verification endpoint before calling Memact.
-7. Use only the approved scopes and categories returned by verification.
+6. Verify api_key + connection_id + required_scopes + activity_categories through the Memact verification endpoint before requesting context.
+7. Use only the approved context, memory, scopes, and categories returned by verification.
 ```
 
 Do not describe repository names as separate brands. Memact is the brand; access,
@@ -265,20 +266,20 @@ capture, schema, and memory are functions or layers.
 
 ## Consent and Data Transparency
 
-The consent page must show what the app is asking to do, what activity
-categories it wants, and a Data Transparency link for the same app.
+The consent page must show what the app is asking Memact to understand, what
+activity categories it wants, and a Data Transparency link for the same app.
 
 Data Transparency is not an owner-dashboard tab. It is a user-facing companion
 page for the app asking for consent. It must explain:
 
-- actual captured fields, such as URLs, page titles, selected text, transcripts, timestamps, or evidence snippets
-- memory objects and graph packets, such as summaries, evidence cards, nodes, edges, aggregates, or schema packets
-- why the app uses those objects
+- evidence fields that may inform understanding, such as URLs, page titles, selected text, transcripts, timestamps, or evidence snippets
+- memory objects and graph packets, such as summaries, evidence cards, inferred schema packets, nodes, edges, aggregates, or patterns
+- why the app needs that context
 - retention and deletion expectations
 - how the user can revoke consent or stop future access
 
 Categories and scopes are boundaries, not the full disclosure. If an app cannot
-describe the actual data and graph packets it uses, the consent flow is not
+describe the evidence and context objects it uses, the consent flow is not
 ready.
 
 ## Help Tab

@@ -1,12 +1,12 @@
 # Memact
 
-Memact lets apps use helpful memory only after a user approves the app, scopes, activity categories, and data transparency.
+Memact turns user-approved digital activity into permissioned context, schemas, and memory.
 
 ## What Memact Is
 
 Memact is the product name. Access, capture, schema, and memory are functions or layers, not separate brands.
 
-Apps use Memact when they need user-approved context such as summaries, evidence snippets, activity categories, graph objects, or schema packets. Apps should not receive a blanket dump of a user's private memory graph.
+Apps use Memact when they need to understand what a user is doing, what they may be trying to do, what they like, or what context matters next. Capture is only an evidence layer. The product is permissioned understanding from activity memory, not a blanket dump of captured data or a user's private graph.
 
 ## Key Pages
 
@@ -22,7 +22,7 @@ Apps use Memact when they need user-approved context such as summaries, evidence
 
 - Users approve or cancel an app before it connects.
 - Users should see Data Transparency beside the consent flow.
-- Data Transparency should explain the actual captured fields, evidence cards, summaries, graph packets, retention, and revocation path.
+- Data Transparency should explain the evidence fields, context objects, summaries, graph packets, retention, and revocation path.
 - Categories and scopes are boundaries, not full disclosure.
 
 ## Developer Concepts
@@ -34,20 +34,20 @@ Apps use Memact when they need user-approved context such as summaries, evidence
 - Store the returned `connection_id` for that user.
 - Keep the raw Memact API key in server environment config, such as `MEMACT_API_KEY` in `.env` locally and a secret manager in production. This is the private app key created in the Memact portal and usually starts with `mka_`.
 - App developers should not configure Supabase keys. Supabase belongs to Memact's access infrastructure, not customer apps.
-- Verify `api_key + connection_id + required_scopes + activity_categories` through the Memact verification endpoint before using Memact output.
-- Use only the scopes and categories returned by verification.
+- Verify `api_key + connection_id + required_scopes + activity_categories` through the Memact verification endpoint before requesting Memact context.
+- Use only the context, memory, scopes, and categories returned by verification.
 
 ## For AI Coding Agents
 
 If a developer asks an agent to "use Memact", build the same integration a human developer would build:
 
 - Add a Connect Memact action that sends the user to `https://www.memact.com/connect` with the app id, requested scopes, activity categories, and redirect URL.
-- Add the matching Data Transparency link so the user can inspect actual captured fields, evidence, summaries, graph packets, retention, and revocation before and after consent.
+- Add the matching Data Transparency link so the user can inspect evidence fields, context objects, summaries, graph packets, retention, and revocation before and after consent.
 - Handle the redirect from Memact and store the returned `connection_id` for that user and app.
 - Keep the raw Memact API key in a server environment variable or secret manager. Do not ask users to paste it into UI, and do not place it in browser JavaScript, mobile bundles, public repos, logs, screenshots, or emails.
-- Before reading Memact output, call the Memact verification endpoint server-side with the API key, connection id, required scopes, and activity categories.
+- Before requesting Memact context, call the Memact verification endpoint server-side with the API key, connection id, required scopes, and activity categories.
 - Treat scopes and activity categories as hard limits. If access is missing, send the user back through consent instead of silently widening data use.
 
 ## Short Definition
 
-Memact lets apps remember useful context from user-approved activity without giving them blanket access.
+Memact provides permissioned understanding from activity memory: useful context about what a user does or is trying to do, without giving apps blanket access to raw activity.

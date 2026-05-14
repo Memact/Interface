@@ -24,9 +24,9 @@ export function DataTransparencyPage({
       <div className="transparency-hero">
         <div>
           <p className="eyebrow">Data transparency</p>
-          <h2>What {appName} will use Memact for.</h2>
+          <h2>What {appName} wants Memact to understand.</h2>
           <p className="muted">
-            This page belongs beside consent. Before approving, you should be able to see the actual data, evidence, and graph packets an app expects to use, not just broad categories.
+            This page belongs beside consent. Before approving, you should be able to see the evidence, context objects, memory, and graph packets an app expects to use, not just broad categories.
           </p>
         </div>
         <div className="transparency-summary" aria-label="Transparency summary">
@@ -53,20 +53,20 @@ export function DataTransparencyPage({
 
       <div className="transparency-grid">
         <section className="permission-list transparency-card">
-          <p className="eyebrow">Actual data used</p>
-          <h3>Captured data and evidence</h3>
+          <p className="eyebrow">Evidence used</p>
+          <h3>Signals that may inform context</h3>
           <DisclosureList
             items={capturedData}
-            empty="This app has not listed exact captured data yet. It should disclose the real fields it uses, such as URLs, page titles, selected text, transcripts, evidence snippets, or timestamps."
+            empty="This app has not listed exact evidence fields yet. It should disclose the real fields it uses to produce understanding, such as URLs, page titles, selected text, transcripts, evidence snippets, or timestamps."
           />
         </section>
 
         <section className="permission-list transparency-card">
-          <p className="eyebrow">Memory objects</p>
-          <h3>Graph packets and summaries</h3>
+          <p className="eyebrow">Context objects</p>
+          <h3>Memory, graph packets, and summaries</h3>
           <DisclosureList
             items={graphPackets}
-            empty="This app has not listed exact graph packets yet. If it writes or reads memory, it should describe the packet types, summaries, evidence cards, nodes, edges, or aggregates it uses."
+            empty="This app has not listed exact context objects yet. If it writes or reads memory, it should describe the summaries, schema packets, evidence cards, nodes, edges, patterns, or aggregates it uses."
           />
         </section>
 
@@ -75,7 +75,7 @@ export function DataTransparencyPage({
           <h3>What the app says it will do</h3>
           <DisclosureList
             items={dataUses}
-            empty={app?.description || "This app has not provided a plain-language purpose for its Memact usage yet."}
+            empty={app?.description || "This app has not provided a plain-language purpose for the context it wants from Memact yet."}
           />
         </section>
 
@@ -112,7 +112,7 @@ export function DataTransparencyPage({
         <p className="eyebrow">Required app disclosure</p>
         <div className="mini-row">
           <strong>Categories are not enough.</strong>
-          <small>Apps using Memact should disclose the actual captured fields, memory objects, graph packets, retention, and revocation path before asking users to approve.</small>
+          <small>Apps using Memact should disclose the evidence fields, context objects, memory objects, graph packets, retention, and revocation path before asking users to approve.</small>
         </div>
       </section>
 

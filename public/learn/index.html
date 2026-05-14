@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>What is Memact? | User-approved memory for apps</title>
-    <meta name="description" content="Memact lets apps use helpful memory only after users approve the app, scopes, activity categories, and data transparency. Learn the user and developer flow." />
+    <title>What is Memact? | Permissioned understanding from activity memory</title>
+    <meta name="description" content="Memact turns user-approved digital activity into permissioned context, schemas, and memory so apps can understand what a user is doing without receiving a raw activity feed." />
     <meta name="robots" content="index,follow" />
     <meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
@@ -18,8 +18,8 @@
     <link rel="apple-touch-icon" href="/icon.png" />
     <meta property="og:site_name" content="Memact" />
     <meta property="og:locale" content="en_US" />
-    <meta property="og:title" content="What is Memact? | User-approved memory for apps" />
-    <meta property="og:description" content="Memact lets apps use helpful memory only after users approve the app, scopes, activity categories, and data transparency." />
+    <meta property="og:title" content="What is Memact? | Permissioned understanding from activity memory" />
+    <meta property="og:description" content="Memact turns approved activity into permissioned context, schemas, and memory. Apps get understanding, not a raw activity feed." />
     <meta property="og:type" content="article" />
     <meta property="og:url" content="https://www.memact.com/learn/" />
     <meta property="og:image" content="https://www.memact.com/seo-logo.png" />
@@ -29,8 +29,8 @@
     <meta property="og:image:height" content="282" />
     <meta property="og:image:alt" content="Memact wordmark on a dark background" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="What is Memact? | User-approved memory for apps" />
-    <meta name="twitter:description" content="Memact lets apps use helpful memory only after users approve the app, scopes, activity categories, and data transparency." />
+    <meta name="twitter:title" content="What is Memact? | Permissioned understanding from activity memory" />
+    <meta name="twitter:description" content="Memact turns approved activity into permissioned context, schemas, and memory. Apps get understanding, not a raw activity feed." />
     <meta name="twitter:image" content="https://www.memact.com/seo-logo.png" />
     <meta name="twitter:image:alt" content="Memact wordmark on a dark background" />
     <script type="application/ld+json">
@@ -38,11 +38,11 @@
         "@context": "https://schema.org",
         "@type": "FAQPage",
         "mainEntity": [
-          {"@type":"Question","name":"What is Memact?","acceptedAnswer":{"@type":"Answer","text":"Memact lets apps remember useful context from user-approved activity without giving them blanket access."}},
-          {"@type":"Question","name":"Does an app get my whole memory graph?","acceptedAnswer":{"@type":"Answer","text":"No. Apps only get the permissions, activity categories, and output the user approved for that app."}},
-          {"@type":"Question","name":"What is Data Transparency?","acceptedAnswer":{"@type":"Answer","text":"Data Transparency is the consent-companion page where an app explains actual captured fields, evidence, graph packets, retention, and revocation."}},
-          {"@type":"Question","name":"How does a developer use the Memact API?","acceptedAnswer":{"@type":"Answer","text":"Register an app, choose scopes and categories, send the user through consent, link the matching Data Transparency page, store the returned connection_id, keep the API key in server environment config or a secret manager, and verify access before using Memact output."}},
-          {"@type":"Question","name":"What is a schema packet?","acceptedAnswer":{"@type":"Answer","text":"A schema packet is a memory object that can include evidence, content units, nodes, edges, and a summary."}}
+          {"@type":"Question","name":"What is Memact?","acceptedAnswer":{"@type":"Answer","text":"Memact turns approved digital activity into permissioned context: what the user is doing, what they may be trying to do, and what memory is safe for a specific app to reuse."}},
+          {"@type":"Question","name":"Does an app get my whole memory graph?","acceptedAnswer":{"@type":"Answer","text":"No. Apps only get the context, summaries, evidence, schema packets, or graph objects the user approved for that app."}},
+          {"@type":"Question","name":"What is Data Transparency?","acceptedAnswer":{"@type":"Answer","text":"Data Transparency is the consent-companion page where an app explains the evidence fields, context objects, graph packets, retention, and revocation path."}},
+          {"@type":"Question","name":"How does a developer use the Memact API?","acceptedAnswer":{"@type":"Answer","text":"Register an app, choose scopes and categories, send the user through consent, link the matching Data Transparency page, store the returned connection_id, keep the API key in server environment config or a secret manager, verify access, and request only the approved context."}},
+          {"@type":"Question","name":"What is a schema packet?","acceptedAnswer":{"@type":"Answer","text":"A schema packet is an understanding envelope that can include evidence, content units, inferred structure, nodes, edges, and a summary."}}
         ]
       }
     </script>
@@ -384,8 +384,8 @@
 
       <section class="panel hero-panel">
         <p class="eyebrow">Memact</p>
-        <h1>Apps can remember only what the user approves.</h1>
-        <p class="lead">Memact gives developers a consent-first way to use helpful memory. Users see the app, scopes, activity categories, and data disclosure before access is allowed.</p>
+        <h1>Understand what the user is trying to do.</h1>
+        <p class="lead">Memact gives developers a consent-first way to turn approved activity into useful context, schemas, and memory. Apps get understanding, not a raw activity feed.</p>
         <div class="hero-actions">
           <a class="button" href="/#sign-up">Get started</a>
           <a class="button" href="/#sign-in">Sign in</a>
@@ -403,23 +403,23 @@
           <p class="faq-section-title">Basics</p>
           <details open>
             <summary><span class="faq-question">What is Memact?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>Memact lets apps remember useful context from your activity, but only inside the permissions you approve.</p></div>
+            <div class="faq-answer"><p>Memact helps apps understand what you do, what you are trying to do, and what context may matter next, using only the activity and memory permissions you approve.</p></div>
           </details>
           <details>
             <summary><span class="faq-question">Where does Memact run?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>Apps use a small Memact client SDK. Activity capture happens locally through the browser extension and, if you enable it, a local helper. Apps only receive the approved output, not a blanket feed of your activity.</p></div>
+            <div class="faq-answer"><p>Apps use a small Memact client SDK. Evidence can come from the browser extension and, if enabled, a local helper. Memact turns approved evidence into context, schemas, and memory; apps do not receive a blanket activity feed.</p></div>
           </details>
           <details>
             <summary><span class="faq-question">Does an app get my whole memory graph?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>No. Apps only get the permissions and activity categories you approve. Raw graph access is separate and sensitive.</p></div>
+            <div class="faq-answer"><p>No. Apps only get the context, summaries, evidence, or graph objects allowed by the permissions and categories you approve. Raw graph access is separate and sensitive.</p></div>
           </details>
           <details>
             <summary><span class="faq-question">How does consent work?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>It shows what an app wants before anything is connected. You approve or cancel. Apps should link Data Transparency beside consent so you can review the actual data and memory objects they plan to use.</p></div>
+            <div class="faq-answer"><p>It shows what an app wants Memact to understand before anything is connected. You approve or cancel. Apps should link Data Transparency beside consent so you can review the evidence, schemas, memory objects, and context they plan to use.</p></div>
           </details>
           <details>
             <summary><span class="faq-question">What are activity categories?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>They limit where an app can work, like research pages, news, AI conversations, developer activity, or media.</p></div>
+            <div class="faq-answer"><p>They limit which part of your activity Memact can understand for that app, like research pages, news, AI conversations, developer activity, or media.</p></div>
           </details>
         </div>
 
@@ -431,11 +431,11 @@
               <ol>
                 <li>Register your app in Memact and choose the smallest scopes and activity categories your feature needs.</li>
                 <li>Add a Connect Memact button in your app. Send users to `/connect` with app id, scopes, categories, and redirect URL.</li>
-                <li>Put a Data Transparency link beside that consent flow. Explain the actual captured fields, evidence cards, summaries, graph packets, retention, and revocation path.</li>
+                <li>Put a Data Transparency link beside that consent flow. Explain the evidence fields, context objects, summaries, graph packets, retention, and revocation path.</li>
                 <li>After approval, Memact redirects back with a `connection_id`. Store that id for the signed-in user in your app.</li>
                 <li>Keep the raw Memact API key in server environment config, such as `MEMACT_API_KEY` in `.env` locally and a secret manager in production.</li>
                 <li>Your backend calls Memact's verification endpoint with the API key, stored connection id, required scopes, and activity categories.</li>
-                <li>Use only the approved result returned by Memact.</li>
+                <li>Request only the approved context, memory, schemas, or graph objects returned by Memact.</li>
               </ol>
             </div>
           </details>
@@ -449,11 +449,11 @@
           </details>
           <details>
             <summary><span class="faq-question">Is a Data Transparency page required?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>Yes. Any app asking users to consent through Memact should expose Data Transparency next to the consent flow. It must explain the actual captured fields, evidence cards, summaries, graph packets, retention, and revocation path. Categories alone are not enough.</p></div>
+            <div class="faq-answer"><p>Yes. Any app asking users to consent through Memact should expose Data Transparency next to the consent flow. It must explain the evidence fields, context objects, summaries, graph packets, retention, and revocation path. Categories alone are not enough.</p></div>
           </details>
           <details>
             <summary><span class="faq-question">What is not allowed?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>Apps should only request what they need. Hidden monitoring, selling raw memory, manipulation, and sensitive decision-making are not allowed.</p></div>
+            <div class="faq-answer"><p>Apps should only request what they need. Hidden monitoring, selling raw activity or memory, manipulation, and sensitive decision-making are not allowed.</p></div>
           </details>
         </div>
       </section>

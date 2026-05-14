@@ -97,7 +97,7 @@ export function Dashboard({
   const appDescription = !isCreatingApp && selectedApp
     ? selectedApp.description || "No description added."
     : "Each app gets its own permissions and API keys."
-  const dashboardSubtitle = "Create app-specific keys with clear permission scopes."
+  const dashboardSubtitle = "Create app-specific keys for permissioned context."
 
   const provider = getUserProvider(user, authUser)
   const avatar = getAvatarUrl(user, authUser)
@@ -330,7 +330,7 @@ export function Dashboard({
             </div>
           </div>
           <p className="muted">
-            Permissions mean you choose exactly which actions a registered app can ask Memact to perform. If a scope is not saved for that app, its API key cannot use that permission.
+            Permissions mean you choose exactly what a registered app can ask Memact to understand. If a scope is not saved for that app, its API key cannot use that permission.
           </p>
         </section>
       ) : (
@@ -375,7 +375,7 @@ export function Dashboard({
                 </label>
                 <div>
                   <p className="eyebrow">Activity categories</p>
-                  <p className="muted">Pick the kinds of activity this app is allowed to work with. This keeps apps narrow by design.</p>
+                  <p className="muted">Pick the kinds of activity this app is allowed to understand. This keeps apps narrow by design.</p>
                   <CategoryGrid
                     categories={categories}
                     selected={newAppCategories}
@@ -410,7 +410,7 @@ export function Dashboard({
               <div className="section-head">
                 <div className="section-copy">
                   <p className="eyebrow">Permissions</p>
-                  <h2>Choose what this app can ask Memact to do.</h2>
+                  <h2>Choose what this app can ask Memact to understand.</h2>
                   <p className="muted">
                     {selectedConsent
                       ? consentChanged ? "Permissions changed. Save them before creating the next key." : "Permissions are saved for this app. Change scopes any time."
@@ -607,7 +607,7 @@ const memactDataTransparencyUrl = "${dataTransparencyUrl}";
 // 3. After the user approves, Memact redirects back with ?connected=1&connection_id=...
 const memactConnectionId = "connection_id_from_connect_redirect";
 
-// 4. Verify access on your server before doing work.
+// 4. Verify access on your server before requesting context.
 // .env on your server:
 // MEMACT_API_KEY=${apiKey || "mka_key_shown_once"}
 // Optional override only if Memact gives you a different verify host:
@@ -648,9 +648,9 @@ console.log("Memact access granted", {
   categories: access.categories
 });
 
-// 5. Use only approved access.
-// Capture: use access.categories to keep captured activity inside this app's categories.
-// Schema: write schema packets with evidence, nodes, and edges, not raw private dumps.
+// 5. Use only approved understanding.
+// Evidence: keep activity signals inside the returned categories.
+// Schema: write schema packets that explain context, not raw private dumps.
 // Memory: request summaries/evidence/graph objects only if the approved scopes include them.`
 }
 

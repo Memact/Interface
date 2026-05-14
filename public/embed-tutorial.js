@@ -142,9 +142,9 @@ function titleForStep(title, index) {
 function describeStep(title, index) {
   const descriptions = [
     "Put this URL behind your own Connect Memact button. It opens the approval screen for this app.",
-    "Put this URL next to consent. It explains the actual captured fields, evidence cards, summaries, graph packets, retention, and revocation path for this app.",
+    "Put this URL next to consent. It explains the evidence fields, context objects, summaries, graph packets, retention, and revocation path for this app.",
     "After the user approves, Memact redirects back to your app with a connection id.",
-    "Keep the private mka_ Memact API key in server environment config. Your backend sends it to the Memact verification endpoint; do not put it in browser code.",
+    "Keep the private mka_ Memact API key in server environment config. Your backend sends it to the Memact verification endpoint before requesting context; do not put it in browser code.",
     "Use the verified scopes and categories as the boundary for what your app does next."
   ]
   return descriptions[index] || title

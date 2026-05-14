@@ -2,7 +2,7 @@
   "name": "memact-website",
   "private": true,
   "version": "0.0.0",
-  "description": "Memact web portal for app permissions, consent, API keys, and data transparency.",
+  "description": "Memact web portal for permissioned context, consent, API keys, and data transparency.",
   "type": "module",
   "repository": {
     "type": "git",

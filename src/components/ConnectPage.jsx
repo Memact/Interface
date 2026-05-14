@@ -16,7 +16,7 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
             <p className="eyebrow">Permission request</p>
             <h1>{appName} wants to use Memact.</h1>
             <p className="muted">
-              Approve only if you trust this app and the requested data boundary makes sense.
+              Approve only if you trust this app and the requested understanding boundary makes sense.
             </p>
           </div>
           <span className="consent-state-pill">User controlled</span>
@@ -39,12 +39,12 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
           <p className="eyebrow">What consent means</p>
           <div className="consent-points">
             <div className="mini-row">
-              <strong>You are allowing this app to ask Memact for scoped output.</strong>
-              <small>The app does not get unlimited memory access. Memact verifies the app, API key, user consent, scopes, and categories first.</small>
+              <strong>You are allowing this app to ask Memact for scoped context.</strong>
+              <small>The app does not get unlimited memory or raw activity. Memact verifies the app, API key, user consent, scopes, and categories first.</small>
             </div>
             <div className="mini-row">
               <strong>You can revoke access later.</strong>
-              <small>Use Data Transparency to review the app's actual captured fields, memory objects, graph packets, retention, and revocation path before approving.</small>
+              <small>Use Data Transparency to review the evidence fields, context objects, memory objects, graph packets, retention, and revocation path before approving.</small>
             </div>
           </div>
           <div className="connect-link-row">
@@ -77,16 +77,16 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
         <section className="permission-list">
           <p className="eyebrow">Safety boundary</p>
           <div className="mini-row">
-            <strong>No raw memory dump by default.</strong>
-            <small>Memact verifies the app, user permission, requested scopes, and selected categories before allowing access.</small>
+            <strong>No raw memory or activity dump by default.</strong>
+            <small>Memact verifies the app, user permission, requested scopes, and selected categories before any context can be used.</small>
           </div>
           <div className="mini-row">
             <strong>Apps should load their Memact key from environment secrets.</strong>
-            <small>The private app key is the `mka_...` key created in the Memact portal. The app backend reads it from `.env` or a secret manager, then verifies this consent before doing work. App developers should not configure Supabase keys; Memact handles that infrastructure.</small>
+            <small>The private app key is the `mka_...` key created in the Memact portal. The app backend reads it from `.env` or a secret manager, then verifies this consent before requesting Memact context. App developers should not configure Supabase keys; Memact handles that infrastructure.</small>
           </div>
           <div className="mini-row">
             <strong>Blocked uses stay blocked.</strong>
-            <small>Apps may not use Memact for surveillance, selling raw personal memory, manipulative targeting, or sensitive eligibility decisions.</small>
+            <small>Apps may not use Memact for surveillance, selling raw activity or memory, manipulative targeting, or sensitive eligibility decisions.</small>
           </div>
         </section>
 

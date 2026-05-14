@@ -123,8 +123,8 @@ export function Landing({
             </>
           ) : (
             <>
-              <h1>Let apps remember<br />only what the user allows.</h1>
-              <p>Memact lets apps use helpful info from a user's<br className="mobile-subtitle-break" /> digital activity without giving them everything.</p>
+              <h1>Understand what<br />the user is trying to do.</h1>
+              <p>Memact turns approved activity into useful context<br className="mobile-subtitle-break" /> and memory without handing apps everything.</p>
               {showAuth ? (
                 <div className="landing-actions">
                   <a className="scroll-to-auth" href="/#sign-up" onClick={(event) => handleAuthScroll(event, "sign-up")}>Get started</a>
