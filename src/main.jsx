@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
 import "./styles.css"
 import {
@@ -24,6 +24,7 @@ const AUTH_CODE_EXCHANGE_TIMEOUT_MS = 9000
 const AUTH_SESSION_CHECK_TIMEOUT_MS = 9000
 const LAST_AUTH_METHOD_KEY = "memact.lastAuthMethod"
 const INVITE_FUNCTION_NAME = import.meta.env.VITE_SUPABASE_INVITE_FUNCTION || "invite-user"
+const SIGNIN_RISK_FUNCTION_NAME = import.meta.env.VITE_SUPABASE_SIGNIN_RISK_FUNCTION || ""
 
 function App() {
   const client = useMemo(() => new AccessClient(ACCESS_URL), [])
@@ -39,6 +40,8 @@ function App() {
   const [passwordConfirm, setPasswordConfirm] = useState("")
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState("")
   const [verificationCode, setVerificationCode] = useState("")
+  const [pendingSignInVerificationEmail, setPendingSignInVerificationEmail] = useState("")
+  const [signInVerificationCode, setSignInVerificationCode] = useState("")
   const [authLoading, setAuthLoading] = useState("")
   const [authNotice, setAuthNotice] = useState("")
   const [authFlow, setAuthFlow] = useState(() => detectAuthFlowFromUrl())
@@ -78,6 +81,7 @@ function App() {
   const passwordState = useMemo(() => getPasswordState(setupPassword, setupPasswordConfirm), [setupPassword, setupPasswordConfirm])
   const signupPasswordState = useMemo(() => getPasswordState(password, passwordConfirm), [password, passwordConfirm])
   const needsPasswordSetup = Boolean(authUser && shouldOfferPasswordSetup(authUser))
+  const authEventGuardRef = useRef("")
 
   function navigateToPage(page, { replace = false, hash = "" } = {}) {
     const nextPath = `${routeForPage(page)}${hash}`
@@ -141,6 +145,8 @@ function App() {
     setPasswordConfirm("")
     setPendingVerificationEmail("")
     setVerificationCode("")
+    setPendingSignInVerificationEmail("")
+    setSignInVerificationCode("")
     setAuthNotice("Email verified. Sign in with your email and password.")
     setStatus("Email verified.")
     navigateToPage("home", { replace: true, hash: "#sign-in" })
@@ -196,6 +202,10 @@ function App() {
             await finishEmailVerification(nextSession)
             return
           }
+          if (nextSession && detectedFlow === "default") {
+            const guarded = await beginSignInVerificationIfNeeded(supabase, nextSession)
+            if (guarded) return
+          }
           if (!nextSession && isProtectedPage(pageFromLocation())) {
             setAuthNotice("Sign-in did not finish in this browser. Try GitHub again from this page.")
           }
@@ -225,6 +235,9 @@ function App() {
       if (event === "PASSWORD_RECOVERY") {
         setAuthFlow("recovery")
       } else if (event === "SIGNED_IN") {
+        if (authEventGuardRef.current === "password-login" || authEventGuardRef.current === "signin-code") {
+          return
+        }
         if (detectAuthFlowFromUrl() === "verified") {
           finishEmailVerification(nextSession)
           return
@@ -452,10 +465,12 @@ function App() {
     setPasswordSuccess("")
     setAuthLoading("password")
     setStatus("Signing in.")
+    authEventGuardRef.current = "password-login"
     try {
       const auth = requireSupabase()
+      const cleanEmail = email.trim().toLowerCase()
       const { data, error: signInError } = await auth.auth.signInWithPassword({
-        email,
+        email: cleanEmail,
         password
       })
       if (signInError) throw signInError
@@ -475,6 +490,11 @@ function App() {
       }
 
       rememberAuthMethod("Email password")
+      const guarded = await beginSignInVerificationIfNeeded(auth, signedInSession, cleanEmail)
+      if (guarded) {
+        setAuthChecking(false)
+        return
+      }
       setAuthChecking(false)
       applySession(signedInSession, "default")
       markPasswordReadyInBackground(auth, signedInUser || signedInSession.user, setAuthUser)
@@ -483,8 +503,82 @@ function App() {
       setError(passwordLoginErrorMessage(authError))
       setStatus(authStatusMessage(authError))
     } finally {
+      if (authEventGuardRef.current === "password-login") {
+        authEventGuardRef.current = ""
+      }
       setAuthLoading("")
     }
+  }
+
+  async function beginSignInVerificationIfNeeded(auth, signedInSession, preferredEmail = "") {
+    const requiresVerification = await shouldRequireSignInVerification(auth, signedInSession)
+    if (!requiresVerification) return false
+    await auth.auth.reauthenticate()
+    const challengeEmail = preferredEmail || getUserEmail(null, signedInSession?.user).toLowerCase()
+    setAuthSession(null)
+    setAuthUser(null)
+    setPassword("")
+    setPasswordConfirm("")
+    setPendingSignInVerificationEmail(challengeEmail)
+    setSignInVerificationCode("")
+    setAuthMode("sign-in")
+    navigateToPage("home", { replace: true, hash: "#sign-in" })
+    setAuthNotice("Enter the verification code from your email.")
+    setStatus("Verification code sent.")
+    return true
+  }
+
+  async function handleVerifySignInCode(event) {
+    event.preventDefault()
+    setError("")
+    setAuthNotice("")
+    const cleanCode = signInVerificationCode.replace(/\s+/g, "")
+    if (!pendingSignInVerificationEmail) {
+      setError("Sign in again so Memact can send a fresh verification code.")
+      return
+    }
+    if (!/^[0-9A-Za-z]{6,10}$/.test(cleanCode)) {
+      setError("Enter the verification code from your email.")
+      return
+    }
+    setAuthLoading("verify-signin")
+    setStatus("Verifying sign in.")
+    authEventGuardRef.current = "signin-code"
+    try {
+      const auth = requireSupabase()
+      const { data: userData, error: userError } = await auth.auth.getUser()
+      if (userError) throw userError
+      const { error: updateError } = await auth.auth.updateUser({
+        data: {
+          ...(userData?.user?.user_metadata || {}),
+          memact_last_reauth_at: new Date().toISOString()
+        },
+        nonce: cleanCode
+      })
+      if (updateError) throw updateError
+      const { data: sessionData, error: sessionError } = await auth.auth.getSession()
+      if (sessionError) throw sessionError
+      const verifiedSession = sessionData?.session || null
+      if (!verifiedSession) throw new Error("Verification finished, but Memact did not receive a browser session.")
+      setPendingSignInVerificationEmail("")
+      setSignInVerificationCode("")
+      setAuthChecking(false)
+      applySession(verifiedSession, "default")
+      setStatus("Signed in.")
+    } catch (verifyError) {
+      setError(formatAuthErrorMessage(verifyError, "Verification code did not work. Check the latest email and try again."))
+      setStatus(authStatusMessage(verifyError))
+    } finally {
+      authEventGuardRef.current = ""
+      setAuthLoading("")
+    }
+  }
+
+  function clearPendingSignInVerification() {
+    setPendingSignInVerificationEmail("")
+    setSignInVerificationCode("")
+    setPassword("")
+    setAuthNotice("")
   }
 
   async function handleVerifySignupCode(event) {
@@ -523,6 +617,21 @@ function App() {
     setPendingVerificationEmail("")
     setVerificationCode("")
     setAuthNotice("")
+  }
+
+  async function shouldRequireSignInVerification(auth, signedInSession) {
+    if (!SIGNIN_RISK_FUNCTION_NAME || !signedInSession) return false
+    try {
+      const { data, error: riskError } = await auth.functions.invoke(SIGNIN_RISK_FUNCTION_NAME, {
+        body: {
+          event: "password_sign_in"
+        }
+      })
+      if (riskError) return false
+      return Boolean(data?.requires_verification || data?.requiresVerification || data?.ip_changed || data?.ipChanged)
+    } catch {
+      return false
+    }
   }
 
   async function handleForgotPassword() {
@@ -1015,6 +1124,8 @@ function App() {
     setAuthMode("sign-up")
     setPendingVerificationEmail("")
     setVerificationCode("")
+    setPendingSignInVerificationEmail("")
+    setSignInVerificationCode("")
     setStatus("Signed out.")
     navigateToPage("home", { replace: true })
   }
@@ -1171,6 +1282,8 @@ function App() {
           passwordConfirm={passwordConfirm}
           pendingVerificationEmail={pendingVerificationEmail}
           verificationCode={verificationCode}
+          pendingSignInVerificationEmail={pendingSignInVerificationEmail}
+          signInVerificationCode={signInVerificationCode}
           passwordState={signupPasswordState}
           authMode={authMode}
           authLoading={authLoading}
@@ -1180,14 +1293,17 @@ function App() {
           setPassword={setPassword}
           setPasswordConfirm={setPasswordConfirm}
           setVerificationCode={setVerificationCode}
+          setSignInVerificationCode={setSignInVerificationCode}
           setAuthMode={setLandingAuthMode}
           onEmailSignup={handleEmailSignup}
           onVerifySignupCode={handleVerifySignupCode}
+          onVerifySignInCode={handleVerifySignInCode}
           onEmailLogin={handleEmailLogin}
           onPasswordLogin={handlePasswordLogin}
           onForgotPassword={handleForgotPassword}
           onResendConfirmation={handleResendConfirmation}
           onClearPendingVerification={clearPendingVerification}
+          onClearPendingSignInVerification={clearPendingSignInVerification}
           onGithubLogin={handleGithubLogin}
           onLearnMore={() => { window.location.href = "/learn/" }}
         />
