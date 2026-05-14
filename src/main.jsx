@@ -22,6 +22,7 @@ import { getDisplayName } from "./user-display.js"
 const AUTH_INIT_TIMEOUT_MS = 12000
 const AUTH_CODE_EXCHANGE_TIMEOUT_MS = 9000
 const AUTH_SESSION_CHECK_TIMEOUT_MS = 9000
+const LAST_AUTH_METHOD_KEY = "memact.lastAuthMethod"
 
 function App() {
   const client = useMemo(() => new AccessClient(ACCESS_URL), [])
@@ -39,6 +40,7 @@ function App() {
   const [authNotice, setAuthNotice] = useState("")
   const [authFlow, setAuthFlow] = useState(() => detectAuthFlowFromUrl())
   const [authMode, setAuthMode] = useState(() => authModeFromLocation())
+  const [lastAuthMethod, setLastAuthMethod] = useState(() => readLastAuthMethod())
   const [dashboard, dashboardActions] = useDashboardState()
   const [policy, setPolicy] = useState(null)
   const [newAppName, setNewAppName] = useState("")
@@ -113,6 +115,30 @@ function App() {
     }
   }
 
+  function rememberAuthMethod(method) {
+    setLastAuthMethod(method)
+    writeLastAuthMethod(method)
+  }
+
+  async function finishEmailVerification(nextSession) {
+    if (nextSession) {
+      try {
+        await requireSupabase().auth.signOut()
+      } catch {
+        // The verification is already complete; a local sign-out failure should not block the handoff.
+      }
+    }
+    setAuthSession(null)
+    setAuthUser(null)
+    setAuthFlow("default")
+    setAuthMode("sign-in")
+    setPassword("")
+    setPasswordConfirm("")
+    setAuthNotice("Email verified. Sign in with your email and password.")
+    setStatus("Email verified.")
+    navigateToPage("home", { replace: true, hash: "#sign-in" })
+  }
+
   useEffect(() => {
     client.health()
       .then(() => setStatus(ACCESS_MODE === "supabase" ? "Access is running through Supabase." : "Memact is online."))
@@ -152,16 +178,21 @@ function App() {
       }, AUTH_INIT_TIMEOUT_MS)
 
       resolveInitialSession(supabase)
-        .then(({ data, error }) => {
+        .then(async ({ data, error }) => {
           if (!mounted) return
           if (error) {
             setError(error.message)
           }
           const nextSession = data?.session || null
+          const detectedFlow = detectAuthFlowFromUrl()
+          if (detectedFlow === "verified") {
+            await finishEmailVerification(nextSession)
+            return
+          }
           if (!nextSession && isProtectedPage(pageFromLocation())) {
             setAuthNotice("Sign-in did not finish in this browser. Try GitHub again from this page.")
           }
-          applySession(nextSession, detectAuthFlowFromUrl())
+          applySession(nextSession, detectedFlow)
         })
         .catch((sessionError) => {
           if (!mounted) return
@@ -187,6 +218,10 @@ function App() {
       if (event === "PASSWORD_RECOVERY") {
         setAuthFlow("recovery")
       } else if (event === "SIGNED_IN") {
+        if (detectAuthFlowFromUrl() === "verified") {
+          finishEmailVerification(nextSession)
+          return
+        }
         setAuthFlow(detectAuthFlowFromUrl())
       } else if (event === "SIGNED_OUT") {
         setAuthFlow("default")
@@ -333,6 +368,7 @@ function App() {
         }
       })
       if (otpError) throw otpError
+      rememberAuthMethod("Email link")
       setAuthNotice("Check your email for the login link.")
       setStatus("Login link sent.")
     } catch (authError) {
@@ -365,7 +401,7 @@ function App() {
         email,
         password,
         options: {
-          emailRedirectTo: getAuthRedirectTarget(),
+          emailRedirectTo: getEmailConfirmationRedirectTarget(),
           data: {
             memact_display_name: cleanDisplayName,
             memact_display_name_updated_at: new Date().toISOString(),
@@ -379,10 +415,13 @@ function App() {
       setPasswordConfirm("")
       setSignupDisplayName("")
       if (data?.session) {
+        rememberAuthMethod("Email password")
         setAuthChecking(false)
         applySession(data.session, "default")
         setStatus("Account created.")
       } else {
+        rememberAuthMethod("Email password")
+        navigateToPage("home", { replace: true, hash: "#sign-in" })
         setAuthNotice("Check your email to confirm your Memact account.")
         setStatus("Confirmation email sent.")
       }
@@ -423,6 +462,7 @@ function App() {
         throw new Error("Login finished, but Memact did not receive a browser session. Refresh and try again.")
       }
 
+      rememberAuthMethod("Email password")
       setAuthChecking(false)
       applySession(signedInSession, "default")
       markPasswordReadyInBackground(auth, signedInUser || signedInSession.user, setAuthUser)
@@ -466,6 +506,7 @@ function App() {
     setAuthLoading("github")
     setStatus("Opening GitHub login.")
     try {
+      rememberAuthMethod("GitHub")
       const { error: oauthError } = await requireSupabase().auth.signInWithOAuth({
         provider: "github",
         options: {
@@ -476,6 +517,38 @@ function App() {
     } catch (authError) {
       setError(formatAuthErrorMessage(authError))
       setStatus(authStatusMessage(authError))
+      setAuthLoading("")
+    }
+  }
+
+  async function handleResendConfirmation() {
+    setError("")
+    setAuthNotice("")
+    if (!email.trim()) {
+      setError("Enter your email first so Memact knows where to send the confirmation email.")
+      return
+    }
+    setAuthLoading("resend-confirmation")
+    setStatus("Sending confirmation email.")
+    try {
+      const auth = requireSupabase()
+      if (typeof auth.auth.resend !== "function") {
+        throw new Error("Confirmation resend is not available in this Supabase client.")
+      }
+      const { error: resendError } = await auth.auth.resend({
+        type: "signup",
+        email: email.trim(),
+        options: {
+          emailRedirectTo: getEmailConfirmationRedirectTarget()
+        }
+      })
+      if (resendError) throw resendError
+      setAuthNotice("Confirmation email sent again.")
+      setStatus("Confirmation email sent.")
+    } catch (resendError) {
+      setError(formatAuthErrorMessage(resendError, "Could not resend the confirmation email."))
+      setStatus(authStatusMessage(resendError))
+    } finally {
       setAuthLoading("")
     }
   }
@@ -882,6 +955,12 @@ function App() {
           </div>
         </div>
       ) : null}
+      {authNotice ? (
+        <div className={error ? "notice notice-success success-overlay has-error" : "notice notice-success success-overlay"} role="status">
+          <span>{authNotice}</span>
+          <button type="button" className="error-dismiss" onClick={() => setAuthNotice("")} aria-label="Dismiss notice">x</button>
+        </div>
+      ) : null}
       {authChecking && !showAuth ? <p className="status-line">Checking login.</p> : null}
 
       {currentPage === "help" ? (
@@ -995,7 +1074,7 @@ function App() {
           passwordState={signupPasswordState}
           authMode={authMode}
           authLoading={authLoading}
-          authNotice={authNotice}
+          lastAuthMethod={lastAuthMethod}
           setEmail={setEmail}
           setSignupDisplayName={setSignupDisplayName}
           setPassword={setPassword}
@@ -1005,6 +1084,7 @@ function App() {
           onEmailLogin={handleEmailLogin}
           onPasswordLogin={handlePasswordLogin}
           onForgotPassword={handleForgotPassword}
+          onResendConfirmation={handleResendConfirmation}
           onGithubLogin={handleGithubLogin}
           onLearnMore={() => { window.location.href = "/learn/" }}
         />
@@ -1090,7 +1170,9 @@ function shouldOpenAccountTab(user, isRecoveryFlow) {
 
 function detectAuthFlowFromUrl() {
   if (typeof window === "undefined") return "default"
+  const path = window.location.pathname.toLowerCase()
   const query = `${window.location.search || ""}${window.location.hash || ""}`.toLowerCase()
+  if (path === "/auth/confirm" || query.includes("type=signup")) return "verified"
   if (query.includes("type=recovery")) return "recovery"
   return "default"
 }
@@ -1103,15 +1185,34 @@ function authModeFromLocation() {
 function shouldCheckSessionOnLoad() {
   if (typeof window === "undefined") return false
   const page = pageFromLocation(window.location)
+  const path = window.location.pathname.toLowerCase()
   const authPayload = `${window.location.search || ""}${window.location.hash || ""}`.toLowerCase()
   return isProtectedPage(page) ||
+    path === "/auth/confirm" ||
     authPayload.includes("code=") ||
+    authPayload.includes("token_hash=") ||
     authPayload.includes("access_token=") ||
+    authPayload.includes("type=signup") ||
     authPayload.includes("type=recovery") ||
     authPayload.includes("type=magiclink")
 }
 
 async function resolveInitialSession(authClient) {
+  const tokenHash = getAuthTokenHashFromUrl()
+  if (tokenHash && typeof authClient?.auth?.verifyOtp === "function") {
+    try {
+      const verified = await withAuthTimeout(authClient.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: getAuthEmailTypeFromUrl()
+      }), AUTH_CODE_EXCHANGE_TIMEOUT_MS)
+      if (verified?.data?.session || verified?.error) {
+        return verified
+      }
+    } catch (verifyError) {
+      return { data: { session: null }, error: verifyError }
+    }
+  }
+
   const authCode = getAuthCodeFromUrl()
   if (authCode && typeof authClient?.auth?.exchangeCodeForSession === "function") {
     try {
@@ -1132,6 +1233,21 @@ async function resolveInitialSession(authClient) {
 function getAuthCodeFromUrl() {
   if (typeof window === "undefined") return ""
   return new URLSearchParams(window.location.search || "").get("code") || ""
+}
+
+function getAuthTokenHashFromUrl() {
+  if (typeof window === "undefined") return ""
+  const hashParams = new URLSearchParams(String(window.location.hash || "").replace(/^#/, ""))
+  return new URLSearchParams(window.location.search || "").get("token_hash") || hashParams.get("token_hash") || ""
+}
+
+function getAuthEmailTypeFromUrl() {
+  if (typeof window === "undefined") return "signup"
+  const searchParams = new URLSearchParams(window.location.search || "")
+  const hashParams = new URLSearchParams(String(window.location.hash || "").replace(/^#/, ""))
+  const requestedType = String(searchParams.get("type") || hashParams.get("type") || "signup").toLowerCase()
+  const allowedTypes = new Set(["signup", "magiclink", "recovery", "invite", "email_change", "email"])
+  return allowedTypes.has(requestedType) ? requestedType : "signup"
 }
 
 function withAuthTimeout(promise, timeoutMs) {
@@ -1191,6 +1307,28 @@ function getAuthRedirectTarget() {
     return window.location.href
   }
   return getAuthRedirectUrl(routeForPage("access"))
+}
+
+function getEmailConfirmationRedirectTarget() {
+  return getAuthRedirectUrl("/auth/confirm")
+}
+
+function readLastAuthMethod() {
+  if (typeof window === "undefined") return ""
+  try {
+    return window.localStorage.getItem(LAST_AUTH_METHOD_KEY) || ""
+  } catch {
+    return ""
+  }
+}
+
+function writeLastAuthMethod(method) {
+  if (typeof window === "undefined") return
+  try {
+    window.localStorage.setItem(LAST_AUTH_METHOD_KEY, method)
+  } catch {
+    // Last-used hints are optional; blocked storage should not affect auth.
+  }
 }
 
 function buildConnectRedirect(redirectUri, values) {

@@ -134,7 +134,16 @@
       }
 
       .back-button {
-        padding-inline: 12px 16px;
+        width: 46px;
+        min-height: 46px;
+        padding: 0;
+        border-radius: 999px;
+      }
+
+      .back-button .faq-chevron {
+        width: 36px;
+        height: 36px;
+        transform: rotate(90deg);
       }
 
       .faq-chevron {
@@ -328,12 +337,6 @@
         padding-left: 24px;
       }
 
-      footer {
-        margin-top: 24px;
-        color: var(--soft);
-        font-size: 14px;
-      }
-
       @media (max-width: 720px) {
         .page { width: min(100% - 24px, 720px); }
         .topbar {
@@ -346,7 +349,9 @@
           padding: 8px 10px;
           font-size: 13px;
         }
-        .button[href*="github"] { display: none; }
+        .back-button {
+          padding: 0;
+        }
         .faq-chevron {
           width: 36px;
           height: 36px;
@@ -373,8 +378,7 @@
       <header class="topbar">
         <a href="/" aria-label="Go to Memact"><img class="logo" src="/logo.png" alt="Memact" /></a>
         <nav class="nav" aria-label="Public navigation">
-          <a class="button back-button" href="/"><span class="faq-chevron back-chevron" aria-hidden="true">v</span><span>Back to Memact</span></a>
-          <a class="button" href="https://github.com/Memact" rel="noreferrer">GitHub</a>
+          <a class="button back-button" href="/" aria-label="Back to Memact"><span class="faq-chevron" aria-hidden="true">v</span></a>
         </nav>
       </header>
 
@@ -454,9 +458,6 @@
         </div>
       </section>
 
-      <footer>
-        <p>Memact is source-available. This page explains the public concept; the portal handles app registration, permissions, consent, API keys, and data transparency.</p>
-      </footer>
     </main>
   </body>
 </html>

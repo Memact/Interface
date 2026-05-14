@@ -14,7 +14,7 @@ export function Landing({
   passwordState,
   authMode,
   authLoading,
-  authNotice,
+  lastAuthMethod,
   setEmail,
   setSignupDisplayName,
   setPassword,
@@ -24,6 +24,7 @@ export function Landing({
   onEmailLogin,
   onPasswordLogin,
   onForgotPassword,
+  onResendConfirmation,
   onGithubLogin,
   onLearnMore
 }) {
@@ -119,7 +120,7 @@ export function Landing({
                 <span className={signupStep === "password" ? "is-active" : ""} />
               </div>
             ) : null}
-            {authNotice ? <p className="notice notice-success" role="status">{authNotice}</p> : null}
+            {isSignIn && lastAuthMethod ? <p className="last-auth-chip">Last used: {lastAuthMethod}</p> : null}
             <form className="form" onSubmit={isSignIn ? onPasswordLogin : handleSignupSubmit}>
               {!isSignIn && signupStep === "identity" ? (
                 <label>
@@ -169,6 +170,9 @@ export function Landing({
                 <>
                   <button type="button" className="text-button" disabled={authLoading === "forgot-password"} onClick={onForgotPassword}>
                     {authLoading === "forgot-password" ? "Sending reset link..." : "Forgot password?"}
+                  </button>
+                  <button type="button" className="text-button" disabled={authLoading === "resend-confirmation"} onClick={onResendConfirmation}>
+                    {authLoading === "resend-confirmation" ? "Sending confirmation..." : "Resend confirmation email"}
                   </button>
                   <button type="button" className="ghost" disabled={authLoading === "email"} onClick={onEmailLogin}>
                     {authLoading === "email" ? "Sending link..." : "Email me a sign-in link"}

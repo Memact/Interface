@@ -326,6 +326,26 @@ summary:focus-visible {
   background: rgba(200, 247, 212, 0.05);
 }
 
+.success-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: fixed;
+  z-index: 79;
+  top: max(14px, env(safe-area-inset-top));
+  left: 50%;
+  width: min(680px, calc(100% - 28px));
+  margin: 0;
+  transform: translateX(-50%);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(18px);
+}
+
+.success-overlay.has-error {
+  top: calc(max(14px, env(safe-area-inset-top)) + 68px);
+}
+
 .inline-retry {
   min-height: 36px;
   margin-left: 8px;
@@ -445,6 +465,19 @@ p { margin-top: 0; }
 .auth-progress span.is-active {
   border-color: rgba(255, 255, 255, 0.26);
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(180, 226, 255, 0.72));
+}
+
+.last-auth-chip {
+  display: inline-flex;
+  width: fit-content;
+  margin: 0 0 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 13px;
+  font-weight: 750;
 }
 
 .auth-panel form > button[type="submit"] {
