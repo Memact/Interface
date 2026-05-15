@@ -59,6 +59,10 @@
         --soft: rgba(255, 255, 255, 0.42);
         --radius-md: 14px;
         --radius-lg: 18px;
+        --page-inline: clamp(24px, 5vw, 40px);
+        --topbar-top: max(18px, env(safe-area-inset-top));
+        --topbar-height: 74px;
+        --topbar-gap: 12px;
         color: var(--text);
         background: var(--bg);
         font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
@@ -89,15 +93,13 @@
       .page {
         width: min(1240px, calc(100% - 32px));
         margin: 0 auto;
-        padding: max(104px, calc(104px + env(safe-area-inset-top))) 0 56px;
+        padding: var(--topbar-top) 0 56px;
       }
 
       .topbar {
-        position: fixed;
-        top: max(18px, env(safe-area-inset-top));
-        left: 50%;
-        width: min(1240px, calc(100% - 32px));
-        transform: translateX(-50%);
+        position: sticky;
+        top: var(--topbar-top);
+        min-height: var(--topbar-height);
         z-index: 20;
         display: grid;
         grid-template-columns: auto minmax(0, 1fr);
@@ -106,7 +108,7 @@
         border: 1px solid var(--border);
         border-radius: 18px;
         margin-bottom: 20px;
-        padding: 14px clamp(24px, 5vw, 40px);
+        padding: 14px var(--page-inline);
         background: rgba(0, 1, 27, 0.98);
         backdrop-filter: blur(18px);
       }
@@ -377,15 +379,17 @@
 
       @media (max-width: 720px) {
         .page {
+          --page-inline: 32px;
+          --topbar-top: max(10px, env(safe-area-inset-top));
+          --topbar-height: 74px;
+          --topbar-gap: 14px;
           width: min(100% - 24px, 720px);
-          padding-top: max(92px, calc(92px + env(safe-area-inset-top)));
         }
         .topbar {
           grid-template-columns: auto minmax(0, 1fr);
-          width: min(100% - 24px, 720px);
-          top: max(10px, env(safe-area-inset-top));
+          top: var(--topbar-top);
           align-items: center;
-          padding: 10px 22px 11px;
+          padding: 10px var(--page-inline) 11px;
         }
         .logo { width: 136px; }
         .button {
