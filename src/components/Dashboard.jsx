@@ -291,7 +291,7 @@ export function Dashboard({
               <div>
                 <p className="eyebrow">Invite</p>
                 <h2>Invite someone to Memact.</h2>
-                <p className="muted">Send a Memact-native account invitation using your Supabase invite email template.</p>
+                <p className="muted">Send an email invitation so they can create their own Memact account and manage their apps.</p>
               </div>
               {inviteSuccess ? <p className="notice notice-success" role="status">{inviteSuccess}</p> : null}
               <form className="form compact-form" onSubmit={onInviteUser}>
