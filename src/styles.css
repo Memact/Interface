@@ -207,7 +207,10 @@ summary:focus-visible {
   gap: 16px;
   margin: 0 0 16px;
   padding: 12px var(--page-inline);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   background: var(--bg);
+  transition: top 150ms ease, border-color 150ms ease, border-radius 150ms ease;
 }
 
 .logo-link {

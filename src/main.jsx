@@ -29,6 +29,17 @@ const SIGNIN_RISK_FUNCTION_NAME = import.meta.env.VITE_SUPABASE_SIGNIN_RISK_FUNC
 function App() {
   const client = useMemo(() => new AccessClient(ACCESS_URL), [])
   const initialPage = pageFromLocation()
+
+  useEffect(() => {
+    const updateTopbar = () => {
+      const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topbar-gap")) || 12
+      document.documentElement.style.setProperty("--topbar-top", window.scrollY > 2 ? "0px" : `${gap}px`)
+    }
+    updateTopbar()
+    window.addEventListener("scroll", updateTopbar, { passive: true })
+    return () => window.removeEventListener("scroll", updateTopbar)
+  }, [])
+
   const [authSession, setAuthSession] = useState(null)
   const [authUser, setAuthUser] = useState(null)
   const [authChecking, setAuthChecking] = useState(true)

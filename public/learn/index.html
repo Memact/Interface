@@ -561,5 +561,14 @@
       </section>
 
     </main>
+    <script>
+      (function() {
+        var gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topbar-gap")) || 12;
+        document.documentElement.style.setProperty("--topbar-top", gap + "px");
+        window.addEventListener("scroll", function() {
+          document.documentElement.style.setProperty("--topbar-top", window.scrollY > 2 ? "0px" : gap + "px");
+        }, { passive: true });
+      })();
+    </script>
   </body>
 </html>
