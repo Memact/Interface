@@ -7,7 +7,8 @@ import {
   defaultScopesForPolicy,
   normalizeSelectedCategories,
   normalizeSelectedScopes,
-  permissionSuggestionForCategories
+  permissionSuggestionForCategories,
+  presetSuggestionsForPolicy
 } from "../access-policy.js"
 
 test("defaultScopesForPolicy keeps existing defaults when policy is unavailable", () => {
@@ -105,4 +106,36 @@ test("permissionSuggestionForCategories creates category-specific selected scope
   assert.ok(suggestion.scopes.includes("capture:webpage"))
   assert.ok(suggestion.scopes.includes("capture:media"))
   assert.ok(suggestion.scopes.includes("memory:write"))
+})
+
+test("presetSuggestionsForPolicy creates clickable generated presets", () => {
+  const policy = {
+    scopes: {
+      "capture:webpage": {},
+      "schema:write": {},
+      "graph:write": {},
+      "memory:write": {},
+      "memory:read_summary": {},
+      "memory:read_evidence": {}
+    },
+    activity_categories: {
+      "web:news": {}
+    },
+    category_permission_matrix: {
+      "web:news": {
+        "capture:webpage": "recommended",
+        "schema:write": "recommended",
+        "graph:write": "recommended",
+        "memory:write": "recommended",
+        "memory:read_summary": "recommended",
+        "memory:read_evidence": "allowed"
+      }
+    }
+  }
+
+  const presets = presetSuggestionsForPolicy(policy, ["web:news"], "explain article sources")
+
+  assert.ok(presets.length >= 2)
+  assert.equal(presets[0].label, "Article understanding preset")
+  assert.ok(presets[0].scopes.includes("memory:read_evidence"))
 })

@@ -53,7 +53,7 @@ function App() {
   const [newAppDescription, setNewAppDescription] = useState("")
   const [newAppDeveloperUrl, setNewAppDeveloperUrl] = useState("")
   const [newAppRedirectUrl, setNewAppRedirectUrl] = useState("")
-  const [newAppCategories, setNewAppCategories] = useState(() => defaultCategoriesForPolicy(null))
+  const [newAppCategories, setNewAppCategories] = useState([])
   const [selectedAppId, setSelectedAppId] = useState("")
   const [selectedScopes, setSelectedScopes] = useState(() => defaultScopesForPolicy(null))
   const [oneTimeKey, setOneTimeKey] = useState("")
@@ -109,12 +109,17 @@ function App() {
     const page = pageFromLocation()
 
     if (nextSession && isConnectPage(page)) {
+      setError("")
+      setAuthNotice("")
       setCurrentPage("connect")
       setActiveTab("connect")
       return
     }
 
     if (nextSession) {
+      setError("")
+      setAuthNotice("")
+      setAuthChecking(false)
       navigateToPage(shouldOpenAccountTab(nextSession.user, detectedFlow === "recovery") ? "account" : "access", { replace: true })
       return
     }
@@ -193,7 +198,9 @@ function App() {
         .then(async ({ data, error }) => {
           if (!mounted) return
           if (error) {
-            setError(error.message)
+            if (!data?.session) {
+              setError(error.message)
+            }
           }
           const nextSession = data?.session || null
           const detectedFlow = detectAuthFlowFromUrl()
@@ -331,7 +338,7 @@ function App() {
   }, [client, currentPage, session])
 
   useEffect(() => {
-    setNewAppCategories(defaultCategoriesForPolicy(policy))
+    setNewAppCategories([])
   }, [policy])
 
   useEffect(() => {
@@ -875,6 +882,11 @@ function App() {
       scrollElementIntoView("error-message")
       return
     }
+    if (!normalizeSelectedCategories(newAppCategories, policy).length) {
+      setError("Choose at least one activity category before creating the app.")
+      scrollElementIntoView("error-message")
+      return
+    }
     try {
       const developerUrl = normalizeOptionalHttpUrl(newAppDeveloperUrl, "Developer website")
       const redirectUrl = normalizeOptionalHttpUrl(newAppRedirectUrl, "Connect redirect URL")
@@ -892,7 +904,7 @@ function App() {
       setNewAppDescription("")
       setNewAppDeveloperUrl("")
       setNewAppRedirectUrl("")
-      setNewAppCategories(defaultCategoriesForPolicy(policy))
+      setNewAppCategories([])
       setOneTimeKey("")
       setOneTimeKeyId("")
       setOneTimeKeyScopes([])

@@ -4,7 +4,7 @@ Version: `v0.0`
 
 Website is the Memact web UI for users and developers.
 
-Memact helps apps understand what users are trying to do from approved activity
+Memact helps apps understand users' digital activity from approved activity
 and memory while users choose what each app is allowed to know.
 
 ```text
@@ -28,8 +28,8 @@ Website does not capture activity, infer intent, or read memory graphs directly.
 
 ## Product Definition
 
-Memact turns approved digital activity into useful context: what users are
-trying to do, what patterns matter, and what memory is safe to reuse for a
+Memact turns approved digital activity into useful context: what users do,
+what patterns matter, and what memory is safe to reuse for a
 specific app.
 
 Website is not the memory engine. It is the account, app, permission, consent, and API key console.

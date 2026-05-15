@@ -288,7 +288,7 @@ export class SupabaseAccessClient {
 
     let appQuery = this.supabase
       .from("memact_apps")
-      .select("id, owner_user_id, default_scopes, default_categories, revoked_at")
+      .select("id, owner_user_id, description, name, default_scopes, default_categories, revoked_at")
       .eq("id", body?.app_id)
       .is("revoked_at", null)
     if (requireOwner) {
@@ -454,6 +454,12 @@ export class SupabaseAccessClient {
       key: { id: key.id, key_prefix: key.key_prefix, scopes: keyScopes },
       scopes: effectiveScopes,
       categories: effectiveCategories,
+      compiled_policy: buildBrowserCompiledPolicy({
+        appId: app.id,
+        scopes: effectiveScopes,
+        categories: effectiveCategories,
+        purpose: app.description || app.name || ""
+      }),
       understanding_strategy: buildBrowserUnderstandingStrategy(effectiveScopes, effectiveCategories),
       missing_scopes: [],
       missing_categories: []
@@ -551,7 +557,7 @@ function buildBrowserUnderstandingStrategy(scopes = [], categories = []) {
   return {
     id: `browser_understanding_${categories.join("_").replace(/[^a-z0-9_]/gi, "") || "default"}`,
     product: "permissioned_understanding",
-    tagline: "Understand what users are trying to do.",
+    tagline: "Understand users' digital activity.",
     scopes,
     categories,
     capture_plan: {
@@ -566,6 +572,26 @@ function buildBrowserUnderstandingStrategy(scopes = [], categories = []) {
       summaries: scopes.includes("memory:read_summary"),
       evidence_cards: scopes.includes("memory:read_evidence"),
       graph_objects: scopes.includes("memory:read_graph")
+    }
+  }
+}
+
+function buildBrowserCompiledPolicy({ appId = "", scopes = [], categories = [], purpose = "" } = {}) {
+  return {
+    id: `browser_policy_${String(appId || "new").replace(/[^a-z0-9]/gi, "").slice(0, 18)}_${categories.join("_").replace(/[^a-z0-9_]/gi, "") || "default"}`,
+    app_id: appId,
+    product: "permissioned_understanding",
+    tagline: "Understand users' digital activity.",
+    purpose: String(purpose || "").trim().slice(0, 240),
+    scopes,
+    categories,
+    strategy: buildBrowserUnderstandingStrategy(scopes, categories),
+    warnings: scopes.includes("memory:read_graph") || scopes.includes("capture:device")
+      ? ["This policy includes sensitive permissions. Explain why users need them."]
+      : [],
+    storage: {
+      default: { id: "local-first-memory", label: "Local-first memory" },
+      future_user_cloud: { id: "user-owned-cloud-memory", label: "User-owned cloud memory", status: "planned", purpose: "cross-platform sync to user-owned storage" }
     }
   }
 }

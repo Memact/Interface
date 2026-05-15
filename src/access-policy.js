@@ -34,7 +34,25 @@ export function suggestedScopesForCategories(policy, categories = []) {
   const availableScopes = availablePolicyScopes(policy)
   const allowed = new Set(availableScopes.length ? availableScopes : DEFAULT_SCOPES)
   const selectedCategories = new Set(Array.isArray(categories) ? categories : [])
-  const suggested = new Set(["capture:webpage", "schema:write", "memory:read_summary"])
+  const matrix = policy?.category_permission_matrix || {}
+  const suggested = new Set()
+
+  for (const category of selectedCategories) {
+    const row = matrix[category] || {}
+    for (const [scope, status] of Object.entries(row)) {
+      if (status === "recommended") suggested.add(scope)
+    }
+  }
+
+  if (suggested.size) {
+    return [...suggested].filter((scope) => allowed.has(scope))
+  }
+
+  if (selectedCategories.size) {
+    suggested.add("capture:webpage")
+    suggested.add("schema:write")
+    suggested.add("memory:read_summary")
+  }
 
   if (selectedCategories.has("web:news") || selectedCategories.has("web:social") || selectedCategories.has("web:research")) {
     suggested.add("graph:write")
@@ -62,6 +80,39 @@ export function permissionSuggestionForCategories(policy, categories = []) {
     scopes: normalizeSelectedScopes(scopes, policy),
     categories: selectedCategories
   }
+}
+
+export function presetSuggestionsForPolicy(policy, categories = [], appPurpose = "") {
+  const selectedCategories = normalizeSelectedCategories(categories, policy)
+  const primary = permissionSuggestionForCategories(policy, selectedCategories)
+  const leanScopes = normalizeSelectedScopes(["capture:webpage", selectedCategories.some((category) => category.startsWith("media:")) ? "capture:media" : "", "schema:write", "memory:read_summary"], policy)
+  const explainableScopes = normalizeSelectedScopes([...primary.scopes, "memory:read_evidence"], policy)
+  const purpose = String(appPurpose || "").toLowerCase()
+  const purposeBoostedScopes = /debug|audit|source|citation|evidence|explain|why/.test(purpose)
+    ? explainableScopes
+    : primary.scopes
+
+  return [
+    {
+      ...primary,
+      label: selectedCategories.includes("web:news") ? "Article understanding preset" : primary.label,
+      scopes: purposeBoostedScopes
+    },
+    {
+      id: `lean-${leanScopes.join("-")}`,
+      label: "Lean summary preset",
+      description: "Smallest useful set for compact context.",
+      scopes: leanScopes,
+      categories: selectedCategories
+    },
+    {
+      id: `explain-${explainableScopes.join("-")}`,
+      label: "Explainable preset",
+      description: "Adds evidence cards so users can see why Memact inferred something.",
+      scopes: explainableScopes,
+      categories: selectedCategories
+    }
+  ].filter((preset, index, presets) => preset.scopes.length && presets.findIndex((item) => item.scopes.join("|") === preset.scopes.join("|")) === index)
 }
 
 export function defaultCategoriesForPolicy(policy) {
