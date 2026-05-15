@@ -321,7 +321,7 @@ summary:focus-visible {
   transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
 }
 
-.error-dismiss:hover {
+button.error-dismiss:hover:not(:disabled) {
   border-color: rgba(255, 255, 255, 0.36);
   background: var(--surface-3);
   color: var(--text);
@@ -2083,13 +2083,24 @@ input:-webkit-autofill:focus {
 }
 
 .presets-section {
-  margin-top: 16px;
-  border-top: 1px solid var(--border);
-  padding-top: 16px;
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.015);
+  display: grid;
+  gap: 12px;
 }
 
 .presets-label {
-  margin: 0 0 10px;
+  margin: 0;
+}
+
+.presets-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .presets-inline {
@@ -2099,6 +2110,10 @@ input:-webkit-autofill:focus {
 }
 
 @media (max-width: 900px) {
+  .presets-section {
+    padding: 12px;
+  }
+
   .presets-inline {
     grid-template-columns: 1fr;
   }
