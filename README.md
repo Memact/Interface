@@ -1,7 +1,5 @@
 # Memact Website
 
-Version: `v0.0`
-
 Website is the Memact web UI for users and developers.
 
 Memact helps apps understand users' digital activity from approved activity
