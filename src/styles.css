@@ -189,18 +189,25 @@ summary:focus-visible {
   padding: 16px 0 56px;
 }
 
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 16px;
-  margin: 0 0 16px;
-  padding: 12px 0;
-  background: var(--bg);
-}
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    border: 1px solid var(--border);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    padding: 8px 10px 9px;
+    margin: 0;
+    background: rgba(0, 1, 27, 0.98);
+    backdrop-filter: blur(18px);
+  }
+
+  .page {
+    padding-top: max(90px, calc(14px + env(safe-area-inset-top)));
+  }
 
 .logo-link {
   display: inline-flex;
@@ -686,6 +693,9 @@ p { margin-top: 0; }
 
 .settings-details {
   width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
 }
 
 .settings-trigger {
@@ -727,11 +737,6 @@ p { margin-top: 0; }
   font-size: 15px;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.settings-details[open] {
-  border-color: rgba(255, 255, 255, 0.18);
-  background: var(--surface-2);
 }
 
 .settings-menu {
@@ -1679,21 +1684,28 @@ input:-webkit-autofill:focus {
   }
 
   .topbar {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 20;
     grid-template-columns: 1fr;
     gap: 10px;
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     padding: 8px 10px 9px;
-    margin-bottom: 12px;
-    background: rgba(0, 1, 27, 0.96);
+    margin: 0;
+    background: rgba(0, 1, 27, 0.98);
     backdrop-filter: blur(18px);
+  }
+
+  .page {
+    padding-top: max(90px, calc(14px + env(safe-area-inset-top)));
   }
 
   .logo-link {
     justify-self: start;
+    padding-left: 2px;
   }
 
   .page-auth .topbar {
@@ -1718,6 +1730,7 @@ input:-webkit-autofill:focus {
     margin-inline: -12px;
     padding: 1px 12px 8px;
     -webkit-overflow-scrolling: touch;
+    justify-content: center;
   }
 
   .tab {
@@ -2115,6 +2128,7 @@ input:-webkit-autofill:focus {
   .presets-inline .permission-suggestion-chip {
     width: 100%;
     justify-items: start;
+    align-items: start;
     text-align: left;
   }
 
@@ -2122,5 +2136,6 @@ input:-webkit-autofill:focus {
   .presets-inline .permission-suggestion-chip strong {
     justify-self: start;
     text-align: left;
+    width: 100%;
   }
 }

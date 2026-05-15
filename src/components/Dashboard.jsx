@@ -503,7 +503,7 @@ export function Dashboard({
                         <span className="badge badge-success">active</span>
                         <button type="button" className="ghost" onClick={() => onRevokeKey(key.id)}>Revoke</button>
                       </div>
-                    )) : <p className="muted">No active API keys for this app.</p>}
+                    )) : null}
 
                     {revokedKeys.length ? (
                       <details className="revoked-history">
