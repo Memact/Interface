@@ -456,7 +456,7 @@ export function Dashboard({
               {presetSuggestions.length > 0 ? (
                 <div className="presets-section">
                   <p className="eyebrow presets-label">Quick presets</p>
-                  <p className="presets-sub">Apply a preset to match common permission patterns. Scopes update immediately — save to confirm.</p>
+                  <p className="presets-sub">Apply a preset to match common permission patterns. Scopes update immediately. Save to confirm.</p>
                   <div className="presets-inline">
                     {presetSuggestions.map((preset) => (
                       <button
