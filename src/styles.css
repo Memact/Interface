@@ -14,8 +14,8 @@
   --radius-md: 14px;
   --radius-lg: 18px;
   --sidebar-width: 248px;
-  --page-inline: 32px;
-  --topbar-top: 16px;
+  --page-inline: 24px;
+  --topbar-top: 0px;
   --topbar-height: 76px;
   --topbar-gap: 12px;
   color: var(--text);
@@ -219,6 +219,7 @@ summary:focus-visible {
   display: block;
   width: 132px;
   height: auto;
+  transform: translateY(-2px);
 }
 
 .tabs {
@@ -1614,7 +1615,7 @@ input:-webkit-autofill:focus {
 @media (min-width: 901px) {
   .page:not(.page-auth) {
     --page-inline: 24px;
-    --topbar-top: 16px;
+    --topbar-top: 0px;
     --topbar-height: 76px;
     --topbar-gap: 20px;
     width: min(1440px, calc(100% - 40px));
@@ -1679,8 +1680,8 @@ input:-webkit-autofill:focus {
 /* Mobile */
 @media (max-width: 900px) {
   .page {
-    --page-inline: 32px;
-    --topbar-top: max(10px, env(safe-area-inset-top));
+    --page-inline: 16px;
+    --topbar-top: 0px;
     --topbar-height: 76px;
     --topbar-gap: 14px;
     width: min(100% - 24px, 720px);
@@ -1906,7 +1907,7 @@ input:-webkit-autofill:focus {
   body { font-size: 14px; }
 
   .page {
-    --page-inline: 32px;
+    --page-inline: 16px;
     --topbar-height: 74px;
     width: min(100% - 20px, 720px);
   }
