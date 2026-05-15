@@ -196,7 +196,8 @@ summary:focus-visible {
 
 .topbar {
   position: fixed;
-  top: var(--topbar-top);
+  top: 0;
+  margin-top: var(--topbar-top);
   left: 50%;
   width: min(1120px, calc(100% - 32px));
   min-height: var(--topbar-height);
@@ -210,7 +211,7 @@ summary:focus-visible {
   border: 1px solid var(--border);
   border-radius: var(--topbar-radius);
   background: var(--bg);
-  transition: top 150ms ease, border-radius 150ms ease;
+  transition: margin-top 250ms ease, border-radius 250ms ease;
 }
 
 .logo-link {
@@ -1632,7 +1633,8 @@ input:-webkit-autofill:focus {
 
   .page:not(.page-auth) .topbar {
     position: fixed;
-    top: var(--topbar-top);
+    top: 0;
+    margin-top: var(--topbar-top);
     left: 50%;
     width: min(1440px, calc(100% - 40px));
     z-index: 20;
@@ -1643,13 +1645,13 @@ input:-webkit-autofill:focus {
     align-content: center;
     align-items: center;
     gap: 16px;
-    margin: 0 0 18px;
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--topbar-radius);
     padding: 14px var(--page-inline);
     background: rgba(0, 1, 27, 0.98);
     box-shadow: 0 18px 52px rgba(0, 0, 0, 0.22);
     backdrop-filter: blur(18px);
+    transition: margin-top 250ms ease, border-radius 250ms ease;
   }
 
   .page:not(.page-auth) .tabs {
@@ -1704,7 +1706,8 @@ input:-webkit-autofill:focus {
 
   .topbar {
     position: fixed;
-    top: var(--topbar-top);
+    top: 0;
+    margin-top: var(--topbar-top);
     left: 50%;
     width: min(100% - 24px, 720px);
     min-height: var(--topbar-height);
@@ -1717,7 +1720,7 @@ input:-webkit-autofill:focus {
     padding: 10px var(--page-inline) 11px;
     background: rgba(0, 1, 27, 0.98);
     backdrop-filter: blur(18px);
-    transition: top 150ms ease, border-radius 150ms ease;
+    transition: margin-top 250ms ease, border-radius 250ms ease;
   }
 
   .logo-link {
