@@ -99,11 +99,10 @@
       .topbar {
         position: fixed;
         top: 0;
-        margin-top: var(--topbar-top);
         left: 50%;
         width: min(1440px, calc(100% - 40px));
         min-height: var(--topbar-height);
-        transform: translateX(-50%);
+        transform: translateX(-50%) translateY(var(--topbar-top));
         z-index: 20;
         display: grid;
         grid-template-columns: auto minmax(0, 1fr);
@@ -114,7 +113,8 @@
         padding: 14px var(--page-inline);
         background: rgba(0, 1, 27, 0.98);
         backdrop-filter: blur(18px);
-        transition: margin-top 250ms ease, border-radius 250ms ease;
+        will-change: transform;
+        transition: transform 250ms ease, border-radius 250ms ease;
       }
 
       .topbar > a {
@@ -393,7 +393,7 @@
         .topbar {
           grid-template-columns: auto minmax(0, 1fr);
           width: min(100% - 24px, 720px);
-          margin-top: var(--topbar-top);
+          transform: translateX(-50%) translateY(var(--topbar-top));
           align-items: center;
           padding: 10px var(--page-inline) 11px;
         }

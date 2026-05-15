@@ -197,11 +197,10 @@ summary:focus-visible {
 .topbar {
   position: fixed;
   top: 0;
-  margin-top: var(--topbar-top);
   left: 50%;
   width: min(1120px, calc(100% - 32px));
   min-height: var(--topbar-height);
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(var(--topbar-top));
   z-index: 20;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -211,7 +210,8 @@ summary:focus-visible {
   border: 1px solid var(--border);
   border-radius: var(--topbar-radius);
   background: var(--bg);
-  transition: margin-top 250ms ease, border-radius 250ms ease;
+  will-change: transform;
+  transition: transform 250ms ease, border-radius 250ms ease;
 }
 
 .logo-link {
@@ -1634,13 +1634,12 @@ input:-webkit-autofill:focus {
   .page:not(.page-auth) .topbar {
     position: fixed;
     top: 0;
-    margin-top: var(--topbar-top);
     left: 50%;
     width: min(1440px, calc(100% - 40px));
     z-index: 20;
     min-height: var(--topbar-height);
     height: auto;
-    transform: translateX(-50%);
+    transform: translateX(-50%) translateY(var(--topbar-top));
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-content: center;
     align-items: center;
@@ -1651,7 +1650,8 @@ input:-webkit-autofill:focus {
     background: rgba(0, 1, 27, 0.98);
     box-shadow: 0 18px 52px rgba(0, 0, 0, 0.22);
     backdrop-filter: blur(18px);
-    transition: margin-top 250ms ease, border-radius 250ms ease;
+    will-change: transform;
+    transition: transform 250ms ease, border-radius 250ms ease;
   }
 
   .page:not(.page-auth) .tabs {
@@ -1707,11 +1707,10 @@ input:-webkit-autofill:focus {
   .topbar {
     position: fixed;
     top: 0;
-    margin-top: var(--topbar-top);
     left: 50%;
     width: min(100% - 24px, 720px);
     min-height: var(--topbar-height);
-    transform: translateX(-50%);
+    transform: translateX(-50%) translateY(var(--topbar-top));
     z-index: 20;
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 10px;
@@ -1720,7 +1719,8 @@ input:-webkit-autofill:focus {
     padding: 10px var(--page-inline) 11px;
     background: rgba(0, 1, 27, 0.98);
     backdrop-filter: blur(18px);
-    transition: margin-top 250ms ease, border-radius 250ms ease;
+    will-change: transform;
+    transition: transform 250ms ease, border-radius 250ms ease;
   }
 
   .logo-link {
