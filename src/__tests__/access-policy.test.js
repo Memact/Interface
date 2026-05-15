@@ -6,7 +6,8 @@ import {
   defaultCategoriesForPolicy,
   defaultScopesForPolicy,
   normalizeSelectedCategories,
-  normalizeSelectedScopes
+  normalizeSelectedScopes,
+  permissionSuggestionForCategories
 } from "../access-policy.js"
 
 test("defaultScopesForPolicy keeps existing defaults when policy is unavailable", () => {
@@ -79,4 +80,29 @@ test("normalizeSelectedCategories removes duplicates and unknown categories", ()
     normalizeSelectedCategories(["web:news", "unknown", "ai:assistant", "web:news"], policy),
     ["web:news", "ai:assistant"]
   )
+})
+
+test("permissionSuggestionForCategories creates category-specific selected scopes", () => {
+  const policy = {
+    scopes: {
+      "capture:webpage": {},
+      "capture:media": {},
+      "schema:write": {},
+      "graph:write": {},
+      "memory:write": {},
+      "memory:read_summary": {},
+      "memory:read_evidence": {}
+    },
+    activity_categories: {
+      "web:news": {},
+      "media:video": {}
+    }
+  }
+
+  const suggestion = permissionSuggestionForCategories(policy, ["web:news", "media:video"])
+
+  assert.equal(suggestion.label, "Suggested for article understanding")
+  assert.ok(suggestion.scopes.includes("capture:webpage"))
+  assert.ok(suggestion.scopes.includes("capture:media"))
+  assert.ok(suggestion.scopes.includes("memory:write"))
 })

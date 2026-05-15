@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { CategoryGrid } from "./CategoryGrid.jsx"
 import { HelpPanel } from "./HelpPanel.jsx"
+import { permissionSuggestionForCategories } from "../access-policy.js"
 import { getAvatarUrl, getInitials, getUserEmail, getUserProvider } from "../user-display.js"
 
 export function Dashboard({
@@ -10,6 +11,7 @@ export function Dashboard({
   apps,
   apiKeys,
   consents,
+  policy,
   scopes,
   categories,
   selectedAppId,
@@ -72,6 +74,10 @@ export function Dashboard({
   const activeKeys = selectedKeys.filter((key) => !key.revoked_at)
   const revokedKeys = selectedKeys.filter((key) => key.revoked_at)
   const usageStats = getUsageStats(selectedApp, selectedKeys, apps)
+  const permissionSuggestion = permissionSuggestionForCategories(policy, selectedAppCategories)
+  const suggestedScopesLabel = permissionSuggestion.scopes.length
+    ? `${permissionSuggestion.scopes.length} selected`
+    : "No suggestion"
   const selectedConsent = consents.find((consent) => consent.app_id === selectedAppId && !consent.revoked_at)
   const scopesChanged = selectedConsent ? !sameValues(selectedScopes, selectedConsent.scopes) : true
   const categoriesChanged = selectedConsent ? !sameValues(selectedAppCategories, selectedConsent.categories || []) : true
@@ -418,6 +424,16 @@ export function Dashboard({
                   </p>
                 </div>
                 <div className="actions section-actions">
+                  <button
+                    type="button"
+                    className="permission-suggestion-chip"
+                    disabled={!selectedAppId || !permissionSuggestion.scopes.length}
+                    title={permissionSuggestion.description}
+                    onClick={() => setSelectedScopes(permissionSuggestion.scopes)}
+                  >
+                    <span>{permissionSuggestion.label}</span>
+                    <strong>{suggestedScopesLabel}</strong>
+                  </button>
                   <span className="tooltip-wrap" title={permissionsHint || undefined}>
                     <button type="button" className="ghost" disabled={!selectedAppId || !selectedScopes.length || !selectedAppCategories.length} onClick={onGrantConsent}>Save permissions</button>
                   </span>
@@ -645,13 +661,15 @@ if (!access?.allowed) {
 console.log("Memact access granted", {
   app: access.app?.name,
   scopes: access.scopes,
-  categories: access.categories
+  categories: access.categories,
+  understanding_strategy: access.understanding_strategy?.id
 });
 
 // 5. Use only approved understanding.
-// Evidence: keep activity signals inside the returned categories.
-// Schema: write schema packets that explain context, not raw private dumps.
-// Memory: request summaries/evidence/graph objects only if the approved scopes include them.`
+// Follow access.understanding_strategy for this exact scope + category combination.
+// Capture: use only the allowed_inputs for the approved activity categories.
+// Schema: write only the listed schema_packets.
+// Memory: request summaries/evidence/graph objects only when delivery_plan allows them.`
 }
 
 function getDeveloperVerifyUrl() {

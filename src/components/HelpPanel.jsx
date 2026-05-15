@@ -57,7 +57,8 @@ const ADVANCED_FAQS = [
           <li>After approval, Memact redirects back to your <code>redirect_uri</code> with a <code>connection_id</code>. Store that id for the signed-in user in your app.</li>
           <li>Keep the raw Memact API key in server environment config, such as <code>MEMACT_API_KEY</code> in <code>.env</code> locally and a secret manager in production. Do not ask users to paste it into UI.</li>
           <li>Your backend calls Memact's verification endpoint with <code>Authorization: Bearer process.env.MEMACT_API_KEY</code>, the stored <code>connection_id</code>, required scopes, and activity categories. If verification fails, do not request context or memory.</li>
-          <li>Use only the approved understanding: summaries, evidence snippets, graph objects, schema writes, memory objects, or status signals that match the returned scopes and categories.</li>
+          <li>Read the returned <code>understanding_strategy</code>. It tells your app which category-specific evidence Memact can use, what context it can infer, which schema packets can be formed, and whether summaries, evidence cards, or graph objects may be delivered.</li>
+          <li>Use only the approved understanding. For example, a news article app should follow the news/article strategy for claims, sources, topics, and reading intent instead of asking for a generic activity dump.</li>
         </ol>
       </>
     )
@@ -82,7 +83,7 @@ const ADVANCED_FAQS = [
     question: "What code should I embed?",
     answer: (
       <>
-        Embed only the user-facing connection pieces in the client: the Connect button, the Data Transparency link, and your callback handling. Put verification on your server. The server loads <code>process.env.MEMACT_API_KEY</code>, then sends <code>connection_id</code>, <code>required_scopes</code>, and <code>activity_categories</code> to Memact's verify endpoint. You normally do not set a verify URL; use the default Memact endpoint shown in the generated tutorial. Add <code>MEMACT_VERIFY_URL</code> only if Memact gives you a different verification host. Run your feature only when Memact returns <code>allowed: true</code>, then request only the context, memory, and understanding allowed by the returned scopes and categories.
+        Embed only the user-facing connection pieces in the client: the Connect button, the Data Transparency link, and your callback handling. Put verification on your server. The server loads <code>process.env.MEMACT_API_KEY</code>, then sends <code>connection_id</code>, <code>required_scopes</code>, and <code>activity_categories</code> to Memact's verify endpoint. You normally do not set a verify URL; use the default Memact endpoint shown in the generated tutorial. Add <code>MEMACT_VERIFY_URL</code> only if Memact gives you a different verification host. Run your feature only when Memact returns <code>allowed: true</code>, then follow the returned <code>understanding_strategy</code> so your app uses the category-specific context Memact approved for that user.
       </>
     )
   },

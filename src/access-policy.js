@@ -30,6 +30,40 @@ export function defaultScopesForPolicy(policy) {
   return policyDefaults.length ? policyDefaults : availableScopes
 }
 
+export function suggestedScopesForCategories(policy, categories = []) {
+  const availableScopes = availablePolicyScopes(policy)
+  const allowed = new Set(availableScopes.length ? availableScopes : DEFAULT_SCOPES)
+  const selectedCategories = new Set(Array.isArray(categories) ? categories : [])
+  const suggested = new Set(["capture:webpage", "schema:write", "memory:read_summary"])
+
+  if (selectedCategories.has("web:news") || selectedCategories.has("web:social") || selectedCategories.has("web:research")) {
+    suggested.add("graph:write")
+    suggested.add("memory:write")
+  }
+  if (selectedCategories.has("media:video") || selectedCategories.has("media:audio")) {
+    suggested.add("capture:media")
+  }
+  if (selectedCategories.has("dev:code") || selectedCategories.has("ai:assistant") || selectedCategories.has("work:docs")) {
+    suggested.add("memory:write")
+  }
+  if (selectedCategories.has("web:social") || selectedCategories.has("dev:code")) {
+    suggested.add("memory:read_evidence")
+  }
+
+  return [...suggested].filter((scope) => allowed.has(scope))
+}
+
+export function permissionSuggestionForCategories(policy, categories = []) {
+  const selectedCategories = normalizeSelectedCategories(categories, policy)
+  const scopes = suggestedScopesForCategories(policy, selectedCategories)
+  return {
+    label: selectedCategories.includes("web:news") ? "Suggested for article understanding" : "Suggested permissions",
+    description: "Selected from this app's activity categories. You can still adjust it.",
+    scopes: normalizeSelectedScopes(scopes, policy),
+    categories: selectedCategories
+  }
+}
+
 export function defaultCategoriesForPolicy(policy) {
   const availableCategories = availablePolicyCategories(policy)
   if (!availableCategories.length) return DEFAULT_CATEGORIES

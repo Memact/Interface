@@ -9,7 +9,7 @@ import {
 } from "./memact-access-client.js"
 import { getAuthRedirectUrl, isSupabaseConfigured, requireSupabase, supabase } from "./supabase-client.js"
 import { hasDuplicateAppName } from "./app-name.js"
-import { defaultCategoriesForPolicy, defaultScopesForPolicy, normalizeSelectedCategories, normalizeSelectedScopes } from "./access-policy.js"
+import { defaultCategoriesForPolicy, defaultScopesForPolicy, normalizeSelectedCategories, normalizeSelectedScopes, permissionSuggestionForCategories } from "./access-policy.js"
 import { ConnectPage } from "./components/ConnectPage.jsx"
 import { DataTransparencyPage } from "./components/DataTransparencyPage.jsx"
 import { Dashboard } from "./components/Dashboard.jsx"
@@ -360,7 +360,10 @@ function App() {
   useEffect(() => {
     if (!selectedAppId) return
     const appConsent = consents.find((consent) => consent.app_id === selectedAppId && !consent.revoked_at)
-    const nextScopes = appConsent?.scopes?.length ? appConsent.scopes : defaultScopesForPolicy(policy)
+    const selectedApp = apps.find((app) => app.id === selectedAppId)
+    const appCategories = selectedApp?.default_categories?.length ? selectedApp.default_categories : defaultCategoriesForPolicy(policy)
+    const suggestedScopes = permissionSuggestionForCategories(policy, appCategories).scopes
+    const nextScopes = appConsent?.scopes?.length ? appConsent.scopes : suggestedScopes.length ? suggestedScopes : defaultScopesForPolicy(policy)
     setSelectedScopes(normalizeSelectedScopes(nextScopes, policy))
   }, [apps, consents, policy, selectedAppId])
 
@@ -1215,6 +1218,7 @@ function App() {
           apps={apps}
           apiKeys={apiKeys}
           consents={consents}
+          policy={policy}
           scopes={scopes}
           categories={policy?.activity_categories || {}}
           selectedAppId={selectedAppId}

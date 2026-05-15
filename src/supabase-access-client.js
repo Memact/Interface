@@ -454,6 +454,7 @@ export class SupabaseAccessClient {
       key: { id: key.id, key_prefix: key.key_prefix, scopes: keyScopes },
       scopes: effectiveScopes,
       categories: effectiveCategories,
+      understanding_strategy: buildBrowserUnderstandingStrategy(effectiveScopes, effectiveCategories),
       missing_scopes: [],
       missing_categories: []
     }
@@ -536,6 +537,36 @@ function denied(code, message) {
     missing_scopes: [],
     missing_categories: [],
     error: { code, message }
+  }
+}
+
+function buildBrowserUnderstandingStrategy(scopes = [], categories = []) {
+  const categorySet = new Set(categories)
+  const outputs = []
+  if (categorySet.has("web:news")) outputs.push("main claim", "supporting evidence", "reading intent")
+  if (categorySet.has("web:social")) outputs.push("topics followed", "creator affinity", "community context")
+  if (categorySet.has("dev:code")) outputs.push("implementation goal", "bug context", "next debugging step")
+  if (!outputs.length) outputs.push("user goal", "topic", "context", "next action")
+
+  return {
+    id: `browser_understanding_${categories.join("_").replace(/[^a-z0-9_]/gi, "") || "default"}`,
+    product: "permissioned_understanding",
+    tagline: "Understand what users are trying to do.",
+    scopes,
+    categories,
+    capture_plan: {
+      local_only_raw_capture: true
+    },
+    understanding_plan: {
+      outputs,
+      graph_write: scopes.includes("graph:write"),
+      memory_write: scopes.includes("memory:write")
+    },
+    delivery_plan: {
+      summaries: scopes.includes("memory:read_summary"),
+      evidence_cards: scopes.includes("memory:read_evidence"),
+      graph_objects: scopes.includes("memory:read_graph")
+    }
   }
 }
 

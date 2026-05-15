@@ -754,13 +754,43 @@ p { margin-top: 0; }
 .section-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  width: min(100%, 194px);
+  width: min(100%, 240px);
   gap: 10px;
 }
 
 .section-actions .tooltip-wrap,
 .section-actions button {
   width: 100%;
+}
+
+.permission-suggestion-chip {
+  display: grid;
+  gap: 2px;
+  min-height: 58px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.045);
+  text-align: left;
+}
+
+.permission-suggestion-chip:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface-3);
+}
+
+.permission-suggestion-chip span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+}
+
+.permission-suggestion-chip strong {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.2;
 }
 
 .key-panel-head {
