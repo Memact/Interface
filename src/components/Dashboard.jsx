@@ -108,6 +108,7 @@ export function Dashboard({
   const initials = getInitials(displayName, displayEmail)
   const [accountEditor, setAccountEditor] = useState(authFlow === "recovery" || needsPasswordSetup ? "password" : "")
   const [changeMenuOpen, setChangeMenuOpen] = useState(false)
+  const [selectedPresetId, setSelectedPresetId] = useState("")
   const showDisplayNameEditor = accountEditor === "display-name"
   const showPasswordEditor = accountEditor === "password"
   const showEmailEditor = accountEditor === "email"
@@ -462,10 +463,10 @@ export function Dashboard({
                       <button
                         key={preset.id}
                         type="button"
-                        className="permission-suggestion-chip"
+                        className={`permission-suggestion-chip ${selectedPresetId === preset.id ? "is-active" : ""}`}
                         disabled={!selectedAppId || !preset.scopes.length}
                         title={preset.description}
-                        onClick={() => setSelectedScopes(preset.scopes)}
+                        onClick={() => { setSelectedScopes(preset.scopes); setSelectedPresetId(preset.id) }}
                       >
                         <span>{preset.label}</span>
                         <strong>{preset.scopes.length} selected</strong>
