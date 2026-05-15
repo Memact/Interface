@@ -743,9 +743,9 @@ p { margin-top: 0; }
 .settings-menu button {
   justify-content: flex-start;
   min-height: 44px;
-  border: 1px solid transparent;
-  border-radius: 14px;
-  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
   color: var(--muted);
   text-align: left;
 }
@@ -1877,6 +1877,10 @@ input:-webkit-autofill:focus {
   .inline-help-link {
     overflow-wrap: anywhere;
   }
+
+  .presets-section {
+    padding: 12px;
+  }
 }
 
 @media (max-width: 520px) {
@@ -2095,15 +2099,11 @@ input:-webkit-autofill:focus {
 
 .presets-inline {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   gap: 8px;
 }
 
-@media (max-width: 900px) {
-  .presets-section {
-    padding: 12px;
-  }
-
+@media (max-width: 520px) {
   .presets-inline {
     grid-template-columns: 1fr;
   }
