@@ -109,11 +109,11 @@
         align-items: center;
         gap: 16px;
         border: 1px solid var(--border);
-        border-radius: 18px;
-        margin-bottom: 20px;
+        border-radius: var(--topbar-radius);
         padding: 14px var(--page-inline);
         background: rgba(0, 1, 27, 0.98);
         backdrop-filter: blur(18px);
+        transition: top 150ms ease, border-radius 150ms ease;
       }
 
       .topbar > a {
@@ -564,9 +564,13 @@
     <script>
       (function() {
         var gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topbar-gap")) || 12;
+        var radius = "var(--radius-lg)";
         document.documentElement.style.setProperty("--topbar-top", gap + "px");
+        document.documentElement.style.setProperty("--topbar-radius", radius);
         window.addEventListener("scroll", function() {
-          document.documentElement.style.setProperty("--topbar-top", window.scrollY > 2 ? "0px" : gap + "px");
+          var scrolled = window.scrollY > 2;
+          document.documentElement.style.setProperty("--topbar-top", scrolled ? "0px" : gap + "px");
+          document.documentElement.style.setProperty("--topbar-radius", scrolled ? "0 0 var(--radius-lg) var(--radius-lg)" : radius);
         }, { passive: true });
       })();
     </script>

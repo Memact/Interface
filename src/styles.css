@@ -18,6 +18,7 @@
   --topbar-top: 0px;
   --topbar-height: 76px;
   --topbar-gap: 12px;
+  --topbar-radius: var(--radius-lg);
   color: var(--text);
   background: var(--bg);
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
@@ -205,12 +206,11 @@ summary:focus-visible {
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
-  margin: 0 0 16px;
   padding: 12px var(--page-inline);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--topbar-radius);
   background: var(--bg);
-  transition: top 150ms ease, border-color 150ms ease, border-radius 150ms ease;
+  transition: top 150ms ease, border-radius 150ms ease;
 }
 
 .logo-link {
@@ -1624,6 +1624,7 @@ input:-webkit-autofill:focus {
     --topbar-top: 0px;
     --topbar-height: 76px;
     --topbar-gap: 20px;
+    --topbar-radius: var(--radius-lg);
     width: min(1440px, calc(100% - 40px));
     max-width: 1440px;
     margin: 0 auto;
@@ -1693,6 +1694,7 @@ input:-webkit-autofill:focus {
     --topbar-top: 0px;
     --topbar-height: 76px;
     --topbar-gap: 14px;
+    --topbar-radius: var(--radius-lg);
     width: min(100% - 24px, 720px);
   }
 
@@ -1711,11 +1713,11 @@ input:-webkit-autofill:focus {
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 10px;
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--topbar-radius);
     padding: 10px var(--page-inline) 11px;
-    margin-bottom: 12px;
     background: rgba(0, 1, 27, 0.98);
     backdrop-filter: blur(18px);
+    transition: top 150ms ease, border-radius 150ms ease;
   }
 
   .logo-link {

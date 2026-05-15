@@ -33,7 +33,9 @@ function App() {
   useEffect(() => {
     const updateTopbar = () => {
       const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topbar-gap")) || 12
-      document.documentElement.style.setProperty("--topbar-top", window.scrollY > 2 ? "0px" : `${gap}px`)
+      const scrolled = window.scrollY > 2
+      document.documentElement.style.setProperty("--topbar-top", scrolled ? "0px" : `${gap}px`)
+      document.documentElement.style.setProperty("--topbar-radius", scrolled ? "0 0 var(--radius-lg) var(--radius-lg)" : "var(--radius-lg)")
     }
     updateTopbar()
     window.addEventListener("scroll", updateTopbar, { passive: true })
