@@ -452,6 +452,27 @@ export function Dashboard({
                   )
                 })}
               </div>
+
+              {presetSuggestions.length > 0 ? (
+                <div className="presets-section">
+                  <p className="eyebrow presets-label">Quick presets</p>
+                  <div className="presets-inline">
+                    {presetSuggestions.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        className="permission-suggestion-chip"
+                        disabled={!selectedAppId || !preset.scopes.length}
+                        title={preset.description}
+                        onClick={() => setSelectedScopes(preset.scopes)}
+                      >
+                        <span>{preset.label}</span>
+                        <strong>{preset.scopes.length} selected</strong>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </section>
 
             <section id="api-keys-panel" className="panel api-keys-panel">
@@ -518,35 +539,6 @@ export function Dashboard({
           </div>
         </>
       )}
-
-      {activeTab === "access" && presetSuggestions.length > 0 ? (
-        <section className="panel presets-panel" aria-label="Permission presets">
-          <details className="presets-details" open>
-            <summary>
-              <div className="presets-summary-head">
-                <p className="eyebrow">Quick presets</p>
-                <h3>Apply a preset permission set</h3>
-              </div>
-              <span className="faq-chevron presets-chevron" aria-hidden="true">v</span>
-            </summary>
-            <div className="presets-grid">
-              {presetSuggestions.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  className="permission-suggestion-chip"
-                  disabled={!selectedAppId || !preset.scopes.length}
-                  title={preset.description}
-                  onClick={() => setSelectedScopes(preset.scopes)}
-                >
-                  <span>{preset.label}</span>
-                  <strong>{preset.scopes.length} selected</strong>
-                </button>
-              ))}
-            </div>
-          </details>
-        </section>
-      ) : null}
 
       {activeTab === "access" && oneTimeKey ? (
         <section id="one-time-key-panel" className="panel key-panel">
