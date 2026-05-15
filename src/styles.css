@@ -15,7 +15,7 @@
   --radius-lg: 18px;
   --sidebar-width: 248px;
   --page-inline: 24px;
-  --topbar-top: 0px;
+  --topbar-top: 12px;
   --topbar-height: 76px;
   --topbar-gap: 12px;
   --topbar-radius: var(--radius-lg);
@@ -1621,7 +1621,7 @@ input:-webkit-autofill:focus {
 @media (min-width: 901px) {
   .page:not(.page-auth) {
     --page-inline: 24px;
-    --topbar-top: 0px;
+    --topbar-top: 20px;
     --topbar-height: 76px;
     --topbar-gap: 20px;
     --topbar-radius: var(--radius-lg);
@@ -1691,7 +1691,7 @@ input:-webkit-autofill:focus {
 @media (max-width: 900px) {
   .page {
     --page-inline: 16px;
-    --topbar-top: 0px;
+    --topbar-top: 14px;
     --topbar-height: 76px;
     --topbar-gap: 14px;
     --topbar-radius: var(--radius-lg);
