@@ -2010,3 +2010,150 @@ input:-webkit-autofill:focus {
 @media (max-width: 860px) {
   .usage-kpis { grid-template-columns: 1fr; }
 }
+
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+}
+
+.loading-screen-inner {
+  display: grid;
+  place-items: center;
+  gap: 24px;
+  text-align: center;
+}
+
+.loading-screen-logo {
+  display: block;
+  width: 132px;
+  height: auto;
+}
+
+.loading-indicator {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--border);
+  border-top-color: var(--text);
+  border-radius: 999px;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 900px) {
+  .loading-screen-logo { width: 120px; }
+}
+
+@media (max-width: 520px) {
+  .loading-screen-logo { width: 112px; }
+}
+
+.presets-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  overflow: hidden;
+}
+
+.presets-details {
+  display: grid;
+  gap: 0;
+}
+
+.presets-details summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 64px;
+  padding: 16px 24px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.presets-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.presets-details summary::marker {
+  content: "";
+}
+
+.presets-summary-head {
+  display: grid;
+  gap: 4px;
+}
+
+.presets-summary-head .eyebrow {
+  margin: 0;
+}
+
+.presets-summary-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.presets-chevron {
+  transition: transform 140ms ease, color 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.presets-details[open] .presets-chevron {
+  transform: rotate(180deg);
+}
+
+.presets-details summary:hover .presets-chevron {
+  border-color: rgba(255, 255, 255, 0.36);
+  color: var(--text);
+  background: var(--surface-3);
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 10px;
+  padding: 0 24px 20px;
+}
+
+.presets-grid .permission-suggestion-chip {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .presets-panel { padding: 0; }
+
+  .presets-details summary {
+    padding: 14px 16px;
+    min-height: 56px;
+  }
+
+  .presets-grid {
+    padding: 0 16px 16px;
+    grid-template-columns: 1fr;
+  }
+
+  .presets-grid .permission-suggestion-chip {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .presets-details summary {
+    padding: 12px 14px;
+    min-height: 52px;
+    gap: 12px;
+  }
+
+  .presets-grid {
+    padding: 0 14px 14px;
+    gap: 8px;
+  }
+}

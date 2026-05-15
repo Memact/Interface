@@ -421,19 +421,6 @@ export function Dashboard({
                   </p>
                 </div>
                 <div className="actions section-actions">
-                  {presetSuggestions.map((preset) => (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      className="permission-suggestion-chip"
-                      disabled={!selectedAppId || !preset.scopes.length}
-                      title={preset.description}
-                      onClick={() => setSelectedScopes(preset.scopes)}
-                    >
-                      <span>{preset.label}</span>
-                      <strong>{preset.scopes.length} selected</strong>
-                    </button>
-                  ))}
                   <span className="tooltip-wrap" title={permissionsHint || undefined}>
                     <button type="button" className="ghost" disabled={!selectedAppId || !selectedScopes.length || !selectedAppCategories.length} onClick={onGrantConsent}>Save permissions</button>
                   </span>
@@ -531,6 +518,35 @@ export function Dashboard({
           </div>
         </>
       )}
+
+      {activeTab === "access" && presetSuggestions.length > 0 ? (
+        <section className="panel presets-panel" aria-label="Permission presets">
+          <details className="presets-details" open>
+            <summary>
+              <div className="presets-summary-head">
+                <p className="eyebrow">Quick presets</p>
+                <h3>Apply a preset permission set</h3>
+              </div>
+              <span className="faq-chevron presets-chevron" aria-hidden="true">v</span>
+            </summary>
+            <div className="presets-grid">
+              {presetSuggestions.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className="permission-suggestion-chip"
+                  disabled={!selectedAppId || !preset.scopes.length}
+                  title={preset.description}
+                  onClick={() => setSelectedScopes(preset.scopes)}
+                >
+                  <span>{preset.label}</span>
+                  <strong>{preset.scopes.length} selected</strong>
+                </button>
+              ))}
+            </div>
+          </details>
+        </section>
+      ) : null}
 
       {activeTab === "access" && oneTimeKey ? (
         <section id="one-time-key-panel" className="panel key-panel">

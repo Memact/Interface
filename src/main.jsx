@@ -1144,14 +1144,26 @@ function App() {
 
   const scopes = policy?.scopes || {}
   const showAuth = !session && !authChecking
+  const isInitialLoading = authChecking && !session
   const statusNeedsAttention = /missing|failed|offline/i.test(status)
   const showStatusPill = !showAuth && Boolean(error || statusNeedsAttention)
+
+  if (isInitialLoading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-screen-inner">
+          <img className="loading-screen-logo" src="/logo.png" alt="Memact" width="132" height="30" />
+          <div className="loading-indicator" aria-label="Loading" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <main className={showAuth ? "page page-auth" : "page"}>
       <header className="topbar">
         <a className="logo-link" href="https://www.memact.com/" aria-label="Go to memact.com">
-          <img className="logo-img" src="/logo.png" alt="Memact" />
+          <img className="logo-img" src="/logo.png" alt="Memact" width="132" height="30" />
         </a>
         {session ? (
           <nav className="tabs" aria-label="Memact portal tabs">
@@ -1163,7 +1175,7 @@ function App() {
         {showStatusPill ? <span className="status-pill" aria-live="polite">{status}</span> : null}
       </header>
 
-      {error ? (
+      {error && !isInitialLoading ? (
         <div id="error-message" className="notice notice-danger error-overlay" role="alert">
           <span>{error}</span>
           <div className="error-overlay-actions">
@@ -1172,13 +1184,12 @@ function App() {
           </div>
         </div>
       ) : null}
-      {authNotice ? (
+      {authNotice && !isInitialLoading ? (
         <div className={error ? "notice notice-success success-overlay has-error" : "notice notice-success success-overlay"} role="status">
           <span>{authNotice}</span>
           <button type="button" className="error-dismiss" onClick={() => setAuthNotice("")} aria-label="Dismiss notice">x</button>
         </div>
       ) : null}
-      {authChecking && !session ? <p className="status-line">Checking login.</p> : null}
 
       {currentPage === "help" ? (
         <section className="dashboard">

@@ -170,11 +170,22 @@
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.025);
   overflow: hidden;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.faq-item:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
 }
 
 .faq-item[open] {
   border-color: rgba(255, 255, 255, 0.2);
   background: var(--surface-2);
+}
+
+.faq-item[open]:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: var(--surface-3);
 }
 
 .faq-item summary.faq-trigger {
