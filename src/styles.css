@@ -681,40 +681,39 @@ p { margin-top: 0; }
 }
 
 .account-change-control {
-  position: relative;
   width: min(100%, 360px);
-  z-index: 4;
 }
 
-.account-change-button {
-  display: flex;
+.settings-details {
+  width: 100%;
+}
+
+.settings-trigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
   width: 100%;
   min-height: 64px;
-  gap: 14px;
-  padding: 10px 12px 10px 16px;
-  border-color: var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  text-align: left;
-}
-
-.account-change-button:hover:not(:disabled),
-.account-change-button.is-active,
-.account-change-button.is-active:hover:not(:disabled) {
-  border-color: var(--border-strong);
+  padding: 10px 16px 10px 16px;
+  cursor: pointer;
   color: var(--text);
-  background: var(--surface-3);
+  font-weight: 700;
+  list-style: none;
+  list-style-position: outside;
 }
 
-.account-change-button > span:first-child {
+.settings-trigger::-webkit-details-marker { display: none; }
+.settings-trigger::marker { content: ""; }
+
+.settings-trigger-text {
   display: grid;
   min-width: 0;
   gap: 3px;
 }
 
-.account-change-label {
+.settings-trigger .account-change-label {
   color: var(--soft);
   font-size: 11px;
   font-weight: 800;
@@ -722,7 +721,7 @@ p { margin-top: 0; }
   text-transform: uppercase;
 }
 
-.account-change-button strong {
+.settings-trigger strong {
   overflow: hidden;
   color: var(--text);
   font-size: 15px;
@@ -730,42 +729,29 @@ p { margin-top: 0; }
   white-space: nowrap;
 }
 
-.account-change-chevron {
-  margin: 0;
-  transform: rotate(0deg);
+.settings-details[open] {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: var(--surface-2);
 }
 
-.account-change-button[aria-expanded="true"] .account-change-chevron {
-  transform: rotate(180deg);
-}
-
-.account-change-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
+.settings-menu {
+  padding: 0 16px 12px;
   display: grid;
-  width: 100%;
   gap: 6px;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: rgba(18, 19, 44, 0.98);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.34);
-  backdrop-filter: blur(18px);
 }
 
-.account-change-menu button {
+.settings-menu button {
   justify-content: flex-start;
   min-height: 44px;
-  border-color: transparent;
+  border: 1px solid transparent;
   border-radius: 14px;
   background: transparent;
   color: var(--muted);
   text-align: left;
 }
 
-.account-change-menu button:hover,
-.account-change-menu button.is-active {
+.settings-menu button:hover,
+.settings-menu button.is-active {
   border-color: var(--border-strong);
   background: var(--surface-3);
   color: var(--text);
@@ -794,6 +780,7 @@ p { margin-top: 0; }
 
 .permission-suggestion-chip {
   display: grid;
+  justify-items: start;
   gap: 2px;
   min-height: 58px;
   padding: 10px 12px;
@@ -1958,10 +1945,7 @@ input:-webkit-autofill:focus {
     padding: 9px 10px;
   }
 
-  .account-change-menu {
-    position: static;
-    margin-top: 8px;
-  }
+  .account-grid { grid-template-columns: 1fr; }
 
   .section-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));

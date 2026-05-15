@@ -107,7 +107,6 @@ export function Dashboard({
   const displayEmail = getUserEmail(user, authUser)
   const initials = getInitials(displayName, displayEmail)
   const [accountEditor, setAccountEditor] = useState(authFlow === "recovery" || needsPasswordSetup ? "password" : "")
-  const [changeMenuOpen, setChangeMenuOpen] = useState(false)
   const [selectedPresetId, setSelectedPresetId] = useState("")
   const showDisplayNameEditor = accountEditor === "display-name"
   const showPasswordEditor = accountEditor === "password"
@@ -125,7 +124,6 @@ export function Dashboard({
 
   const chooseAccountEditor = (editor) => {
     setAccountEditor(accountEditor === editor ? "" : editor)
-    setChangeMenuOpen(false)
   }
 
   return (
@@ -157,35 +155,27 @@ export function Dashboard({
               </p>
             </div>
           </div>
-          <div className="account-change-control">
-            <button
-              type="button"
-              className={accountEditor ? "account-change-button is-active" : "account-change-button"}
-              aria-expanded={changeMenuOpen}
-              onClick={() => setChangeMenuOpen((current) => !current)}
-            >
-              <span>
+          <details className="faq-item settings-details">
+            <summary className="faq-trigger settings-trigger">
+              <span className="settings-trigger-text">
                 <span className="account-change-label">Settings</span>
                 <strong>{activeChangeLabel}</strong>
               </span>
-              <span className="faq-chevron account-change-chevron" aria-hidden="true">v</span>
-            </button>
-            {changeMenuOpen ? (
-              <div className="account-change-menu" role="menu">
-                {changeOptions.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className={accountEditor === option.id ? "is-active" : ""}
-                    role="menuitem"
-                    onClick={() => chooseAccountEditor(option.id)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
+              <span className="faq-chevron" aria-hidden="true">v</span>
+            </summary>
+            <div className="faq-answer settings-menu">
+              {changeOptions.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={accountEditor === option.id ? "is-active" : ""}
+                  onClick={() => chooseAccountEditor(option.id)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </details>
           {showDisplayNameEditor ? (
             <section className="password-panel account-editor-panel display-name-panel">
               <div>
