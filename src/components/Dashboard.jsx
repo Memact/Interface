@@ -117,7 +117,7 @@ export function Dashboard({
     { id: "password", label: needsPasswordSetup ? "Set password" : "Change password" },
     { id: "invite", label: "Invite user" }
   ].filter(Boolean)
-  const activeChangeLabel = changeOptions.find((option) => option.id === accountEditor)?.label || "Choose an action"
+  const activeChangeLabel = changeOptions.find((option) => option.id === accountEditor)?.label || "Choose a setting"
 
   const chooseAccountEditor = (editor) => {
     setAccountEditor(accountEditor === editor ? "" : editor)
@@ -161,7 +161,7 @@ export function Dashboard({
               onClick={() => setChangeMenuOpen((current) => !current)}
             >
               <span>
-                <span className="account-change-label">Change</span>
+                <span className="account-change-label">Settings</span>
                 <strong>{activeChangeLabel}</strong>
               </span>
               <span className="faq-chevron account-change-chevron" aria-hidden="true">v</span>

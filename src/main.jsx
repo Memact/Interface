@@ -1128,7 +1128,7 @@ function App() {
   }
 
   const scopes = policy?.scopes || {}
-  const showAuth = !session
+  const showAuth = !session && !authChecking
   const statusNeedsAttention = /missing|failed|offline/i.test(status)
   const showStatusPill = !showAuth && Boolean(error || statusNeedsAttention)
 
@@ -1163,7 +1163,7 @@ function App() {
           <button type="button" className="error-dismiss" onClick={() => setAuthNotice("")} aria-label="Dismiss notice">x</button>
         </div>
       ) : null}
-      {authChecking && !showAuth ? <p className="status-line">Checking login.</p> : null}
+      {authChecking && !session ? <p className="status-line">Checking login.</p> : null}
 
       {currentPage === "help" ? (
         <section className="dashboard">
@@ -1404,7 +1404,8 @@ function shouldCheckSessionOnLoad() {
   const page = pageFromLocation(window.location)
   const path = window.location.pathname.toLowerCase()
   const authPayload = `${window.location.search || ""}${window.location.hash || ""}`.toLowerCase()
-  return isProtectedPage(page) ||
+  return page === "home" ||
+    isProtectedPage(page) ||
     path === "/auth/confirm" ||
     authPayload.includes("code=") ||
     authPayload.includes("token_hash=") ||
