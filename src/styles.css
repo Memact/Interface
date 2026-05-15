@@ -191,7 +191,7 @@ summary:focus-visible {
 .page {
   width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
-  padding: calc(var(--topbar-height) + var(--topbar-gap)) 0 56px;
+  padding: calc(var(--topbar-height) + var(--topbar-top) + var(--topbar-gap)) 0 56px;
 }
 
 .topbar {
