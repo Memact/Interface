@@ -150,8 +150,8 @@ export function HelpPanel() {
       <div>
         <p className="eyebrow">Help</p>
         <h2>Frequently asked questions</h2>
+        <p className="muted">Answers about how Memact works, what apps can see, and how consent is controlled.</p>
       </div>
-      <p className="muted help-intro">Built to clear your doubts with transparent, user-controlled answers.</p>
 
       <div className="faq-section">
         <p className="faq-section-title">Basics</p>

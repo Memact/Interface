@@ -41,7 +41,7 @@
   transform: translate(calc(-50% + 3px), -50%) rotate(-45deg);
 }
 
-.faq-item:hover .faq-chevron {
+.faq-item summary.faq-trigger:hover .faq-chevron {
   border-color: rgba(255, 255, 255, 0.36);
   color: var(--text);
   background: var(--surface-3);
