@@ -13,11 +13,9 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
       <article className="panel connect-card">
         <div className="connect-hero">
           <div>
-            <p className="eyebrow">Permission request</p>
-            <h1>{appName} wants to use Memact.</h1>
-            <p className="muted">
-              Approve only if you trust this app and the requested understanding boundary makes sense.
-            </p>
+            <p className="eyebrow">Connect app</p>
+            <h1>{appName} wants to connect.</h1>
+            <p className="muted">Review what this app can use, then approve or cancel.</p>
           </div>
           <span className="consent-state-pill">User controlled</span>
         </div>
@@ -36,15 +34,15 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
         {notice ? <p className="notice notice-success" role="status">{notice}</p> : null}
 
         <section className="permission-list consent-summary-card">
-          <p className="eyebrow">What consent means</p>
+          <p className="eyebrow">Before you approve</p>
           <div className="consent-points">
             <div className="mini-row">
-              <strong>You are allowing this app to ask Memact for scoped context.</strong>
-              <small>The app does not get unlimited memory or raw activity. Memact verifies the app, API key, user consent, scopes, and categories first.</small>
+              <strong>This app only gets approved understanding.</strong>
+              <small>It cannot take unlimited memory or raw activity.</small>
             </div>
             <div className="mini-row">
-              <strong>You can revoke access later.</strong>
-              <small>Use Data Transparency to review the evidence fields, context objects, memory objects, graph packets, retention, and revocation path before approving.</small>
+              <strong>You can review details first.</strong>
+              <small>Data Transparency shows what the app is asking to use.</small>
             </div>
           </div>
           <div className="connect-link-row">
@@ -73,22 +71,6 @@ export function ConnectPage({ connectRequest, connectDetails, loading, notice, o
             )) : <p className="muted">No categories requested.</p>}
           </section>
         </div>
-
-        <section className="permission-list">
-          <p className="eyebrow">Safety boundary</p>
-          <div className="mini-row">
-            <strong>No raw memory or activity dump by default.</strong>
-            <small>Memact verifies the app, user permission, requested scopes, and selected categories before any context can be used.</small>
-          </div>
-          <div className="mini-row">
-            <strong>Apps should load their Memact key from environment secrets.</strong>
-            <small>The private app key is the `mka_...` key created in the Memact portal. The app backend reads it from `.env` or a secret manager, then verifies this consent before requesting Memact context. App developers should not configure Supabase keys; Memact handles that infrastructure.</small>
-          </div>
-          <div className="mini-row">
-            <strong>Blocked uses stay blocked.</strong>
-            <small>Apps may not use Memact for surveillance, selling raw activity or memory, manipulative targeting, or sensitive eligibility decisions.</small>
-          </div>
-        </section>
 
         <div className="connect-actions">
           <button type="button" onClick={onApprove} disabled={!app?.id || loading === "approve"}>

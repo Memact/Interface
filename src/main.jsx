@@ -1099,6 +1099,32 @@ function App() {
     navigateToPage("access", { replace: true })
   }
 
+  function handleExternalBack() {
+    window.location.href = getExternalBackUrl()
+  }
+
+  function getExternalBackUrl() {
+    if (connectRequest?.redirect_uri) {
+      return buildConnectRedirect(connectRequest.redirect_uri, {
+        state: connectRequest.state || undefined
+      })
+    }
+    return "https://www.memact.com/"
+  }
+
+  function updateConnectSelection({ scopes: nextScopes = [], categories: nextCategories = [] } = {}) {
+    setConnectRequest((current) => ({
+      ...current,
+      scopes: nextScopes,
+      categories: nextCategories
+    }))
+    setConnectDetails((current) => current ? {
+      ...current,
+      requested_scopes: nextScopes,
+      requested_categories: nextCategories
+    } : current)
+  }
+
   function navigateToDataTransparency(request) {
     navigateWithConnectParams(routeForPage("data"), request)
   }
@@ -1157,6 +1183,7 @@ function App() {
   const isInitialLoading = authChecking && !session
   const statusNeedsAttention = /missing|failed|offline/i.test(status)
   const showStatusPill = !showAuth && Boolean(error || statusNeedsAttention)
+  const showExternalBackHeader = session && (currentPage === "connect" || currentPage === "data")
 
   if (isInitialLoading) {
     return (
@@ -1175,7 +1202,13 @@ function App() {
         <a className="logo-link" href="https://www.memact.com/" aria-label="Go to memact.com">
           <img className="logo-img" src="/logo.png" alt="Memact" width="132" height="30" />
         </a>
-        {session ? (
+        {showExternalBackHeader ? (
+          <nav className="nav back-nav" aria-label="Return navigation">
+            <button type="button" className="button back-button" onClick={handleExternalBack} aria-label="Back to app">
+              <span className="faq-chevron back-chevron" aria-hidden="true">v</span>
+            </button>
+          </nav>
+        ) : session ? (
           <nav className="tabs" aria-label="Memact portal tabs">
             <button type="button" className={currentPage === "access" ? "tab is-active" : "tab"} onClick={() => navigateToPage("access")}>Dashboard</button>
             <button type="button" className={currentPage === "account" ? "tab is-active" : "tab"} onClick={() => navigateToPage("account")}>Account</button>
@@ -1224,6 +1257,7 @@ function App() {
           requestedScopes={connectDetails?.requested_scopes || connectRequest?.scopes || []}
           requestedCategories={connectDetails?.requested_categories || connectRequest?.categories || []}
           transparency={connectDetails?.transparency || connectDetails?.data_transparency || connectDetails?.app?.transparency || {}}
+          onUpdateSelection={updateConnectSelection}
           onBackToConsent={() => navigateToConnect(connectRequest)}
           onManageConsent={() => navigateToPage("access")}
         />
