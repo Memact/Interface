@@ -15,10 +15,8 @@
   --radius-lg: 18px;
   --sidebar-width: 248px;
   --page-inline: 24px;
-  --topbar-top: 12px;
   --topbar-height: 76px;
   --topbar-gap: 12px;
-  --topbar-radius: var(--radius-lg);
   color: var(--text);
   background: var(--bg);
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
@@ -191,27 +189,29 @@ summary:focus-visible {
 .page {
   width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
-  padding: calc(var(--topbar-height) + var(--topbar-top) + var(--topbar-gap)) 0 56px;
+  padding: 0 0 56px;
 }
 
 .topbar {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 50%;
+  z-index: 20;
+  margin: var(--topbar-gap) auto;
   width: min(1120px, calc(100% - 32px));
   min-height: var(--topbar-height);
-  transform: translateX(-50%) translateY(var(--topbar-top));
-  z-index: 20;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
   padding: 12px var(--page-inline);
   border: 1px solid var(--border);
-  border-radius: var(--topbar-radius);
+  border-radius: var(--radius-lg);
   background: var(--bg);
-  will-change: transform;
-  transition: transform 250ms ease, border-radius 250ms ease;
+  transition: border-radius 250ms ease;
+}
+
+.topbar-scrolled .topbar {
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
 .logo-link {
@@ -302,7 +302,7 @@ summary:focus-visible {
   gap: 12px;
   position: fixed;
   z-index: 80;
-  top: calc(var(--topbar-top) + var(--topbar-height) + var(--topbar-gap));
+  top: calc(var(--topbar-height) + var(--topbar-gap));
   left: 50%;
   width: min(680px, calc(100% - 28px));
   margin: 0;
@@ -376,7 +376,7 @@ button.error-dismiss:focus-visible:not(:disabled) {
   gap: 12px;
   position: fixed;
   z-index: 79;
-  top: calc(var(--topbar-top) + var(--topbar-height) + var(--topbar-gap));
+  top: calc(var(--topbar-height) + var(--topbar-gap));
   left: 50%;
   width: min(680px, calc(100% - 28px));
   margin: 0;
@@ -386,7 +386,7 @@ button.error-dismiss:focus-visible:not(:disabled) {
 }
 
 .success-overlay.has-error {
-  top: calc(var(--topbar-top) + var(--topbar-height) + var(--topbar-gap) + 68px);
+  top: calc(var(--topbar-height) + var(--topbar-gap) + 68px);
 }
 
 .inline-retry {
@@ -1622,36 +1622,37 @@ input:-webkit-autofill:focus {
 @media (min-width: 901px) {
   .page:not(.page-auth) {
     --page-inline: 24px;
-    --topbar-top: 20px;
     --topbar-height: 76px;
     --topbar-gap: 20px;
-    --topbar-radius: var(--radius-lg);
     width: min(1440px, calc(100% - 40px));
     max-width: 1440px;
     margin: 0 auto;
   }
 
   .page:not(.page-auth) .topbar {
-    position: fixed;
+    position: sticky;
     top: 0;
-    left: 50%;
-    width: min(1440px, calc(100% - 40px));
     z-index: 20;
+    margin: var(--topbar-gap) auto;
+    width: min(1440px, calc(100% - 40px));
     min-height: var(--topbar-height);
     height: auto;
-    transform: translateX(-50%) translateY(var(--topbar-top));
+    display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-content: center;
     align-items: center;
     gap: 16px;
     border: 1px solid var(--border);
-    border-radius: var(--topbar-radius);
+    border-radius: var(--radius-lg);
     padding: 14px var(--page-inline);
     background: rgba(0, 1, 27, 0.98);
     box-shadow: 0 18px 52px rgba(0, 0, 0, 0.22);
     backdrop-filter: blur(18px);
-    will-change: transform;
-    transition: transform 250ms ease, border-radius 250ms ease;
+    transition: border-radius 250ms ease;
+  }
+
+  .topbar-scrolled .page:not(.page-auth) .topbar {
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   }
 
   .page:not(.page-auth) .tabs {
@@ -1693,10 +1694,8 @@ input:-webkit-autofill:focus {
 @media (max-width: 900px) {
   .page {
     --page-inline: 16px;
-    --topbar-top: 14px;
     --topbar-height: 76px;
     --topbar-gap: 14px;
-    --topbar-radius: var(--radius-lg);
     width: min(100% - 24px, 720px);
   }
 
@@ -1705,13 +1704,13 @@ input:-webkit-autofill:focus {
   }
 
   .topbar {
-    position: fixed;
+    position: sticky;
     top: 0;
-    left: 50%;
+    z-index: 20;
+    margin: var(--topbar-gap) auto;
     width: min(100% - 24px, 720px);
     min-height: var(--topbar-height);
-    transform: translateX(-50%) translateY(var(--topbar-top));
-    z-index: 20;
+    display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 10px;
     border: 1px solid var(--border);
@@ -1719,8 +1718,7 @@ input:-webkit-autofill:focus {
     padding: 10px var(--page-inline) 11px;
     background: rgba(0, 1, 27, 0.98);
     backdrop-filter: blur(18px);
-    will-change: transform;
-    transition: transform 250ms ease, border-radius 250ms ease;
+    transition: border-radius 250ms ease;
   }
 
   .logo-link {

@@ -60,7 +60,6 @@
         --radius-md: 14px;
         --radius-lg: 18px;
         --page-inline: clamp(24px, 5vw, 40px);
-        --topbar-top: 12px;
         --topbar-height: 74px;
         --topbar-gap: 12px;
         color: var(--text);
@@ -93,28 +92,30 @@
       .page {
         width: min(1440px, calc(100% - 40px));
         margin: 0 auto;
-        padding: calc(var(--topbar-height) + var(--topbar-top) + var(--topbar-gap)) 0 56px;
+        padding: 0 0 56px;
       }
 
       .topbar {
-        position: fixed;
+        position: sticky;
         top: 0;
-        left: 50%;
+        z-index: 20;
+        margin: var(--topbar-gap) auto;
         width: min(1440px, calc(100% - 40px));
         min-height: var(--topbar-height);
-        transform: translateX(-50%) translateY(var(--topbar-top));
-        z-index: 20;
         display: grid;
         grid-template-columns: auto minmax(0, 1fr);
         align-items: center;
         gap: 16px;
         border: 1px solid var(--border);
-        border-radius: var(--topbar-radius);
+        border-radius: var(--radius-lg);
         padding: 14px var(--page-inline);
         background: rgba(0, 1, 27, 0.98);
         backdrop-filter: blur(18px);
-        will-change: transform;
-        transition: transform 250ms ease, border-radius 250ms ease;
+        transition: border-radius 250ms ease;
+      }
+
+      .topbar-scrolled .topbar {
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
       }
 
       .topbar > a {
@@ -385,7 +386,6 @@
       @media (max-width: 720px) {
         .page {
           --page-inline: 22px;
-          --topbar-top: 14px;
           --topbar-height: 74px;
           --topbar-gap: 14px;
           width: min(100% - 24px, 720px);
@@ -393,7 +393,7 @@
         .topbar {
           grid-template-columns: auto minmax(0, 1fr);
           width: min(100% - 24px, 720px);
-          transform: translateX(-50%) translateY(var(--topbar-top));
+          margin: var(--topbar-gap) auto;
           align-items: center;
           padding: 10px var(--page-inline) 11px;
         }
@@ -564,35 +564,10 @@
     </main>
     <script>
       (function() {
-        var gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topbar-gap")) || 12;
-        var currentTop = gap, targetTop = gap, rafId = null;
-
-        function animate() {
-          currentTop += (targetTop - currentTop) * 0.12;
-          if (Math.abs(currentTop - targetTop) < 0.3) currentTop = targetTop;
-
-          document.documentElement.style.setProperty("--topbar-top", currentTop + "px");
-
-          var r = currentTop >= gap - 0.5 ? "var(--radius-lg)" :
-                  currentTop <= 0.5 ? "0 0 var(--radius-lg) var(--radius-lg)" :
-                  null;
-          if (r) document.documentElement.style.setProperty("--topbar-radius", r);
-
-          if (Math.abs(currentTop - targetTop) > 0.3) {
-            rafId = requestAnimationFrame(animate);
-          } else {
-            rafId = null;
-          }
-        }
-
         function onScroll() {
-          targetTop = window.scrollY > 2 ? 0 : gap;
-          if (!rafId) rafId = requestAnimationFrame(animate);
+          document.documentElement.classList.toggle('topbar-scrolled', window.scrollY > 2);
         }
-
-        document.documentElement.style.setProperty("--topbar-top", gap + "px");
-        document.documentElement.style.setProperty("--topbar-radius", "var(--radius-lg)");
-
+        onScroll();
         window.addEventListener("scroll", onScroll, { passive: true });
       })();
     </script>
