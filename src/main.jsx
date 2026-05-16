@@ -169,8 +169,8 @@ function App() {
 
   useEffect(() => {
     client.health()
-      .then(() => setStatus(ACCESS_MODE === "supabase" ? "Access is running through Supabase." : "Memact is online."))
-      .catch(() => setStatus(ACCESS_MODE === "supabase" ? "Apply the Access Supabase migration to use the portal." : "Start Memact locally to use the portal."))
+      .then(() => setStatus(ACCESS_MODE === "supabase" ? "Dashboard is running through Supabase." : "Memact is online."))
+      .catch(() => setStatus(ACCESS_MODE === "supabase" ? "Apply the Dashboard Supabase migration to use the portal." : "Start Memact locally to use the portal."))
     client.policy().then(setPolicy).catch(() => {})
   }, [client])
 
@@ -306,7 +306,7 @@ function App() {
   }, [authFlow, needsPasswordSetup, session])
 
   useEffect(() => {
-    const tabName = currentPage === "account" ? "Account" : currentPage === "help" ? "Help" : currentPage === "connect" ? "Connect" : currentPage === "data" ? "Data Transparency" : currentPage === "access" ? "API Keys" : "Login"
+    const tabName = currentPage === "account" ? "Account" : currentPage === "help" ? "Help" : currentPage === "connect" ? "Connect" : currentPage === "data" ? "Data Transparency" : currentPage === "access" ? "Dashboard" : "Login"
     document.title = `Memact | ${tabName}`
   }, [currentPage])
 
@@ -1177,7 +1177,7 @@ function App() {
         </a>
         {session ? (
           <nav className="tabs" aria-label="Memact portal tabs">
-            <button type="button" className={currentPage === "access" ? "tab is-active" : "tab"} onClick={() => navigateToPage("access")}>Access</button>
+            <button type="button" className={currentPage === "access" ? "tab is-active" : "tab"} onClick={() => navigateToPage("access")}>Dashboard</button>
             <button type="button" className={currentPage === "account" ? "tab is-active" : "tab"} onClick={() => navigateToPage("account")}>Account</button>
             <button type="button" className={currentPage === "help" ? "tab is-active" : "tab"} onClick={() => navigateToPage("help")}>Help</button>
           </nav>
@@ -1349,15 +1349,15 @@ function App() {
 function statusForAccessError(error) {
   if (error instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(String(error?.message || ""))) {
     return {
-      message: ACCESS_MODE === "supabase" ? "Could not reach Supabase Access. Check the Website env vars and project settings." : "Could not reach Access. Make sure it is running.",
-      status: ACCESS_MODE === "supabase" ? "Supabase Access offline." : "Access offline."
+      message: ACCESS_MODE === "supabase" ? "Could not reach Supabase Dashboard. Check the Website env vars and project settings." : "Could not reach Dashboard. Make sure it is running.",
+      status: ACCESS_MODE === "supabase" ? "Supabase Dashboard offline." : "Dashboard offline."
     }
   }
   if (error instanceof AccessApiError) {
     if (error.status === 401) return { message: "Please sign in again.", status: "Login expired." }
-    if (error.status === 403) return { message: "Access denied for this dashboard.", status: "Access denied." }
+    if (error.status === 403) return { message: "Dashboard denied this request.", status: "Dashboard denied." }
     if (error.status === 409) return { message: "This app already exists.", status: "Dashboard sync failed." }
-    if (error.status >= 500) return { message: ACCESS_MODE === "supabase" ? "Supabase Access needs the SQL migration or project setup." : "Access service had a server error. Check Access logs.", status: "Dashboard sync failed." }
+    if (error.status >= 500) return { message: ACCESS_MODE === "supabase" ? "Supabase Dashboard needs the SQL migration or project setup." : "Dashboard service had a server error. Check Dashboard logs.", status: "Dashboard sync failed." }
   }
   return {
     message: error?.message || "Dashboard sync failed.",

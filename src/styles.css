@@ -629,6 +629,37 @@ p { margin-top: 0; }
 .dashboard-head .muted,
 .section-head .muted { margin-bottom: 0; }
 
+.dashboard-head > div {
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-tutorial-button {
+  justify-self: start;
+  min-height: 40px;
+  padding: 8px 12px;
+}
+
+.dashboard-tutorial-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-tutorial-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.panel-external-label {
+  margin: 0 0 -8px;
+  color: var(--soft);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .identity-meta {
   display: flex;
   flex-wrap: wrap;
@@ -1879,6 +1910,10 @@ input:-webkit-autofill:focus {
   .dashboard-head .sign-out-button {
     align-self: flex-start;
     width: auto;
+  }
+
+  .dashboard-tutorial-steps {
+    grid-template-columns: 1fr;
   }
 
   .tooltip-wrap { display: flex; width: 100%; }

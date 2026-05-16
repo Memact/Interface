@@ -100,7 +100,6 @@ export function Dashboard({
   const appDescription = !isCreatingApp && selectedApp
     ? selectedApp.description || "No description added."
     : "Each app gets its own permissions and API keys."
-  const dashboardSubtitle = "Generate app keys with permissions you control."
 
   const provider = getUserProvider(user, authUser)
   const avatar = getAvatarUrl(user, authUser)
@@ -108,6 +107,7 @@ export function Dashboard({
   const initials = getInitials(displayName, displayEmail)
   const [accountEditor, setAccountEditor] = useState(authFlow === "recovery" || needsPasswordSetup ? "password" : "")
   const [selectedPresetId, setSelectedPresetId] = useState("")
+  const [showDashboardTutorial, setShowDashboardTutorial] = useState(false)
   const showDisplayNameEditor = accountEditor === "display-name"
   const showPasswordEditor = accountEditor === "password"
   const showEmailEditor = accountEditor === "email"
@@ -131,11 +131,38 @@ export function Dashboard({
       {activeTab === "access" ? (
         <div className="dashboard-head panel slim-panel">
           <div>
-            <p className="eyebrow">Access</p>
+            <p className="eyebrow">Dashboard</p>
             <h2>{`Welcome${displayName ? `, ${displayName}` : ""}!`}</h2>
-            <p className="muted">{dashboardSubtitle}</p>
+            <button
+              type="button"
+              className="ghost dashboard-tutorial-button"
+              onClick={() => setShowDashboardTutorial((current) => !current)}
+              aria-expanded={showDashboardTutorial}
+            >
+              {showDashboardTutorial ? "Hide tutorial" : "Open quick tutorial"}
+            </button>
           </div>
         </div>
+      ) : null}
+
+      {activeTab === "access" && showDashboardTutorial ? (
+        <section className="panel dashboard-tutorial-panel" aria-label="Dashboard quick tutorial">
+          <p className="eyebrow">Quick tutorial</p>
+          <div className="dashboard-tutorial-steps">
+            <div className="mini-row">
+              <strong>1. Create an app</strong>
+              <small>Name the app and choose the activity categories it can use.</small>
+            </div>
+            <div className="mini-row">
+              <strong>2. Save permissions</strong>
+              <small>Pick the scopes that match what the app should understand.</small>
+            </div>
+            <div className="mini-row">
+              <strong>3. Create a key</strong>
+              <small>Copy the key once and keep it on your server.</small>
+            </div>
+          </div>
+        </section>
       ) : null}
 
       {activeTab === "help" ? (
@@ -323,12 +350,10 @@ export function Dashboard({
               <strong>{apiKeys.filter((key) => !key.revoked_at).length}</strong>
             </div>
           </div>
-          <p className="muted">
-            Permissions mean you choose exactly what a registered app can ask Memact to understand. If a scope is not saved for that app, its API key cannot use that permission.
-          </p>
         </section>
       ) : (
         <>
+          <p className="panel-external-label">Apps</p>
           <section id="app-panel" className="panel app-workspace">
             <div className="current-app-block">
               <div>
@@ -491,7 +516,7 @@ export function Dashboard({
                           <strong>{usageStats.lastUsedLabel}</strong>
                         </div>
                       </div>
-                      <p className="usage-empty-state muted">{usageStats.exposureDetail}</p>
+                      {usageStats.exposureDetail ? <p className="usage-empty-state muted">{usageStats.exposureDetail}</p> : null}
                     </section>
 
                     {activeKeys.length ? activeKeys.map((key) => (
@@ -597,7 +622,7 @@ function getUsageStats(selectedApp, selectedKeys = [], apps = []) {
       ? "A public exposure signal was reported for this key. Revoke it and create a replacement after removing the leak."
       : unknownExposure
         ? `Memact can show exposure signals when the access layer reports them. Until then, keep ${appName}'s raw key server-side and out of public code.`
-        : "No public exposure signal has been reported for active keys.",
+        : "",
     lastUsedLabel: lastUsedAt ? formatDate(lastUsedAt) : "No use yet"
   }
 }

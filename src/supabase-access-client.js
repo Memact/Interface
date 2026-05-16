@@ -482,21 +482,21 @@ function mapSupabaseRpcError(error) {
     return new AccessApiError(404, "API key not found.", "api_key_not_found", error)
   }
   if (/could not choose the best candidate function.*memact_create_app|memact_create_app.*app_redirect_urls.*text\[\]/i.test(message)) {
-    return new AccessApiError(500, "Memact found an older Access app function. Using the browser-safe app creation path.", "legacy_create_app_rpc", error)
+    return new AccessApiError(500, "Memact found an older Dashboard app function. Using the browser-safe app creation path.", "legacy_create_app_rpc", error)
   }
   if (/could not find the function.*memact_grant_consent|memact_grant_consent.*schema cache/i.test(message)) {
-    return new AccessApiError(500, "Memact found an older Access permission function. Using the browser-safe permission save path.", "legacy_grant_consent_rpc", error)
+    return new AccessApiError(500, "Memact found an older Dashboard permission function. Using the browser-safe permission save path.", "legacy_grant_consent_rpc", error)
   }
   if (/could not find the function.*memact_connect_app|memact_connect_app.*schema cache|connect_app.*categories/i.test(message)) {
-    return new AccessApiError(500, "Memact found an older Access connection function. Using the browser-safe connection path.", "legacy_connect_app_rpc", error)
+    return new AccessApiError(500, "Memact found an older Dashboard connection function. Using the browser-safe connection path.", "legacy_connect_app_rpc", error)
   }
   if (/could not find the function|schema cache|developer_url.*does not exist|categories.*does not exist/i.test(message)) {
-    return new AccessApiError(500, "Access needs the latest Supabase SQL applied once, then refresh this page.", "access_migration_required", error)
+    return new AccessApiError(500, "Dashboard needs the latest Supabase SQL applied once, then refresh this page.", "access_migration_required", error)
   }
   if (/gen_random_bytes\(integer\) does not exist|digest\(text,\s*unknown\) does not exist/i.test(message)) {
-    return new AccessApiError(500, "Memact is using an older Access crypto function. A browser-safe fallback will be used.", "legacy_access_crypto", error)
+    return new AccessApiError(500, "Memact is using an older Dashboard crypto function. A browser-safe fallback will be used.", "legacy_access_crypto", error)
   }
-  return new AccessApiError(500, message || "Supabase Access request failed.", error?.code || "rpc_failed", error)
+  return new AccessApiError(500, message || "Supabase Dashboard request failed.", error?.code || "rpc_failed", error)
 }
 
 function isLegacyApiKeyEntropyError(error) {

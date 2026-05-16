@@ -23,11 +23,11 @@ test("dashboard reducer stores synced dashboard data", () => {
 test("dashboard reducer records recoverable sync failures", () => {
   const next = dashboardReducer(initialDashboardState, {
     type: "failed",
-    message: "Supabase Access needs the SQL migration.",
+    message: "Supabase Dashboard needs the SQL migration.",
     status: "Dashboard sync failed."
   })
 
-  assert.equal(next.error, "Supabase Access needs the SQL migration.")
+  assert.equal(next.error, "Supabase Dashboard needs the SQL migration.")
   assert.equal(next.status, "Dashboard sync failed.")
   assert.equal(next.canRetryDashboard, true)
 })

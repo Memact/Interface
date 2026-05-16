@@ -5,7 +5,7 @@ export const initialDashboardState = {
   apps: [],
   apiKeys: [],
   consents: [],
-  status: "Checking Access.",
+  status: "Checking Dashboard.",
   error: "",
   canRetryDashboard: false
 }
