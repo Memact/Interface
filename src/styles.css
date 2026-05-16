@@ -194,9 +194,9 @@ summary:focus-visible {
 
 .topbar {
   position: sticky;
-  top: 0;
+  top: var(--topbar-gap);
   z-index: 20;
-  margin: var(--topbar-gap) auto;
+  margin: var(--topbar-gap) auto 16px;
   width: min(1120px, calc(100% - 32px));
   min-height: var(--topbar-height);
   display: grid;
@@ -207,11 +207,13 @@ summary:focus-visible {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--bg);
-  transition: border-radius 250ms ease;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
 .topbar-scrolled .topbar {
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  border-color: var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.24);
 }
 
 .logo-link {
@@ -1649,9 +1651,9 @@ input:-webkit-autofill:focus {
 
   .page:not(.page-auth) .topbar {
     position: sticky;
-    top: 0;
+    top: var(--topbar-gap);
     z-index: 20;
-    margin: var(--topbar-gap) auto;
+    margin: var(--topbar-gap) auto 18px;
     width: min(1440px, calc(100% - 40px));
     min-height: var(--topbar-height);
     height: auto;
@@ -1666,11 +1668,13 @@ input:-webkit-autofill:focus {
     background: rgba(0, 1, 27, 0.98);
     box-shadow: 0 18px 52px rgba(0, 0, 0, 0.22);
     backdrop-filter: blur(18px);
-    transition: border-radius 250ms ease;
+    transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
   }
 
   .topbar-scrolled .page:not(.page-auth) .topbar {
-    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    border-color: var(--border-strong);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 18px 52px rgba(0, 0, 0, 0.28);
   }
 
   .page:not(.page-auth) .tabs {
@@ -1723,9 +1727,9 @@ input:-webkit-autofill:focus {
 
   .topbar {
     position: sticky;
-    top: 0;
+    top: var(--topbar-gap);
     z-index: 20;
-    margin: var(--topbar-gap) auto;
+    margin: var(--topbar-gap) auto 14px;
     width: min(100% - 24px, 720px);
     min-height: var(--topbar-height);
     display: grid;
@@ -1736,7 +1740,7 @@ input:-webkit-autofill:focus {
     padding: 10px var(--page-inline) 11px;
     background: rgba(0, 1, 27, 0.98);
     backdrop-filter: blur(18px);
-    transition: border-radius 250ms ease;
+    transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
   }
 
   .logo-link {
@@ -1949,7 +1953,7 @@ input:-webkit-autofill:focus {
     width: min(100% - 20px, 720px);
     gap: 9px;
     padding: 10px var(--page-inline) 12px;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
   }
 
   .logo-img {
