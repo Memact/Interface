@@ -564,7 +564,7 @@ export function Dashboard({
           <div className="key-box">
             <code>{oneTimeKey}</code>
             <div className="key-actions">
-              <button type="button" onClick={onCopyKey}>Copy key</button>
+              <button type="button" className="button" onClick={onCopyKey}>Copy key</button>
               <button type="button" className="ghost" onClick={onTestKey}>Test key</button>
             </div>
           </div>

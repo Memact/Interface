@@ -586,9 +586,6 @@ p { margin-top: 0; }
 }
 
 .verification-code-input {
-  font-size: clamp(26px, 7vw, 34px);
-  font-weight: 800;
-  letter-spacing: 0.22em;
   text-align: center;
 }
 
@@ -1523,6 +1520,11 @@ input:-webkit-autofill:focus {
   padding: 8px 12px;
 }
 
+.key-actions button:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: rgba(255, 255, 255, 0.36);
+}
+
 .embed-code summary {
   display: grid;
   grid-template-columns: minmax(0, 1fr) max-content;
@@ -1594,6 +1596,14 @@ input:-webkit-autofill:focus {
 }
 
 /* Connect */
+.connect-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 14px;
+}
+
 .connect-shell {
   display: grid;
   place-items: center;
