@@ -36,6 +36,17 @@
   justify-self: end !important;
 }
 
+.embed-code:hover:not(:has(.faq-chevron:hover)) {
+  border-color: var(--border-strong) !important;
+  background: var(--surface-2) !important;
+}
+
+.embed-code .faq-chevron:hover {
+  border-color: rgba(255, 255, 255, 0.36) !important;
+  color: var(--text) !important;
+  background: var(--surface-3) !important;
+}
+
 .embed-tutorial {
   display: grid !important;
   gap: 10px !important;

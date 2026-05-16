@@ -1096,11 +1096,7 @@ input:-webkit-autofill:focus {
 }
 
 .scope-card:hover,
-.app-card:hover,
-.app-chip:hover:not(:disabled),
-.list-card:hover,
-.mini-row:hover,
-.metric-card:hover {
+.app-card:hover {
   border-color: var(--border-strong);
   background: var(--surface-2);
 }
@@ -1238,6 +1234,17 @@ input:-webkit-autofill:focus {
 .revoked-history summary::-webkit-details-marker { display: none; }
 
 .revoked-history summary::marker { content: ""; }
+
+.revoked-history:hover:not(:has(.faq-chevron:hover)) {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.revoked-history .faq-chevron:hover {
+  border-color: rgba(255, 255, 255, 0.36);
+  color: var(--text);
+  background: var(--surface-3);
+}
 
 .revoked-chevron {
   width: 30px;
@@ -1462,6 +1469,17 @@ input:-webkit-autofill:focus {
   color: var(--text);
   background-color: var(--surface-3);
   transform: rotate(180deg);
+}
+
+.embed-code:hover:not(:has(.faq-chevron:hover)) {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.embed-code .faq-chevron:hover {
+  border-color: rgba(255, 255, 255, 0.36);
+  color: var(--text);
+  background: var(--surface-3);
 }
 
 .embed-code pre {
