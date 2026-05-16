@@ -459,32 +459,22 @@
         </nav>
       </header>
 
-      <section class="panel hero-panel">
-        <p class="eyebrow">Memact</p>
-        <h1 class="locked-tagline"><span>Understand users'</span><span>digital activity.</span></h1>
-        <p class="lead">Memact gives developers a consent-first way to turn approved activity into useful context, schemas, and memory. Apps get understanding, not a raw activity feed.</p>
-        <div class="hero-actions">
-          <a class="button" href="/#sign-up">Get started</a>
-          <a class="button" href="/#sign-in">Sign in</a>
-        </div>
-      </section>
-
-      <section class="panel help-panel" aria-label="Memact FAQ">
+      <section class="panel help-panel" aria-label="Learn more about Memact">
         <div>
-          <p class="eyebrow">Help</p>
-          <h2>Frequently asked questions</h2>
-          <p class="help-intro">Answers about how Memact works, what apps can see, and how consent is controlled.</p>
+          <p class="eyebrow">Learn More</p>
+          <h2>Learn more about Memact</h2>
+          <p class="help-intro">A simple guide to how Memact works, what apps can see, and how you stay in control.</p>
         </div>
 
         <div class="faq-section">
           <p class="faq-section-title">Basics</p>
           <details open>
             <summary><span class="faq-question">What is Memact?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>Memact helps apps understand users' digital activity, using only the activity and memory permissions they approve.</p></div>
+            <div class="faq-answer"><p>Memact helps apps understand digital activity only after the user approves the right activity and memory permissions.</p></div>
           </details>
           <details>
             <summary><span class="faq-question">Where does Memact run?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>Apps use a small Memact client SDK. Evidence can come from the browser extension and, if enabled, a local helper. Memact turns approved evidence into context, schemas, and memory; apps do not receive a blanket activity feed.</p></div>
+            <div class="faq-answer"><p>Apps use a small Memact client. Evidence can come from the browser extension and, if enabled, a local helper. Memact turns approved evidence into context, schemas, and memory; apps do not receive a blanket activity feed.</p></div>
           </details>
           <details>
             <summary><span class="faq-question">Does an app get my whole memory graph?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
@@ -492,7 +482,7 @@
           </details>
           <details>
             <summary><span class="faq-question">How does consent work?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>It shows what an app wants Memact to understand before anything is connected. You approve or cancel. Apps should link Data Transparency beside consent so you can review the evidence, schemas, memory objects, and context they plan to use.</p></div>
+            <div class="faq-answer"><p>Consent shows what an app wants Memact to understand before anything is connected. You can approve or cancel, and Data Transparency lets you review the evidence, schemas, memory objects, and context first.</p></div>
           </details>
           <details>
             <summary><span class="faq-question">What are activity categories?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
@@ -501,50 +491,45 @@
         </div>
 
         <div class="faq-section">
-          <p class="faq-section-title">Connect instructions</p>
+          <p class="faq-section-title">Activity and memory</p>
           <details>
-            <summary><span class="faq-question">How do I connect an app to Memact?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer">
-              <ol>
-                <li>Register your app in the Memact portal and choose the smallest scopes and activity categories your feature needs.</li>
-                <li>Add a <strong>Connect Memact</strong> button in your app that sends users to <code>/connect?app_id=...&amp;scopes=...&amp;categories=...&amp;redirect_uri=...</code>.</li>
-                <li>Place a <strong>Data Transparency</strong> link beside the consent flow. Explain the evidence fields, context objects, summaries, graph packets, retention, and revocation path.</li>
-                <li>After the user approves, Memact redirects back to your <code>redirect_uri</code> with a <code>connection_id</code>. Store that id for the signed-in user in your app.</li>
-                <li>Keep the raw Memact API key in server environment config, such as <code>MEMACT_API_KEY</code> in <code>.env</code> locally and a secret manager in production.</li>
-                <li>Your backend calls Memact's verification endpoint with <code>Authorization: Bearer &lt;api_key&gt;</code>, the stored <code>connection_id</code>, required scopes, and activity categories.</li>
-                <li>Only request the approved context, memory, schemas, or graph objects returned by Memact. Do not ask for more than the user consented to.</li>
-              </ol>
-            </div>
+            <summary><span class="faq-question">What activity can be used?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>Memact can use approved evidence like page titles, URLs, domains, timestamps, selected text, page text, PDF text, captions, transcripts, image context, and optional app or window context from the local helper. That evidence exists to produce understanding, not to sell a raw capture feed.</p></div>
           </details>
           <details>
-            <summary><span class="faq-question">What does the verification endpoint return?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>When verification succeeds, Memact returns <code>allowed: true</code> along with the effective scopes, activity categories, an understanding strategy that tells your app which category-specific evidence Memact can use, and the user's connection id. If verification fails, it returns <code>allowed: false</code> with an error code explaining whether the API key is invalid, consent is missing, or scopes/categories are denied.</p></div>
+            <summary><span class="faq-question">What does Memact turn activity into?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>Memact turns approved activity into context objects: events, sessions, evidence cards, summaries, schema packets, graph links, and patterns that can become memory. An app only sees what its saved permissions allow.</p></div>
           </details>
           <details>
-            <summary><span class="faq-question">What is the verification endpoint URL?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>Use <code>POST https://api.memact.com/v1/access/verify</code> with <code>Content-Type: application/json</code> and <code>Authorization: Bearer mka_...</code>. The request body should include <code>connection_id</code>, <code>required_scopes</code>, and <code>activity_categories</code>. Your app backend calls this endpoint; never call it from a browser bundle or mobile app.</p></div>
+            <summary><span class="faq-question">What does an app receive?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>Only scoped understanding allowed by the app key, your consent, selected scopes, activity categories, and authorized origin. That can include compact summaries, evidence cards, schema packets, memory objects, graph objects when approved, and status signals.</p></div>
+          </details>
+          <details>
+            <summary><span class="faq-question">What is blocked?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>Memact skips sensitive pages like banking, payments, checkout, billing, passwords, logins, OTPs, private inboxes, direct messages, medical portals, and private account or admin pages before they become memory evidence.</p></div>
           </details>
         </div>
 
         <div class="faq-section">
-          <p class="faq-section-title">Developers</p>
+          <p class="faq-section-title">Advanced</p>
           <details>
             <summary><span class="faq-question">How do I use the Memact API in an app?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
             <div class="faq-answer">
+              <p>Use Memact as a permissioned understanding and memory layer, not as a raw capture feed.</p>
               <ol>
                 <li>Register your app in Memact and choose the smallest scopes and activity categories your feature needs.</li>
-                <li>Add a Connect Memact button in your app. Send users to `/connect` with app id, scopes, categories, and redirect URL.</li>
-                <li>Put a Data Transparency link beside that consent flow. Explain the evidence fields, context objects, summaries, graph packets, retention, and revocation path.</li>
-                <li>After approval, Memact redirects back with a `connection_id`. Store that id for the signed-in user in your app.</li>
-                <li>Keep the raw Memact API key in server environment config, such as `MEMACT_API_KEY` in `.env` locally and a secret manager in production.</li>
-                <li>Your backend calls Memact's verification endpoint with the API key, stored connection id, required scopes, and activity categories.</li>
-                <li>Request only the approved context, memory, schemas, or graph objects returned by Memact.</li>
+                <li>Add a <strong>Connect Memact</strong> button in your app.</li>
+                <li>Put a Data Transparency link beside that consent flow.</li>
+                <li>After approval, store the returned <code>connection_id</code> for the signed-in user in your app.</li>
+                <li>Keep the raw Memact API key in server environment config.</li>
+                <li>Your backend verifies the API key, connection id, required scopes, and activity categories before requesting context.</li>
+                <li>Use only the approved understanding Memact returns.</li>
               </ol>
             </div>
           </details>
           <details>
             <summary><span class="faq-question">Where should the Memact API key live in code?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
-            <div class="faq-answer"><p>Treat the raw Memact API key like a server-side secret. This is the private app key that starts with `mka_` and is created in the Memact portal. Do not hard-code it into browser bundles, mobile apps, public repos, logs, shared prompts, or user-facing settings panels.</p></div>
+            <div class="faq-answer"><p>Treat the raw Memact API key like a server-side secret. This is the private app key that starts with <code>mka_</code> and is created in the Memact portal. Do not hard-code it into browser bundles, mobile apps, public repos, logs, shared prompts, or user-facing settings panels.</p></div>
           </details>
           <details>
             <summary><span class="faq-question">Do I need a Supabase public key?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
@@ -555,8 +540,24 @@
             <div class="faq-answer"><p>Yes. Any app asking users to consent through Memact should expose Data Transparency next to the consent flow. It must explain the evidence fields, context objects, summaries, graph packets, retention, and revocation path. Categories alone are not enough.</p></div>
           </details>
           <details>
+            <summary><span class="faq-question">What is a schema packet?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>A schema packet is Memact's understanding envelope: evidence, content units, nodes, edges, inferred structure, and a short summary that later layers can decide to keep as memory.</p></div>
+          </details>
+          <details>
             <summary><span class="faq-question">What is not allowed?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
             <div class="faq-answer"><p>Apps should only request what they need. Hidden monitoring, selling raw activity or memory, manipulation, and sensitive decision-making are not allowed.</p></div>
+          </details>
+        </div>
+
+        <div class="faq-section">
+          <p class="faq-section-title">Legal and contact</p>
+          <details>
+            <summary><span class="faq-question">Who runs Memact?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>Memact is a project by <a href="https://github.com/keepsloading" target="_blank" rel="noreferrer">Keeps Loading</a>. Some code may be viewable through the <a href="https://github.com/Memact" target="_blank" rel="noreferrer">Memact GitHub organization</a>, but it remains proprietary. You may not edit, redistribute, or modify it without permission.</p></div>
+          </details>
+          <details>
+            <summary><span class="faq-question">How can I contact Memact?</span><span class="faq-chevron" aria-hidden="true">v</span></summary>
+            <div class="faq-answer"><p>For access, security, or project questions, contact <a href="mailto:keepsloading@gmail.com">keepsloading@gmail.com</a>. For safety, do not send secrets, raw memory exports, or API keys by email.</p></div>
           </details>
         </div>
       </section>
