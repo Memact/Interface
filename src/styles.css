@@ -872,6 +872,10 @@ p { margin-top: 0; }
   margin: 0;
 }
 
+.key-panel {
+  scroll-margin-top: calc(var(--topbar-height) + (var(--topbar-gap) * 2) + 18px);
+}
+
 .access-layout,
 .grid,
 .connect-grid {
@@ -1442,20 +1446,30 @@ input:-webkit-autofill:focus {
 .key-box {
   align-items: center;
   justify-content: space-between;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 12px;
-  background: var(--surface-2);
+  padding: 14px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025)),
+    var(--surface-1);
 }
 
 .key-box code {
   display: block;
   max-width: 100%;
   overflow-x: auto;
-  padding: 8px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
   white-space: nowrap;
   color: var(--text);
+  background: rgba(0, 1, 27, 0.58);
   font-size: 13px;
+}
+
+.key-actions button {
+  min-height: 40px;
+  padding: 8px 12px;
 }
 
 .embed-code summary {

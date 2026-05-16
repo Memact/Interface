@@ -1656,13 +1656,15 @@ function getPasswordState(password, confirmPassword) {
   }
 }
 
-function scrollElementIntoView(id) {
+function scrollElementIntoView(id, block = "start") {
   if (typeof window === "undefined") return
   if (id === "error-message") return
   window.requestAnimationFrame(() => {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
+    window.requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({
+        behavior: "smooth",
+        block
+      })
     })
   })
 }

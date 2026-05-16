@@ -111,6 +111,12 @@
   background: rgba(200, 247, 212, 0.07) !important;
 }
 
+.embed-copy-button:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.36) !important;
+  color: var(--text) !important;
+  background: var(--surface-3) !important;
+}
+
 .embed-step pre {
   width: 100% !important;
   max-width: 100% !important;
