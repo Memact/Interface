@@ -171,7 +171,7 @@ export function Landing({
                     type="text"
                     inputMode="numeric"
                     autoComplete="one-time-code"
-                    placeholder="000000"
+                    placeholder="Enter code"
                     maxLength={10}
                     onChange={(event) => setSignInVerificationCode(event.target.value.replace(/\s+/g, "").slice(0, 10))}
                     required
@@ -187,7 +187,7 @@ export function Landing({
                     type="text"
                     inputMode="numeric"
                     autoComplete="one-time-code"
-                    placeholder="000000"
+                    placeholder="Enter code"
                     maxLength={10}
                     onChange={(event) => setVerificationCode(event.target.value.replace(/\s+/g, "").slice(0, 10))}
                     required
