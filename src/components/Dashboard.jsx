@@ -355,6 +355,7 @@ export function Dashboard({
         <>
           <p className="panel-external-label">Apps</p>
           <section id="app-panel" className="panel app-workspace">
+            <p className="eyebrow">APPS</p>
             <div className="current-app-block">
               <div>
                 <p className="eyebrow">App</p>
@@ -430,11 +431,7 @@ export function Dashboard({
                 <div className="section-copy">
                   <p className="eyebrow">Permissions</p>
                   <h2>Choose what this app can ask Memact to understand.</h2>
-                  <p className="muted">
-                    {selectedConsent
-                      ? consentChanged ? "Permissions changed. Save them before creating the next key." : "Permissions are saved for this app. Change scopes any time."
-                      : "Save permissions before creating a usable API key."}
-                  </p>
+                  <p className="muted">Permissions are saved for this app. Change scopes any time.</p>
                 </div>
                 <div className="actions section-actions">
                   <span className="tooltip-wrap" title={permissionsHint || undefined}>
