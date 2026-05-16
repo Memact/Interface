@@ -1,12 +1,12 @@
 @media (min-width: 901px) {
   .page-auth .auth-logo-img {
-    margin-top: 28px !important;
+    margin-top: 16px !important;
   }
 
   .page-auth .hero-copy {
-    min-height: calc(100svh - 96px) !important;
-    padding-top: 24px !important;
-    padding-bottom: 52px !important;
-    transform: translateY(-28px) !important;
+    min-height: calc(100svh - 68px) !important;
+    padding-top: 14px !important;
+    padding-bottom: 44px !important;
+    transform: translateY(-32px) !important;
   }
 }

@@ -565,14 +565,35 @@
     <script>
       (function() {
         var gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topbar-gap")) || 12;
-        var radius = "var(--radius-lg)";
+        var currentTop = gap, targetTop = gap, rafId = null;
+
+        function animate() {
+          currentTop += (targetTop - currentTop) * 0.12;
+          if (Math.abs(currentTop - targetTop) < 0.3) currentTop = targetTop;
+
+          document.documentElement.style.setProperty("--topbar-top", currentTop + "px");
+
+          var r = currentTop >= gap - 0.5 ? "var(--radius-lg)" :
+                  currentTop <= 0.5 ? "0 0 var(--radius-lg) var(--radius-lg)" :
+                  null;
+          if (r) document.documentElement.style.setProperty("--topbar-radius", r);
+
+          if (Math.abs(currentTop - targetTop) > 0.3) {
+            rafId = requestAnimationFrame(animate);
+          } else {
+            rafId = null;
+          }
+        }
+
+        function onScroll() {
+          targetTop = window.scrollY > 2 ? 0 : gap;
+          if (!rafId) rafId = requestAnimationFrame(animate);
+        }
+
         document.documentElement.style.setProperty("--topbar-top", gap + "px");
-        document.documentElement.style.setProperty("--topbar-radius", radius);
-        window.addEventListener("scroll", function() {
-          var scrolled = window.scrollY > 2;
-          document.documentElement.style.setProperty("--topbar-top", scrolled ? "0px" : gap + "px");
-          document.documentElement.style.setProperty("--topbar-radius", scrolled ? "0 0 var(--radius-lg) var(--radius-lg)" : radius);
-        }, { passive: true });
+        document.documentElement.style.setProperty("--topbar-radius", "var(--radius-lg)");
+
+        window.addEventListener("scroll", onScroll, { passive: true });
       })();
     </script>
   </body>

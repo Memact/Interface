@@ -31,15 +31,43 @@ function App() {
   const initialPage = pageFromLocation()
 
   useEffect(() => {
-    const updateTopbar = () => {
-      const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topbar-gap")) || 12
-      const scrolled = window.scrollY > 2
-      document.documentElement.style.setProperty("--topbar-top", scrolled ? "0px" : `${gap}px`)
-      document.documentElement.style.setProperty("--topbar-radius", scrolled ? "0 0 var(--radius-lg) var(--radius-lg)" : "var(--radius-lg)")
+    let currentTop = 0, targetTop = 0, rafId = null
+
+    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topbar-gap")) || 12
+
+    const animate = () => {
+      currentTop += (targetTop - currentTop) * 0.12
+      if (Math.abs(currentTop - targetTop) < 0.3) currentTop = targetTop
+
+      document.documentElement.style.setProperty("--topbar-top", currentTop + "px")
+
+      const r = currentTop >= gap - 0.5 ? "var(--radius-lg)" :
+                currentTop <= 0.5 ? "0 0 var(--radius-lg) var(--radius-lg)" :
+                null
+      if (r) document.documentElement.style.setProperty("--topbar-radius", r)
+
+      if (Math.abs(currentTop - targetTop) > 0.3) {
+        rafId = requestAnimationFrame(animate)
+      } else {
+        rafId = null
+      }
     }
-    updateTopbar()
-    window.addEventListener("scroll", updateTopbar, { passive: true })
-    return () => window.removeEventListener("scroll", updateTopbar)
+
+    const onScroll = () => {
+      targetTop = window.scrollY > 2 ? 0 : gap
+      if (!rafId) rafId = requestAnimationFrame(animate)
+    }
+
+    currentTop = gap
+    targetTop = gap
+    document.documentElement.style.setProperty("--topbar-top", gap + "px")
+    document.documentElement.style.setProperty("--topbar-radius", "var(--radius-lg)")
+
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      if (rafId) cancelAnimationFrame(rafId)
+    }
   }, [])
 
   const [authSession, setAuthSession] = useState(null)
