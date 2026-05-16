@@ -207,13 +207,11 @@ summary:focus-visible {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--bg);
-  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  transition: box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
 }
 
 .topbar-scrolled .topbar {
-  border-color: var(--border-strong);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.28);
 }
 
 .logo-link {
@@ -274,6 +272,22 @@ summary:focus-visible {
 .back-button .faq-chevron:hover {
   border-color: rgba(255, 255, 255, 0.36);
   color: var(--text);
+  background: var(--surface-3);
+}
+
+details:hover:not(:has(.faq-chevron:hover)) {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.faq-chevron:hover {
+  border-color: rgba(255, 255, 255, 0.36);
+  color: var(--text);
+  background: var(--surface-3);
+}
+
+details[open]:hover:not(:has(.faq-chevron:hover)) {
+  border-color: var(--border-strong);
   background: var(--surface-3);
 }
 
@@ -1173,11 +1187,7 @@ input:-webkit-autofill:focus {
   background: rgba(255, 255, 255, 0.105);
 }
 
-.scope-card:hover,
-.app-card:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-2);
-}
+/* Removed hover highlighting for non-clickable elements */
 
 .scope-card span,
 .app-card span,
@@ -1765,12 +1775,10 @@ input:-webkit-autofill:focus {
     background: rgba(0, 1, 27, 0.98);
     box-shadow: 0 18px 52px rgba(0, 0, 0, 0.22);
     backdrop-filter: blur(18px);
-    transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    transition: box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
   }
 
   .topbar-scrolled .page:not(.page-auth) .topbar {
-    border-color: var(--border-strong);
-    border-radius: var(--radius-lg);
     box-shadow: 0 18px 52px rgba(0, 0, 0, 0.28);
   }
 
@@ -1837,7 +1845,7 @@ input:-webkit-autofill:focus {
     padding: 10px var(--page-inline) 11px;
     background: rgba(0, 1, 27, 0.98);
     backdrop-filter: blur(18px);
-    transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    transition: box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
   }
 
   .logo-link {
